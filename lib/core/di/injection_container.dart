@@ -1,9 +1,75 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:get_it/get_it.dart';
-import '../../features/speed_test/cubit/speed_test_cubit.dart';
+import 'package:network_info_plus/network_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-final sl = GetIt.instance; // Service Locator
+import '../network/network_info.dart';
+import '../../data/datasources/device_info_local_datasource.dart';
+import '../../data/datasources/network_info_local_datasource.dart';
+import '../../data/datasources/speed_test_remote_datasource.dart';
+import '../../data/repositories/diagnostic_repository_impl.dart';
+import '../../domain/repositories/diagnostic_repository.dart';
+import '../../domain/usecases/get_initial_network_info.dart';
+import '../../domain/usecases/run_diagnostic_test.dart';
+import '../../features/home/presentation/cubit/home_cubit.dart';
+import '../../features/diagnostic/presentation/cubit/diagnostic_cubit.dart';
+
+final sl = GetIt.instance;
 
 Future<void> init() async {
-  // Cubit
-  sl.registerFactory(() => SpeedTestCubit());
+  //! Features - Home
+  sl.registerFactory(
+    () => HomeCubit(
+      getInitialNetworkInfo: sl(),
+    ),
+  );
+
+  //! Features - Diagnostic
+  sl.registerFactory(
+    () => DiagnosticCubit(
+      runDiagnosticTest: sl(),
+    ),
+  );
+
+  //! Use cases
+  sl.registerLazySingleton(() => GetInitialNetworkInfo(sl()));
+  sl.registerLazySingleton(() => RunDiagnosticTest(sl()));
+
+  //! Repository
+  sl.registerLazySingleton<DiagnosticRepository>(
+    () => DiagnosticRepositoryImpl(
+      deviceInfoLocalDataSource: sl(),
+      networkInfoLocalDataSource: sl(),
+      speedTestRemoteDataSource: sl(),
+      networkInfo: sl(),
+    ),
+  );
+
+  //! Data sources
+  sl.registerLazySingleton<DeviceInfoLocalDataSource>(
+    () => DeviceInfoLocalDataSourceImpl(
+      deviceInfo: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton<NetworkInfoLocalDataSource>(
+    () => NetworkInfoLocalDataSourceImpl(
+      networkInfo: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton<SpeedTestRemoteDataSource>(
+    () => SpeedTestRemoteDataSourceImpl(),
+  );
+
+  //! Core
+  sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
+
+  //! External
+  final sharedPreferences = await SharedPreferences.getInstance();
+  sl.registerLazySingleton(() => sharedPreferences);
+  sl.registerLazySingleton(() => DeviceInfoPlugin());
+  sl.registerLazySingleton(() => NetworkInfoPlus.instance);
+  sl.registerLazySingleton(() => Connectivity());
 }

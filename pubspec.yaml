@@ -1,37 +1,53 @@
 name: maxt_diagnostic
-description: "Um aplicativo profissional de diagnóstico de rede."
-publish_to: 'none' 
+description: "A professional network diagnostic application."
+publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '^3.3.0' # <-- ALTERAÇÃO APLICADA AQUI
+  sdk: '>=3.3.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  
-  # Utilitários & Core
-  cupertino_icons: ^1.0.6
-  intl: ^0.18.1
-  get_it: ^7.6.7
-  
-  # Lógica de Estado
-  flutter_bloc: ^8.1.5
-  bloc: ^8.1.2
+
+  # Core & Utilities
+  cupertino_icons: ^1.0.8
+  intl: any
+  get_it: ^7.7.0
   equatable: ^2.0.5
-  
-  # Rede
-  dio: ^5.4.3
-  
-  # Outros
-  webview_flutter: ^4.7.0
+
+  # State Management
+  flutter_bloc: ^8.1.6
+  bloc: ^8.1.4
+
+  # Functional Programming
+  dartz: ^0.10.1
+
+  # Network & Device Info
+  connectivity_plus: ^6.0.3
+  network_info_plus: ^5.0.3
+  wifi_info_flutter: ^2.0.2
+  device_info_plus: ^10.1.0
+  http: ^1.2.1
+
+  # WebView for Speed Test
+  webview_flutter: ^4.8.0
+
+  # PDF & Sharing
+  printing: ^5.12.0
+  share_plus: ^7.2.2
+
+  # Storage
+  shared_preferences: ^2.2.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
+  bloc_test: ^9.1.7
+  mocktail: ^1.0.3
 
 flutter:
   uses-material-design: true
