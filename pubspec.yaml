@@ -28,7 +28,6 @@ dependencies:
   # Network & Device Info
   connectivity_plus: ^6.0.3
   network_info_plus: ^5.0.3
-  wifi_info_flutter: ^2.0.2
   device_info_plus: ^10.1.0
   http: ^1.2.1
 

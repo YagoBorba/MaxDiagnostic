@@ -6,22 +6,22 @@ import '../../core/error/failures.dart';
 import '../../core/network/network_info.dart';
 import '../../domain/entities/final_results_entity.dart';
 import '../../domain/repositories/diagnostic_repository.dart';
-import '../datasources/device_info_local_datasource.dart';
-import '../datasources/network_info_local_datasource.dart';
+// import '../datasources/device_info_local_datasource.dart';
+// import '../datasources/network_info_local_datasource.dart';
 import '../datasources/speed_test_remote_datasource.dart';
 import '../models/final_results_model.dart';
 
 /// Implementation of DiagnosticRepository
 /// Coordinates data sources and handles error conversion
 class DiagnosticRepositoryImpl implements DiagnosticRepository {
-  final DeviceInfoLocalDataSource deviceInfoLocalDataSource;
-  final NetworkInfoLocalDataSource networkInfoLocalDataSource;
+  // final DeviceInfoLocalDataSource deviceInfoLocalDataSource;
+  // final NetworkInfoLocalDataSource networkInfoLocalDataSource;
   final SpeedTestRemoteDataSource speedTestRemoteDataSource;
   final NetworkInfo networkInfo;
 
   DiagnosticRepositoryImpl({
-    required this.deviceInfoLocalDataSource,
-    required this.networkInfoLocalDataSource,
+    // required this.deviceInfoLocalDataSource,
+    // required this.networkInfoLocalDataSource,
     required this.speedTestRemoteDataSource,
     required this.networkInfo,
   });
@@ -35,8 +35,19 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
         return const Left(NetworkFailure('No network connection available'));
       }
 
-      final networkInfoModel = await networkInfoLocalDataSource.getInitialNetworkInfo();
-      return Right(networkInfoModel);
+      // TODO: Re-enable when data sources are implemented
+      // final networkInfoModel = await networkInfoLocalDataSource.getInitialNetworkInfo();
+      // return Right(networkInfoModel);
+      
+      // Temporary mock data
+      const mockNetworkInfo = NetworkInfoEntity(
+        connectionType: 'WiFi',
+        wifiName: 'Loading...',
+        wifiBSSID: 'Loading...',
+        externalIP: 'Loading...',
+        internalIP: 'Loading...',
+      );
+      return const Right(mockNetworkInfo);
     } on NetworkException catch (e) {
       return Left(NetworkFailure(e.message));
     } catch (e) {
@@ -95,8 +106,18 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
   @override
   Future<Either<Failure, DeviceInfoEntity>> getDeviceInfo() async {
     try {
-      final deviceInfoModel = await deviceInfoLocalDataSource.getDeviceInfo();
-      return Right(deviceInfoModel);
+      // TODO: Re-enable when data sources are implemented
+      // final deviceInfoModel = await deviceInfoLocalDataSource.getDeviceInfo();
+      // return Right(deviceInfoModel);
+      
+      // Temporary mock data
+      const mockDeviceInfo = DeviceInfoEntity(
+        deviceModel: 'Loading...',
+        deviceBrand: 'Loading...',
+        operatingSystem: 'Loading...',
+        osVersion: 'Loading...',
+      );
+      return const Right(mockDeviceInfo);
     } on DeviceInfoException catch (e) {
       return Left(DeviceInfoFailure(e.message));
     } catch (e) {
@@ -107,8 +128,19 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
   @override
   Future<Either<Failure, NetworkInfoEntity>> getNetworkInfo() async {
     try {
-      final networkInfoModel = await networkInfoLocalDataSource.getNetworkInfo();
-      return Right(networkInfoModel);
+      // TODO: Re-enable when data sources are implemented
+      // final networkInfoModel = await networkInfoLocalDataSource.getNetworkInfo();
+      // return Right(networkInfoModel);
+      
+      // Temporary mock data
+      const mockNetworkInfo = NetworkInfoEntity(
+        connectionType: 'WiFi',
+        wifiName: 'Loading...',
+        wifiBSSID: 'Loading...',
+        externalIP: 'Loading...',
+        internalIP: 'Loading...',
+      );
+      return const Right(mockNetworkInfo);
     } on NetworkException catch (e) {
       return Left(NetworkFailure(e.message));
     } catch (e) {
