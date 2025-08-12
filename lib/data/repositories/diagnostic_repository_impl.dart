@@ -32,7 +32,7 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
       // Check network connectivity first
       final isConnected = await networkInfo.isConnected;
       if (!isConnected) {
-        return Left(NetworkFailure('No network connection available'));
+        return const Left(NetworkFailure('No network connection available'));
       }
 
       final networkInfoModel = await networkInfoLocalDataSource.getInitialNetworkInfo();
@@ -50,7 +50,7 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
       // Check network connectivity
       final isConnected = await networkInfo.isConnected;
       if (!isConnected) {
-        yield Left(NetworkFailure('No network connection available'));
+        yield const Left(NetworkFailure('No network connection available'));
         return;
       }
 
