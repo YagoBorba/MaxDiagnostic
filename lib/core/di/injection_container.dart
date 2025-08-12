@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wifi_info_flutter/wifi_info_flutter.dart';
 
 import '../network/network_info.dart';
-// TODO: Uncomment when data sources are fixed
+// TODO: Re-enable when all import issues are resolved
 // import '../../data/datasources/device_info_local_datasource.dart';
 // import '../../data/datasources/network_info_local_datasource.dart';
 // import '../../data/datasources/speed_test_remote_datasource.dart';
@@ -35,11 +35,12 @@ Future<void> init() async {
   //   ),
   // );
 
-  //! Use cases (TODO: Uncomment when data sources are ready)
+  //! Use cases (TODO: Uncomment when imports are fixed)
+  //! Use cases (TODO: Re-enable when all import issues are resolved)
   // sl.registerLazySingleton(() => GetInitialNetworkInfo(sl()));
   // sl.registerLazySingleton(() => RunDiagnosticTest(sl()));
 
-  //! Repository (TODO: Uncomment when data sources are ready)
+  //! Repository (TODO: Re-enable when all import issues are resolved)
   // sl.registerLazySingleton<DiagnosticRepository>(
   //   () => DiagnosticRepositoryImpl(
   //     deviceInfoLocalDataSource: sl(),
@@ -49,7 +50,7 @@ Future<void> init() async {
   //   ),
   // );
 
-  //! Data sources (TODO: Uncomment when imports are fixed)
+  //! Data sources (TODO: Re-enable when all import issues are resolved)
   // sl.registerLazySingleton<DeviceInfoLocalDataSource>(
   //   () => DeviceInfoLocalDataSourceImpl(
   //     deviceInfo: sl(),
@@ -66,9 +67,7 @@ Future<void> init() async {
 
   // sl.registerLazySingleton<SpeedTestRemoteDataSource>(
   //   () => SpeedTestRemoteDataSourceImpl(),
-  // );
-
-  //! Core
+  // );  //! Core
   sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
 
   //! External

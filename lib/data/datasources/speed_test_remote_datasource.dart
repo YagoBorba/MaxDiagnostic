@@ -129,6 +129,8 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
           _handleError(data['message'] as String? ?? 'Erro desconhecido');
           break;
         default:
+          // TODO: Replace with proper logging framework
+          // ignore: avoid_print
           print('Unknown message type: $type');
       }
     } catch (e) {
