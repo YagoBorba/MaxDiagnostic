@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:maxt_diagnostic/app/navigation/app_router.dart';
+import 'package:maxt_diagnostic/features/home/presentation/cubit/home_cubit.dart';
 import 'core/di/injection_container.dart' as di;
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
@@ -13,15 +16,23 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'MaxT Diagnostic',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
-        useMaterial3: true,
+    // O BlocProvider agora envolve todo o MaterialApp.router para que
+    // os Cubits possam ser acessados em qualquer rota.
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => di.sl<HomeCubit>()),
+        // O DiagnosticCubit será adicionado localmente na tela
+      ],
+      child: MaterialApp.router(
+        title: 'MaxT Diagnostic',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
+          useMaterial3: true,
+        ),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        routerConfig: router, // Usando a configuração do GoRouter
       ),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: const PlaceholderScreen(),
     );
   }
 }

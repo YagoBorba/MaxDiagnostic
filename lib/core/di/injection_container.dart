@@ -8,35 +8,18 @@ import '../network/network_info.dart';
 import '../../data/datasources/speed_test_remote_datasource.dart';
 import '../../data/repositories/diagnostic_repository_impl.dart';
 import '../../domain/repositories/diagnostic_repository.dart';
-// import '../../domain/usecases/get_initial_network_info.dart'; // TODO: Fix import resolution issue
-// TODO: Re-enable when import issues are resolved
-// import '../../data/datasources/device_info_local_datasource.dart';
-// import '../../data/datasources/network_info_local_datasource.dart';
-// import '../../domain/usecases/run_diagnostic_test.dart';
-// TODO: Uncomment when cubits are created
-// import '../../features/home/presentation/cubit/home_cubit.dart';
-// import '../../features/diagnostic/presentation/cubit/diagnostic_cubit.dart';
+import '../../features/home/presentation/cubit/home_cubit.dart';
+import '../../features/diagnostic/presentation/cubit/diagnostic_cubit.dart';
 
 final sl = GetIt.instance;
 
 Future<void> init() async {
-  //! Features - Home (TODO: Uncomment when implemented)
-  // sl.registerFactory(
-  //   () => HomeCubit(
-  //     getInitialNetworkInfo: sl(),
-  //   ),
-  // );
+  // Features - Cubits
+  sl.registerFactory(() => HomeCubit());
+  sl.registerFactory(() => DiagnosticCubit());
 
-  //! Features - Diagnostic (TODO: Uncomment when implemented)
-  // sl.registerFactory(
-  //   () => DiagnosticCubit(
-  //     runDiagnosticTest: sl(),
-  //   ),
-  // );
-
-  //! Use cases (TODO: Fix import resolution issue)
+  // Use cases (TODO: Re-enable when import issues are resolved)
   // sl.registerLazySingleton(() => GetInitialNetworkInfo(sl()));
-  // sl.registerLazySingleton(() => RunDiagnosticTest(sl())); // TODO: Implement this use case
 
   //! Repository
   sl.registerLazySingleton<DiagnosticRepository>(

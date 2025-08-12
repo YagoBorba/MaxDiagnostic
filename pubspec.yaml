@@ -41,6 +41,12 @@ dependencies:
   # Storage
   shared_preferences: ^2.2.2
 
+  # Navigation
+  go_router: ^14.2.0
+
+  # Icons
+  lucide_icons: ^0.257.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
