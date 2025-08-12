@@ -35,7 +35,7 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
   @override
   Future<SpeedTestResultModel> getSpeedTestResult() {
     if (_resultCompleter == null) {
-      throw SpeedTestException('Speed test not started');
+      throw const SpeedTestException('Speed test not started');
     }
     return _resultCompleter!.future;
   }
