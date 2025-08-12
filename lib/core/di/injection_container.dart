@@ -3,7 +3,6 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:get_it/get_it.dart';
 import 'package:network_info_plus/network_info_plus.dart' as network_info_plus;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:wifi_info_flutter/wifi_info_flutter.dart';
 
 import '../network/network_info.dart';
 // TODO: Re-enable when all import issues are resolved
@@ -35,7 +34,6 @@ Future<void> init() async {
   //   ),
   // );
 
-  //! Use cases (TODO: Uncomment when imports are fixed)
   //! Use cases (TODO: Re-enable when all import issues are resolved)
   // sl.registerLazySingleton(() => GetInitialNetworkInfo(sl()));
   // sl.registerLazySingleton(() => RunDiagnosticTest(sl()));
@@ -76,5 +74,4 @@ Future<void> init() async {
   sl.registerLazySingleton(() => DeviceInfoPlugin());
   sl.registerLazySingleton(() => network_info_plus.NetworkInfo());
   sl.registerLazySingleton(() => Connectivity());
-  sl.registerLazySingleton(() => WifiInfo());
 }
