@@ -6,13 +6,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wifi_info_flutter/wifi_info_flutter.dart';
 
 import '../network/network_info.dart';
-import '../../data/datasources/device_info_local_datasource.dart';
-import '../../data/datasources/network_info_local_datasource.dart';
-import '../../data/datasources/speed_test_remote_datasource.dart';
-import '../../data/repositories/diagnostic_repository_impl.dart';
-import '../../domain/repositories/diagnostic_repository.dart';
-import '../../domain/usecases/get_initial_network_info.dart';
-import '../../domain/usecases/run_diagnostic_test.dart';
+// TODO: Uncomment when data sources are fixed
+// import '../../data/datasources/device_info_local_datasource.dart';
+// import '../../data/datasources/network_info_local_datasource.dart';
+// import '../../data/datasources/speed_test_remote_datasource.dart';
+// import '../../data/repositories/diagnostic_repository_impl.dart';
+// import '../../domain/repositories/diagnostic_repository.dart';
+// import '../../domain/usecases/get_initial_network_info.dart';
+// import '../../domain/usecases/run_diagnostic_test.dart';
 // TODO: Uncomment when cubits are created
 // import '../../features/home/presentation/cubit/home_cubit.dart';
 // import '../../features/diagnostic/presentation/cubit/diagnostic_cubit.dart';
@@ -34,38 +35,38 @@ Future<void> init() async {
   //   ),
   // );
 
-  //! Use cases
-  sl.registerLazySingleton(() => GetInitialNetworkInfo(sl()));
-  sl.registerLazySingleton(() => RunDiagnosticTest(sl()));
+  //! Use cases (TODO: Uncomment when data sources are ready)
+  // sl.registerLazySingleton(() => GetInitialNetworkInfo(sl()));
+  // sl.registerLazySingleton(() => RunDiagnosticTest(sl()));
 
-  //! Repository
-  sl.registerLazySingleton<DiagnosticRepository>(
-    () => DiagnosticRepositoryImpl(
-      deviceInfoLocalDataSource: sl(),
-      networkInfoLocalDataSource: sl(),
-      speedTestRemoteDataSource: sl(),
-      networkInfo: sl(),
-    ),
-  );
+  //! Repository (TODO: Uncomment when data sources are ready)
+  // sl.registerLazySingleton<DiagnosticRepository>(
+  //   () => DiagnosticRepositoryImpl(
+  //     deviceInfoLocalDataSource: sl(),
+  //     networkInfoLocalDataSource: sl(),
+  //     speedTestRemoteDataSource: sl(),
+  //     networkInfo: sl(),
+  //   ),
+  // );
 
-  //! Data sources
-  sl.registerLazySingleton<DeviceInfoLocalDataSource>(
-    () => DeviceInfoLocalDataSourceImpl(
-      deviceInfo: sl(),
-    ),
-  );
+  //! Data sources (TODO: Uncomment when imports are fixed)
+  // sl.registerLazySingleton<DeviceInfoLocalDataSource>(
+  //   () => DeviceInfoLocalDataSourceImpl(
+  //     deviceInfo: sl(),
+  //   ),
+  // );
 
-  sl.registerLazySingleton<NetworkInfoLocalDataSource>(
-    () => NetworkInfoLocalDataSourceImpl(
-      networkInfo: sl(),
-      connectivity: sl(),
-      wifiInfo: sl(),
-    ),
-  );
+  // sl.registerLazySingleton<NetworkInfoLocalDataSource>(
+  //   () => NetworkInfoLocalDataSourceImpl(
+  //     networkInfo: sl(),
+  //     connectivity: sl(),
+  //     wifiInfo: sl(),
+  //   ),
+  // );
 
-  sl.registerLazySingleton<SpeedTestRemoteDataSource>(
-    () => SpeedTestRemoteDataSourceImpl(),
-  );
+  // sl.registerLazySingleton<SpeedTestRemoteDataSource>(
+  //   () => SpeedTestRemoteDataSourceImpl(),
+  // );
 
   //! Core
   sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
