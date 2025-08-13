@@ -1,35 +1,13 @@
 // lib/features/home/presentation/view/widgets/network_info_card.dart
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
-import 'package:maxt_diagnostic/domain/entities/final_results_entity.dart';
+import 'package:lucide_flutter/lucide_flutter.dart';
+import 'package:maxt_diagnostic/data/models/network_info_model.dart'; // Changed import
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/signal_strength_text.dart';
 
 class NetworkInfoCard extends StatelessWidget {
-  final NetworkInfoEntity networkInfo;
+  final NetworkInfoModel networkInfo; // Changed to use the Model
 
   const NetworkInfoCard({super.key, required this.networkInfo});
-
-  bool get isConnected {
-    return networkInfo.connectionType != 'None' && 
-           networkInfo.connectionType != 'null' &&
-           networkInfo.connectionType.isNotEmpty;
-  }
-
-  String get networkName {
-    if (!isConnected) return 'Desconectado';
-    return networkInfo.wifiName ?? networkInfo.connectionType;
-  }
-
-  String get frequency {
-    if (networkInfo.wifiFrequency != null && networkInfo.wifiFrequency!.isNotEmpty) {
-      return networkInfo.wifiFrequency!;
-    }
-    return 'N/A';
-  }
-
-  int get signalStrengthDbm {
-    return networkInfo.wifiSignalStrength ?? -70; // Default signal for demo
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,44 +23,45 @@ class NetworkInfoCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  LucideIcons.wifi, 
-                  color: isConnected ? const Color(0xFF4D89FF) : Colors.grey,
+                  LucideIcons.wifi,
+                  color: networkInfo.isConnected
+                      ? const Color(0xFF4D89FF)
+                      : Colors.grey,
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  networkName,
+                  networkInfo.networkName,
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF1E293B),
+                    color: Color(0xFF1E29B),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            if (isConnected) ...[
+            if (networkInfo.isConnected) ...[
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   _InfoDetail(
-                    label: 'Sinal:', 
-                    value: '$signalStrengthDbm dBm'
+                    label: 'Sinal:',
+                    value: '${networkInfo.signalStrengthDbm} dBm',
                   ),
                   _InfoDetail(
-                    label: 'Frequência:', 
-                    value: frequency
+                    label: 'Frequência:',
+                    value: networkInfo.frequency,
                   ),
                 ],
               ),
               const SizedBox(height: 8),
-              SignalStrengthText(strengthInDbm: signalStrengthDbm),
+              SignalStrengthText(
+                strengthInDbm: networkInfo.signalStrengthDbm,
+              ),
             ] else ...[
               const Text(
                 'Sem conexão de rede',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
             ],
           ],
@@ -109,9 +88,9 @@ class _InfoDetail extends StatelessWidget {
         Text(
           value,
           style: const TextStyle(
-            fontSize: 16, 
-            fontWeight: FontWeight.w500, 
-            color: Color(0xFF1F2937)
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Color(0xFF1F2937),
           ),
         ),
       ],

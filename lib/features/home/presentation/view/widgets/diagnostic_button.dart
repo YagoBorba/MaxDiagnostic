@@ -1,5 +1,6 @@
 // lib/features/home/presentation/view/widgets/diagnostic_button.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class DiagnosticButton extends StatelessWidget {
   final VoidCallback? onPressed;
@@ -28,9 +29,9 @@ class DiagnosticButton extends StatelessWidget {
       ),
       // Em Flutter, passar null para onPressed desabilita o botão automaticamente.
       onPressed: isEnabled ? onPressed : null,
-      child: const Text(
-        'Iniciar Diagnóstico',
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      child: Text(
+        AppLocalizations.of(context)!.start_diagnostic_button,
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       ),
     );
   }
