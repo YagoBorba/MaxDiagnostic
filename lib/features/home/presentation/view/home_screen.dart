@@ -14,7 +14,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Status da Rede'), // TODO: Usar logo aqui
+        title: const Text('Status da Rede'), 
       ),
       backgroundColor: const Color(0xFFF9FAFB),
       body: BlocBuilder<HomeCubit, HomeState>(
@@ -51,7 +51,6 @@ class HomeScreen extends StatelessWidget {
           }
           
           if (state is HomeLoaded) {
-            // A UI principal quando os dados estão carregados
             return SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Column(
