@@ -1,5 +1,6 @@
 {
     "@@locale": "pt",
     "app_title": "MaxDiagnostic",
-    "start_diagnostic_button": "Iniciar Diagnóstico"
+        "start_diagnostic_button": "Iniciar Diagnóstico",
+        "stay_informed": "Fique Sabendo"
 }
