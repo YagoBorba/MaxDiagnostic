@@ -147,7 +147,6 @@ textColor: const Color(0xFFDC2626),
           resultColor: const Color(0xFFB91C1C),
         );
       case TestStatus.pending:
-      default:
         return _TestTheme(
           backgroundColor: Colors.white,
           borderColor: const Color(0xFFE5E7EB),
