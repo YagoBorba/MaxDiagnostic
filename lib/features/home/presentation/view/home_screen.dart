@@ -67,9 +67,9 @@ class HomeScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Scrollable Content
+                  // Content (no scroll; responsive padding)
                   Expanded(
-                    child: SingleChildScrollView(
+                    child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -78,8 +78,7 @@ class HomeScreen extends StatelessWidget {
                           const SizedBox(height: 16),
                           const QuickTipsCard(),
                           const SizedBox(height: 16),
-                          const RotatingInfoCard(), // Add the new card
-                          const SizedBox(height: 20),
+                          const RotatingInfoCard(),
                         ],
                       ),
                     ),
@@ -87,11 +86,16 @@ class HomeScreen extends StatelessWidget {
                   // Sticky Button at the bottom
                   Padding(
                     padding: const EdgeInsets.all(16.0),
-                    child: DiagnosticButton(
-                      isEnabled: state.networkInfo.isConnected,
-                      onPressed: () {
-                        context.go('/diagnostic');
-                      },
+                    child: SizedBox(
+                      width: double.infinity,
+                      // taller button
+                      height: 56,
+                      child: DiagnosticButton(
+                        isEnabled: state.networkInfo.connectionType.toLowerCase() != 'none',
+                        onPressed: () {
+                          context.go('/diagnostic');
+                        },
+                      ),
                     ),
                   ),
                 ],

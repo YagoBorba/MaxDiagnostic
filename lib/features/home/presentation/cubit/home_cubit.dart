@@ -16,7 +16,7 @@ class HomeCubit extends Cubit<HomeState> {
     // Mock network info for testing
     const networkInfo = NetworkInfoEntity(
       connectionType: 'WiFi',
-      wifiName: 'MaxT-Network',
+      wifiName: 'Borba',
       wifiSignalStrength: -45,
       wifiFrequency: '5 GHz',
       externalIP: '192.168.1.100',

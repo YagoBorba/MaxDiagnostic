@@ -16,12 +16,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // O BlocProvider agora envolve todo o MaterialApp.router para que
-    // os Cubits possam ser acessados em qualquer rota.
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => di.sl<HomeCubit>()),
-        // O DiagnosticCubit será adicionado localmente na tela
       ],
       child: MaterialApp.router(
         title: 'MaxT Diagnostic',
@@ -37,7 +34,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-/// Temporary placeholder screen until we implement the real UI
 class PlaceholderScreen extends StatelessWidget {
   const PlaceholderScreen({super.key});
 
@@ -45,7 +41,7 @@ class PlaceholderScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('MaxT Diagnostic'),
+        title: const Text('Max Diagnostic'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: const Center(
