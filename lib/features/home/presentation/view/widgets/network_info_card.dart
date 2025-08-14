@@ -1,4 +1,3 @@
-// lib/features/home/presentation/view/widgets/network_info_card.dart
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:maxt_diagnostic/domain/entities/final_results_entity.dart';

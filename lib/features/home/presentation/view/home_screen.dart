@@ -1,4 +1,3 @@
-// lib/features/home/presentation/view/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -6,7 +5,7 @@ import 'package:maxt_diagnostic/features/home/presentation/cubit/home_cubit.dart
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/diagnostic_button.dart';
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/network_info_card.dart';
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/quick_tips_card.dart';
-import 'package:maxt_diagnostic/features/home/presentation/view/widgets/rotating_info_card.dart'; // Import the new widget
+import 'package:maxt_diagnostic/features/home/presentation/view/widgets/rotating_info_card.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -53,12 +52,10 @@ class HomeScreen extends StatelessWidget {
             if (state is HomeLoaded) {
               return Column(
                 children: [
-                  // Header
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 16.0),
                     child: Column(
                       children: [
-                        // Placeholder for Logo
                         Text('MAX INTERNET',
                             style: TextStyle(
                                 fontSize: 24, fontWeight: FontWeight.bold)),
@@ -67,7 +64,6 @@ class HomeScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                  // Content (no scroll; responsive padding)
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -83,12 +79,10 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Sticky Button at the bottom
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: SizedBox(
                       width: double.infinity,
-                      // taller button
                       height: 56,
                       child: DiagnosticButton(
                         isEnabled: state.networkInfo.connectionType.toLowerCase() != 'none',

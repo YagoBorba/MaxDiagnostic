@@ -39,7 +39,6 @@ class _RotatingInfoCardState extends State<RotatingInfoCard>
       ),
     );
 
-    // Start the rotation timer
     _timer = Timer.periodic(const Duration(seconds: 7), (timer) {
       _changeInfo();
     });
@@ -68,11 +67,11 @@ class _RotatingInfoCardState extends State<RotatingInfoCard>
   Widget build(BuildContext context) {
     return Card(
       elevation: 2,
-      color: const Color(0xFFEFF6FF), // Light blue background
+  color: const Color(0xFFEFF6FF),
       shadowColor: Colors.black12,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: Color(0xFFDBEAFE)), // Light blue border
+  side: const BorderSide(color: Color(0xFFDBEAFE)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20.0),

@@ -1,4 +1,3 @@
-// lib/features/home/presentation/view/widgets/signal_strength_text.dart
 import 'package:flutter/material.dart';
 
 enum SignalQuality {
