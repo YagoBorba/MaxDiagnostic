@@ -24,7 +24,7 @@ class DiagnosticButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
         ),
         elevation: 4,
-        shadowColor: const Color(0xFF4D89FF).withOpacity(0.3),
+        shadowColor: const Color(0xFF4D89FF).withAlpha(77),
       ),
       onPressed: isEnabled ? onPressed : null,
       child: Text(
