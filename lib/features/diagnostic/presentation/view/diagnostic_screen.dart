@@ -26,7 +26,13 @@ class _DiagnosticView extends StatelessWidget {
     final state = context.watch<DiagnosticCubit>().state;
     final bool isTestRunning = state.globalStatus == GlobalTestStatus.running;
 
-    return Scaffold(
+    return BlocListener<DiagnosticCubit, DiagnosticState>(
+      listener: (context, state) {
+        if (state.finalResults != null && state.globalStatus == GlobalTestStatus.complete) {
+          context.go('/results', extra: state.finalResults);
+        }
+      },
+      child: Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -76,7 +82,8 @@ class _DiagnosticView extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 }
 

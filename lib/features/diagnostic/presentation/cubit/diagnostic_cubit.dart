@@ -89,10 +89,38 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
 
     await Future.delayed(const Duration(seconds: 1));
 
-  emit(state.copyWith(
+     emit(state.copyWith(
       overallProgress: 100,
       tests: state.tests.map((t) => t.copyWith(status: TestStatus.complete)).toList(),
     ));
 
+    final mockResults = FinalResultsEntity(
+      timestamp: DateTime.now(),
+      deviceInfo: const DeviceInfoEntity(
+        deviceModel: 'Pixel 7',
+        deviceBrand: 'Google',
+        operatingSystem: 'Android',
+        osVersion: '14',
+      ),
+      networkInfo: const NetworkInfoEntity(
+        connectionType: 'WiFi',
+        wifiName: 'MAX-5G',
+        wifiFrequency: '5 GHz',
+        wifiSignalStrength: -48,
+        wifiLinkSpeed: 433,
+      ),
+  speedTestResult: SpeedTestResultEntity(
+        downloadSpeed: 12.70,
+        uploadSpeed: 20.11,
+        ping: 11.9,
+        jitter: 10.7,
+        serverLocation: 'São Paulo - BR',
+        testStartTime: DateTime(2025, 1, 1, 12, 0),
+        testEndTime: DateTime(2025, 1, 1, 12, 1),
+        testCompleted: true,
+      ),
+    );
+
+    emit(state.copyWith(finalResults: mockResults));
   }
 }
