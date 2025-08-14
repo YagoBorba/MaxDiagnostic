@@ -116,7 +116,7 @@ class _MainProgressCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF4D89FF).withOpacity(0.1),
+            color: const Color(0xFF4D89FF).withAlpha(26),
             blurRadius: 12,
             offset: const Offset(0, 4),
           )

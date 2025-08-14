@@ -68,7 +68,6 @@ class AdviceCard extends StatelessWidget {
             textColor: const Color(0xFF166534),
             iconData: LucideIcons.checkCircle2);
       case AdviceSeverity.info:
-      default:
         return _AdviceTheme(
             backgroundColor: const Color(0xFFEFF6FF),
             iconColor: const Color(0xFF3B82F6),
