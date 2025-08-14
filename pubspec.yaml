@@ -28,7 +28,6 @@ dependencies:
   # Network & Device Info
   connectivity_plus: ^6.0.3
   network_info_plus: ^5.0.3
-  wifi_info_flutter: ^2.0.2
   device_info_plus: ^10.1.0
   http: ^1.2.1
 
@@ -41,6 +40,12 @@ dependencies:
 
   # Storage
   shared_preferences: ^2.2.2
+
+  # Navigation
+  go_router: ^14.2.0
+
+  # Icons
+  lucide_icons: ^0.257.0
 
 dev_dependencies:
   flutter_test:
