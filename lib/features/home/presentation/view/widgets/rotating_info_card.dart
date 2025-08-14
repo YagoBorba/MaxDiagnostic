@@ -93,15 +93,18 @@ class _RotatingInfoCardState extends State<RotatingInfoCard>
               ],
             ),
             const SizedBox(height: 12),
-            FadeTransition(
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 70),
+              child: FadeTransition(
               opacity: _fadeAnimation,
-              child: Text(
-                _infoItems[_currentIndex],
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Color(0xFF1D4ED8),
-                  height: 1.5,
+                child: Text(
+                  _infoItems[_currentIndex],
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFF1D4ED8),
+                    height: 1.5,
+                  ),
                 ),
               ),
             ),

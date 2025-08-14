@@ -20,7 +20,7 @@ class DiagnosticButton extends StatelessWidget {
         foregroundColor: Colors.white,
         disabledBackgroundColor: Colors.grey.shade300,
         disabledForegroundColor: Colors.grey.shade600,
-        padding: const EdgeInsets.symmetric(vertical: 16),
+  padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
@@ -31,7 +31,7 @@ class DiagnosticButton extends StatelessWidget {
       onPressed: isEnabled ? onPressed : null,
       child: Text(
         AppLocalizations.of(context)!.start_diagnostic_button,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
       ),
     );
   }
