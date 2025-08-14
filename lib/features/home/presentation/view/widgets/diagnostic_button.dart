@@ -1,4 +1,3 @@
-// lib/features/home/presentation/view/widgets/diagnostic_button.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
@@ -27,7 +26,6 @@ class DiagnosticButton extends StatelessWidget {
         elevation: 4,
         shadowColor: const Color(0xFF4D89FF).withOpacity(0.3),
       ),
-      // Em Flutter, passar null para onPressed desabilita o botão automaticamente.
       onPressed: isEnabled ? onPressed : null,
       child: Text(
         AppLocalizations.of(context)!.start_diagnostic_button,
