@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maxt_diagnostic/app/navigation/app_router.dart';
 import 'package:maxt_diagnostic/features/home/presentation/cubit/home_cubit.dart';
 import 'core/di/injection_container.dart' as di;
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'l10n/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
