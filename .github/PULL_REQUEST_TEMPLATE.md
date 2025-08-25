@@ -42,7 +42,7 @@ Describe the tests that you ran to verify your changes. Provide instructions so 
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] New and existing unit tests pass locally with my changes
 - [ ] I have checked my code and corrected any misspellings
-- [ ] I have followed the [Conventional Commits](./.github/COMMIT_CONVENTION.md) format
+- [ ] I have followed the [Conventional Commits](./COMMIT_CONVENTION.md) format
 
 ## 🏗️ Architecture Considerations
 
