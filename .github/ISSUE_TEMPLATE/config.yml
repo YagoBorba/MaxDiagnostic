@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔒 Security vulnerability report
+    url: https://github.com/YagoBorba/MaxDiagnostic/blob/develop/.github/SECURITY.md
+    about: Please read our Security Policy and report privately as instructed.
+  - name: 📚 Contribution guidelines
+    url: https://github.com/YagoBorba/MaxDiagnostic/blob/develop/CONTRIBUTING.md
+    about: Start here to contribute following our GitFlow and standards.
