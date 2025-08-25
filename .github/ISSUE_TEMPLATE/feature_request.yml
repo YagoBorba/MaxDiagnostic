@@ -1,0 +1,125 @@
+name: ✨ Feature Request
+description: Suggest a new feature or enhancement for MaxDiagnostic
+title: "✨ [Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! 🚀
+        
+        Before submitting, please search existing issues to avoid duplicates.
+
+  - type: dropdown
+    id: feature-area
+    attributes:
+      label: Feature Area
+      description: Which area of the app does this feature relate to?
+      options:
+        - Speed Test
+        - WiFi Analysis
+        - Network Information
+        - User Interface
+        - Settings/Configuration
+        - Performance
+        - Accessibility
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: Is your feature request related to a problem? Please describe.
+      placeholder: "I'm always frustrated when..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like to see implemented
+      placeholder: "I would like to see..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Describe any alternative solutions or features you've considered
+      placeholder: "Alternative approaches could be..."
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature to you?
+      options:
+        - Low
+        - Medium
+        - High
+        - Critical
+    validations:
+      required: true
+
+  - type: dropdown
+    id: target-users
+    attributes:
+      label: Target Users
+      description: Who would benefit from this feature?
+      options:
+        - All users
+        - Advanced users
+        - Network administrators
+        - Mobile users
+        - Desktop users
+        - Specific use case (describe below)
+    validations:
+      required: true
+
+  - type: textarea
+    id: user-story
+    attributes:
+      label: User Story
+      description: Describe this feature as a user story
+      placeholder: "As a [type of user], I want [goal] so that [benefit]"
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: Define what constitutes a successful implementation
+      placeholder: |
+        - [ ] Criterion 1
+        - [ ] Criterion 2
+        - [ ] Criterion 3
+      render: markdown
+
+  - type: textarea
+    id: technical-considerations
+    attributes:
+      label: Technical Considerations
+      description: Any technical aspects to consider (performance, compatibility, etc.)
+      placeholder: "Consider impact on..."
+
+  - type: checkboxes
+    id: willing-to-implement
+    attributes:
+      label: Implementation
+      description: Are you willing to work on this feature?
+      options:
+        - label: I'm willing to submit a PR for this feature
+        - label: I can help with testing
+        - label: I can help with documentation
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our Code of Conduct
+      options:
+        - label: I agree to follow this project's [Code of Conduct](../CODE_OF_CONDUCT.md)
+          required: true
