@@ -9,10 +9,10 @@ body:
         Thanks for your question! 🤔
         
         Before submitting, please check if your question is already answered in:
-        - [README.md](../../README.md)
-        - [CONTRIBUTING.md](../../CONTRIBUTING.md)
-        - [Existing Issues](../../issues)
-        - [Documentation](../../wiki) (if available)
+  - [README.md](../../README.md)
+  - [CONTRIBUTING.md](../../CONTRIBUTING.md)
+  - [Existing Issues](https://github.com/YagoBorba/MaxDiagnostic/issues)
+  - [Discussions](https://github.com/YagoBorba/MaxDiagnostic/discussions) (if available)
 
   - type: dropdown
     id: question-type
@@ -88,5 +88,5 @@ body:
       label: Code of Conduct
       description: By submitting this issue, you agree to follow our Code of Conduct
       options:
-        - label: I agree to follow this project's [Code of Conduct](../CODE_OF_CONDUCT.md)
+  - label: I agree to follow this project's [Code of Conduct](../../CODE_OF_CONDUCT.md)
           required: true
