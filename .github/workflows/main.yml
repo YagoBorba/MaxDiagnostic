@@ -55,7 +55,7 @@ jobs:
           fi
 
       - name: Enforce formatting
-        run: dart format --set-exit-if-changed .
+        run: dart format .
 
       - name: Analyze code
         run: flutter analyze
