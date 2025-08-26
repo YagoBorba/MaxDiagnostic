@@ -6,11 +6,13 @@ import '../../../../../core/config/app_config.dart';
 class DiagnosticButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool isEnabled;
+  final VoidCallback? onBlockedTap;
 
   const DiagnosticButton({
     super.key,
     required this.onPressed,
     this.isEnabled = true,
+    this.onBlockedTap,
   });
 
   @override
@@ -30,10 +32,14 @@ class DiagnosticButton extends StatelessWidget {
         if (isEnabled) {
           onPressed?.call();
         } else {
-          final msg = context.read<AppConfig>().disabledStartMessage;
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(SnackBar(content: Text(msg)));
+          if (onBlockedTap != null) {
+            onBlockedTap!();
+          } else {
+            final msg = context.read<AppConfig>().disabledStartMessage;
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(SnackBar(content: Text(msg)));
+          }
         }
       },
       child: Text(
