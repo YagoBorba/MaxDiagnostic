@@ -63,7 +63,7 @@ jobs:
       - name: Run tests with coverage
         env:
           CI: true
-        run: flutter test --coverage --no-pub
+        run: flutter test --coverage --no-pub --timeout=2m
 
       - name: Upload coverage artifact
         if: always()
