@@ -9,9 +9,9 @@ class SignalStrengthText extends StatelessWidget {
 
   SignalQuality _getSignalQuality(int dBm) {
     final absStrength = dBm.abs();
-    if (absStrength <= 55) return SignalQuality.excellent; 
+    if (absStrength <= 55) return SignalQuality.excellent;
     if (absStrength <= 70) return SignalQuality.normal;
-    return SignalQuality.poor; 
+    return SignalQuality.poor;
   }
 
   Color _getQualityColor(SignalQuality quality) {

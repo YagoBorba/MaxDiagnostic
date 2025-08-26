@@ -17,7 +17,8 @@ import '../config/app_config.dart';
 final sl = GetIt.instance;
 
 Future<void> init() async {
-  sl.registerFactory(() => HomeCubit(getInitialNetworkInfo: sl(), config: sl()));
+  sl.registerFactory(
+      () => HomeCubit(getInitialNetworkInfo: sl(), config: sl()));
   sl.registerFactory(() => DiagnosticCubit());
 
   sl.registerLazySingleton(() => GetInitialNetworkInfo(sl()));

@@ -57,11 +57,22 @@ class DiagnosticState extends Equatable {
   factory DiagnosticState.initial() {
     return const DiagnosticState(
       tests: [
-        TestUIState(id: 'download', name: 'Teste de Download', status: TestStatus.pending),
-        TestUIState(id: 'upload', name: 'Teste de Upload', status: TestStatus.pending),
-        TestUIState(id: 'latency', name: 'Teste de Latência', status: TestStatus.pending),
-        TestUIState(id: 'jitter', name: 'Teste de Jitter', status: TestStatus.pending),
-        TestUIState(id: 'additionalInfo', name: 'Coletando Informações Adicionais', status: TestStatus.pending),
+        TestUIState(
+            id: 'download',
+            name: 'Teste de Download',
+            status: TestStatus.pending),
+        TestUIState(
+            id: 'upload', name: 'Teste de Upload', status: TestStatus.pending),
+        TestUIState(
+            id: 'latency',
+            name: 'Teste de Latência',
+            status: TestStatus.pending),
+        TestUIState(
+            id: 'jitter', name: 'Teste de Jitter', status: TestStatus.pending),
+        TestUIState(
+            id: 'additionalInfo',
+            name: 'Coletando Informações Adicionais',
+            status: TestStatus.pending),
       ],
       overallProgress: 0.0,
       globalStatus: GlobalTestStatus.pending,
@@ -77,8 +88,11 @@ class DiagnosticState extends Equatable {
     String? webViewErrorMessage,
     FinalResultsEntity? finalResults,
   }) {
-    final newWebViewErrorMessage = (globalStatus != null && globalStatus != this.globalStatus) ? null : webViewErrorMessage ?? this.webViewErrorMessage;
-    
+    final newWebViewErrorMessage =
+        (globalStatus != null && globalStatus != this.globalStatus)
+            ? null
+            : webViewErrorMessage ?? this.webViewErrorMessage;
+
     return DiagnosticState(
       tests: tests ?? this.tests,
       overallProgress: overallProgress ?? this.overallProgress,

@@ -8,7 +8,7 @@ class QuickTipsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-  final tips = context.read<AppConfig>().quickTips;
+    final tips = context.read<AppConfig>().quickTips;
 
     return Card(
       elevation: 2,
@@ -26,10 +26,9 @@ class QuickTipsCard extends StatelessWidget {
                 Text(
                   'Dicas Rápidas',
                   style: TextStyle(
-                    fontSize: 18, 
-                    fontWeight: FontWeight.w600, 
-                    color: Color(0xFF374151)
-                  ),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF374151)),
                 ),
               ],
             ),

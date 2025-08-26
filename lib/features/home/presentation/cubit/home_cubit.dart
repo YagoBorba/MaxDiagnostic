@@ -15,19 +15,25 @@ class HomeCubit extends Cubit<HomeState> {
   Timer? _refreshTimer;
   bool _isFetching = false;
 
-  HomeCubit({required this.getInitialNetworkInfo, required this.config}) : super(const HomeInitial());
+  HomeCubit({required this.getInitialNetworkInfo, required this.config})
+      : super(const HomeInitial());
 
   Future<void> fetchInitialInfo() async {
     if (_isFetching) return;
     _isFetching = true;
-    final isFirstLoad = state is HomeInitial || state is HomeError || state is HomePermissionDenied;
-  if (isFirstLoad) emit(const HomeLoading());
+    final isFirstLoad = state is HomeInitial ||
+        state is HomeError ||
+        state is HomePermissionDenied;
+    if (isFirstLoad) emit(const HomeLoading());
     final result = await getInitialNetworkInfo(const NoParams());
     result.fold(
       (failure) {
         final msg = _mapFailure(failure);
-        if (msg.toLowerCase().contains('permissionfailure') || msg.toLowerCase().contains('permission')) {
-          emit(const HomePermissionDenied(message: 'Permissão de localização negada. Habilite para ler informações do Wi‑Fi.'));
+        if (msg.toLowerCase().contains('permissionfailure') ||
+            msg.toLowerCase().contains('permission')) {
+          emit(const HomePermissionDenied(
+              message:
+                  'Permissão de localização negada. Habilite para ler informações do Wi‑Fi.'));
         } else {
           emit(HomeError(message: msg));
         }
@@ -56,7 +62,8 @@ class HomeCubit extends Cubit<HomeState> {
     } else if (req.isPermanentlyDenied) {
       await openAppSettings();
     } else {
-      emit(const HomePermissionDenied(message: 'Permissão de localização negada.'));
+      emit(const HomePermissionDenied(
+          message: 'Permissão de localização negada.'));
     }
   }
 
@@ -79,6 +86,10 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   String _mapFailure(Object failure) {
-    return failure.toString().replaceAll('Instance of ', '').replaceAll('(', ': ').replaceAll(')', '');
+    return failure
+        .toString()
+        .replaceAll('Instance of ', '')
+        .replaceAll('(', ': ')
+        .replaceAll(')', '');
   }
 }

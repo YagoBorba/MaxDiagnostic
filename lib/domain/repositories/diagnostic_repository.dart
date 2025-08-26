@@ -23,7 +23,8 @@ abstract class DiagnosticRepository {
   Future<Either<Failure, SpeedTestResultEntity>> runSpeedTest();
 
   /// Save diagnostic results locally
-  Future<Either<Failure, void>> saveDiagnosticResults(FinalResultsEntity results);
+  Future<Either<Failure, void>> saveDiagnosticResults(
+      FinalResultsEntity results);
 
   /// Get saved diagnostic results
   Future<Either<Failure, List<FinalResultsEntity>>> getSavedResults();
