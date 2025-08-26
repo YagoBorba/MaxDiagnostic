@@ -4,6 +4,8 @@ import 'package:maxt_diagnostic/app/navigation/app_router.dart';
 import 'package:maxt_diagnostic/features/home/presentation/cubit/home_cubit.dart';
 import 'core/di/injection_container.dart' as di;
 import 'l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
+import 'core/config/app_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,8 +18,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
+    final config = di.sl<AppConfig>();
+    return MultiProvider(
       providers: [
+        Provider<AppConfig>.value(value: config),
         BlocProvider(create: (_) => di.sl<HomeCubit>()),
       ],
       child: MaterialApp.router(

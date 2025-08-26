@@ -45,8 +45,8 @@ class _RotatingInfoCardState extends State<RotatingInfoCard>
   }
 
   void _changeInfo() {
-  if (_animationController.isAnimating) return;
-  _animationController.forward().then((_) {
+    if (_animationController.isAnimating) return;
+    _animationController.forward().then((_) {
       if (mounted) {
         setState(() {
           _currentIndex = (_currentIndex + 1) % _infoItems.length;
@@ -67,11 +67,11 @@ class _RotatingInfoCardState extends State<RotatingInfoCard>
   Widget build(BuildContext context) {
     return Card(
       elevation: 2,
-  color: const Color(0xFFEFF6FF),
+      color: const Color(0xFFEFF6FF),
       shadowColor: Colors.black12,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-  side: const BorderSide(color: Color(0xFFDBEAFE)),
+        side: const BorderSide(color: Color(0xFFDBEAFE)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -95,7 +95,7 @@ class _RotatingInfoCardState extends State<RotatingInfoCard>
             ConstrainedBox(
               constraints: const BoxConstraints(minHeight: 70),
               child: FadeTransition(
-              opacity: _fadeAnimation,
+                opacity: _fadeAnimation,
                 child: Text(
                   _infoItems[_currentIndex],
                   textAlign: TextAlign.center,

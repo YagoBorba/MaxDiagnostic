@@ -31,14 +31,18 @@ class AdviceService {
       );
     }
 
-    triggeredAdvice.sort((a, b) => a.severity.index.compareTo(b.severity.index));
+    triggeredAdvice
+        .sort((a, b) => a.severity.index.compareTo(b.severity.index));
     return triggeredAdvice;
   }
 
   static final List<_Rule> _rules = [
     _Rule(
       id: 'bottleneck_wifi_environment',
-      condition: (r) => r.networkInfo.wifiLinkSpeed != null && (r.speedTestResult.downloadSpeed) < r.networkInfo.wifiLinkSpeed! * 0.5,
+      condition: (r) =>
+          r.networkInfo.wifiLinkSpeed != null &&
+          (r.speedTestResult.downloadSpeed) <
+              r.networkInfo.wifiLinkSpeed! * 0.5,
       advice: (r) => AdviceEntity(
         id: 'bottleneck_wifi_environment',
         title: 'Otimize seu Ambiente Wi-Fi',
@@ -49,7 +53,8 @@ class AdviceService {
     ),
     _Rule(
       id: 'high_jitter_and_ping',
-      condition: (r) => (r.speedTestResult.ping) > 100 && (r.speedTestResult.jitter) > 40,
+      condition: (r) =>
+          (r.speedTestResult.ping) > 100 && (r.speedTestResult.jitter) > 40,
       advice: (r) => const AdviceEntity(
         id: 'high_jitter_and_ping',
         title: 'Conexão Lenta e Instável',
@@ -65,11 +70,14 @@ class AdviceService {
         final speed = r.speedTestResult.downloadSpeed;
         String desc;
         if (speed > 30) {
-          desc = 'Sua velocidade de ${speed.toStringAsFixed(0)} Mbps é excelente para múltiplas tarefas simultâneas, como streaming em 4K, jogos e downloads.';
+          desc =
+              'Sua velocidade de ${speed.toStringAsFixed(0)} Mbps é excelente para múltiplas tarefas simultâneas, como streaming em 4K, jogos e downloads.';
         } else if (speed > 10) {
-          desc = 'Sua velocidade de ${speed.toStringAsFixed(0)} Mbps é ótima para streaming de vídeos em alta definição (HD) e para o uso diário da maioria das famílias.';
+          desc =
+              'Sua velocidade de ${speed.toStringAsFixed(0)} Mbps é ótima para streaming de vídeos em alta definição (HD) e para o uso diário da maioria das famílias.';
         } else {
-          desc = 'Sua velocidade de ${speed.toStringAsFixed(0)} Mbps é adequada para tarefas como navegação em redes sociais, e-mails e streaming de vídeo em qualidade padrão (SD).';
+          desc =
+              'Sua velocidade de ${speed.toStringAsFixed(0)} Mbps é adequada para tarefas como navegação em redes sociais, e-mails e streaming de vídeo em qualidade padrão (SD).';
         }
         return AdviceEntity(
             id: 'performance_tier_analysis',
