@@ -11,7 +11,8 @@ class TestItemCard extends StatefulWidget {
   State<TestItemCard> createState() => _TestItemCardState();
 }
 
-class _TestItemCardState extends State<TestItemCard> with SingleTickerProviderStateMixin {
+class _TestItemCardState extends State<TestItemCard>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _animationController;
 
   @override
@@ -32,7 +33,7 @@ class _TestItemCardState extends State<TestItemCard> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     final theme = _getTheme(widget.test.status);
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -75,7 +76,10 @@ class _TestItemCardState extends State<TestItemCard> with SingleTickerProviderSt
                 else
                   const Text(
                     'Aguardando...',
-                     style: TextStyle(fontSize: 14, color: Colors.grey, fontStyle: FontStyle.italic),
+                    style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                        fontStyle: FontStyle.italic),
                   ),
               ],
             ),
@@ -104,15 +108,15 @@ class _TestItemCardState extends State<TestItemCard> with SingleTickerProviderSt
         child: Icon(LucideIcons.loader2, color: color),
       );
     }
-    
+
     if (status == TestStatus.error) {
-       return Icon(LucideIcons.alertCircle, color: color);
+      return Icon(LucideIcons.alertCircle, color: color);
     }
-    
+
     if (status == TestStatus.complete) {
-       return Icon(iconData, color: color);
+      return Icon(iconData, color: color);
     }
-    
+
     return Icon(iconData, color: color);
   }
 
@@ -143,7 +147,7 @@ class _TestItemCardState extends State<TestItemCard> with SingleTickerProviderSt
           borderColor: const Color(0xFFEF4444),
           iconContainerColor: const Color(0xFFFEE2E2),
           iconColor: const Color(0xFFEF4444),
-textColor: const Color(0xFFDC2626),
+          textColor: const Color(0xFFDC2626),
           resultColor: const Color(0xFFB91C1C),
         );
       case TestStatus.pending:

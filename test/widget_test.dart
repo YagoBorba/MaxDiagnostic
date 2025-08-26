@@ -6,7 +6,7 @@ void main() {
   testWidgets('App should start without crashing', (WidgetTester tester) async {
     // Inicializar as dependências antes de construir o app
     await di.init();
-    
+
     // Build our app and trigger a frame.
     await tester.pumpWidget(const MyApp());
 

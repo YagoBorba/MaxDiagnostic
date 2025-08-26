@@ -16,7 +16,8 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
       globalStatus: GlobalTestStatus.running,
       tests: state.tests.map((t) {
         if (t.id == 'download') {
-          return t.copyWith(status: TestStatus.running, resultText: 'Iniciando...');
+          return t.copyWith(
+              status: TestStatus.running, resultText: 'Iniciando...');
         }
         return t;
       }).toList(),
@@ -41,10 +42,14 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
       overallProgress: 20,
       tests: state.tests.map((t) {
         if (t.id == 'download') {
-          return t.copyWith(status: TestStatus.complete, progress: 1.0, resultText: '12.70 Mbps');
+          return t.copyWith(
+              status: TestStatus.complete,
+              progress: 1.0,
+              resultText: '12.70 Mbps');
         }
         if (t.id == 'upload') {
-          return t.copyWith(status: TestStatus.running, resultText: 'Iniciando...');
+          return t.copyWith(
+              status: TestStatus.running, resultText: 'Iniciando...');
         }
         return t;
       }).toList(),
@@ -65,20 +70,28 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
         }).toList(),
       ));
     }
-    
+
     emit(state.copyWith(
       overallProgress: 90,
       globalStatus: GlobalTestStatus.complete,
       tests: state.tests.map((t) {
-        switch(t.id) {
+        switch (t.id) {
           case 'download':
-            return t.copyWith(status: TestStatus.complete, progress: 1.0, resultText: '12.70 Mbps');
+            return t.copyWith(
+                status: TestStatus.complete,
+                progress: 1.0,
+                resultText: '12.70 Mbps');
           case 'upload':
-            return t.copyWith(status: TestStatus.complete, progress: 1.0, resultText: '20.11 Mbps');
+            return t.copyWith(
+                status: TestStatus.complete,
+                progress: 1.0,
+                resultText: '20.11 Mbps');
           case 'latency':
-            return t.copyWith(status: TestStatus.complete, resultText: '11.9 ms');
-           case 'jitter':
-            return t.copyWith(status: TestStatus.complete, resultText: '10.7 ms');
+            return t.copyWith(
+                status: TestStatus.complete, resultText: '11.9 ms');
+          case 'jitter':
+            return t.copyWith(
+                status: TestStatus.complete, resultText: '10.7 ms');
           case 'additionalInfo':
             return t.copyWith(status: TestStatus.collecting);
           default:
@@ -89,9 +102,11 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
 
     await Future.delayed(const Duration(seconds: 1));
 
-     emit(state.copyWith(
+    emit(state.copyWith(
       overallProgress: 100,
-      tests: state.tests.map((t) => t.copyWith(status: TestStatus.complete)).toList(),
+      tests: state.tests
+          .map((t) => t.copyWith(status: TestStatus.complete))
+          .toList(),
     ));
 
     final mockResults = FinalResultsEntity(
@@ -109,7 +124,7 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
         wifiSignalStrength: -48,
         wifiLinkSpeed: 433,
       ),
-  speedTestResult: SpeedTestResultEntity(
+      speedTestResult: SpeedTestResultEntity(
         downloadSpeed: 12.70,
         uploadSpeed: 20.11,
         ping: 11.9,

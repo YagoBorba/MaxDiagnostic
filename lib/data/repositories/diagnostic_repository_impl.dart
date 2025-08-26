@@ -17,7 +17,7 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
   final NetworkInfo networkInfo;
 
   DiagnosticRepositoryImpl({
-  required this.networkInfoLocalDataSource,
+    required this.networkInfoLocalDataSource,
     required this.speedTestRemoteDataSource,
     required this.networkInfo,
   });
@@ -30,14 +30,16 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
         return const Left(NetworkFailure('No network connection available'));
       }
 
-  final networkInfoModel = await networkInfoLocalDataSource.getInitialNetworkInfo();
-  return Right(networkInfoModel);
+      final networkInfoModel =
+          await networkInfoLocalDataSource.getInitialNetworkInfo();
+      return Right(networkInfoModel);
     } on NetworkException catch (e) {
       return Left(NetworkFailure(e.message));
     } on PermissionException catch (e) {
       return Left(PermissionFailure(e.message));
     } catch (e) {
-      return Left(NetworkFailure('Failed to get network info: ${e.toString()}'));
+      return Left(
+          NetworkFailure('Failed to get network info: ${e.toString()}'));
     }
   }
 
@@ -71,10 +73,10 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
         timestamp: DateTime.now(),
       ));
 
-      await for (final progressResult in speedTestRemoteDataSource.runSpeedTest()) {
+      await for (final progressResult
+          in speedTestRemoteDataSource.runSpeedTest()) {
         yield Right(progressResult);
       }
-
     } on NetworkException catch (e) {
       yield Left(NetworkFailure(e.message));
     } on SpeedTestException catch (e) {
@@ -90,7 +92,7 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
       // TODO: Re-enable when data sources are implemented
       // final deviceInfoModel = await deviceInfoLocalDataSource.getDeviceInfo();
       // return Right(deviceInfoModel);
-      
+
       const mockDeviceInfo = DeviceInfoEntity(
         deviceModel: 'Loading...',
         deviceBrand: 'Loading...',
@@ -101,28 +103,32 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
     } on DeviceInfoException catch (e) {
       return Left(DeviceInfoFailure(e.message));
     } catch (e) {
-      return Left(DeviceInfoFailure('Failed to get device info: ${e.toString()}'));
+      return Left(
+          DeviceInfoFailure('Failed to get device info: ${e.toString()}'));
     }
   }
 
   @override
   Future<Either<Failure, NetworkInfoEntity>> getNetworkInfo() async {
     try {
-  final networkInfoModel = await networkInfoLocalDataSource.getNetworkInfo();
-  return Right(networkInfoModel);
+      final networkInfoModel =
+          await networkInfoLocalDataSource.getNetworkInfo();
+      return Right(networkInfoModel);
     } on NetworkException catch (e) {
       return Left(NetworkFailure(e.message));
     } on PermissionException catch (e) {
       return Left(PermissionFailure(e.message));
     } catch (e) {
-      return Left(NetworkFailure('Failed to get network info: ${e.toString()}'));
+      return Left(
+          NetworkFailure('Failed to get network info: ${e.toString()}'));
     }
   }
 
   @override
   Future<Either<Failure, SpeedTestResultEntity>> runSpeedTest() async {
     try {
-      final speedTestResult = await speedTestRemoteDataSource.getSpeedTestResult();
+      final speedTestResult =
+          await speedTestRemoteDataSource.getSpeedTestResult();
       return Right(speedTestResult);
     } on SpeedTestException catch (e) {
       return Left(SpeedTestFailure(e.message));
@@ -132,7 +138,8 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
   }
 
   @override
-  Future<Either<Failure, void>> saveDiagnosticResults(FinalResultsEntity results) async {
+  Future<Either<Failure, void>> saveDiagnosticResults(
+      FinalResultsEntity results) async {
     try {
       return const Right(null);
     } catch (e) {
@@ -150,7 +157,8 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
   }
 
   @override
-  Future<Either<Failure, String>> generatePdfReport(FinalResultsEntity results) async {
+  Future<Either<Failure, String>> generatePdfReport(
+      FinalResultsEntity results) async {
     try {
       return const Right('/path/to/generated/report.pdf');
     } catch (e) {

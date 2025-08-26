@@ -11,7 +11,8 @@ import 'package:maxt_diagnostic/features/home/presentation/view/widgets/rotating
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  void _showBlockedStartSheet(BuildContext context, {
+  void _showBlockedStartSheet(
+    BuildContext context, {
     required bool noConnection,
     required int? currentDbm,
     required int excellentThreshold,
@@ -37,7 +38,8 @@ class HomeScreen extends StatelessWidget {
       final max = config.signalExcellentThresholdDbm.toDouble();
       progress = ((currentDbm - min) / (max - min)).clamp(0.0, 1.0);
     }
-    final deficit = currentDbm == null ? null : (excellentThreshold - currentDbm);
+    final deficit =
+        currentDbm == null ? null : (excellentThreshold - currentDbm);
     showModalBottomSheet(
       context: context,
       isScrollControlled: false,
@@ -63,12 +65,14 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               if (noConnection) ...[
-                const Text('Conecte-se a uma rede Wi‑Fi para iniciar o diagnóstico.'),
+                const Text(
+                    'Conecte-se a uma rede Wi‑Fi para iniciar o diagnóstico.'),
               ] else ...[
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: qualityColor(quality).withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(999),
@@ -82,7 +86,8 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text('Sinal atual: ${currentDbm != null ? '$currentDbm dBm' : 'indisponível'}'),
+                    Text(
+                        'Sinal atual: ${currentDbm != null ? '$currentDbm dBm' : 'indisponível'}'),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -93,7 +98,8 @@ class HomeScreen extends StatelessWidget {
                   color: qualityColor(quality),
                 ),
                 const SizedBox(height: 8),
-                Text('Necessário: ≥ $excellentThreshold dBm (Excelente, mais próximo de 0).'),
+                Text(
+                    'Necessário: ≥ $excellentThreshold dBm (Excelente, mais próximo de 0).'),
                 if (deficit != null && deficit > 0) ...[
                   Text('Faltam ${deficit.abs()} dB para atingir Excelente.'),
                 ],
@@ -171,7 +177,9 @@ class HomeScreen extends StatelessWidget {
                       const SizedBox(height: 12),
                       ElevatedButton(
                         onPressed: () async {
-                          await context.read<HomeCubit>().requestLocationPermission();
+                          await context
+                              .read<HomeCubit>()
+                              .requestLocationPermission();
                         },
                         child: const Text('Conceder permissões'),
                       ),
@@ -186,8 +194,11 @@ class HomeScreen extends StatelessWidget {
                 context.read<HomeCubit>().startAutoRefresh();
               });
               final config = context.read<AppConfig>();
-              final noConnection = state.networkInfo.connectionType.toLowerCase() == 'none';
-              final canStart = !noConnection && config.isSignalExcellent(state.networkInfo.wifiSignalStrength);
+              final noConnection =
+                  state.networkInfo.connectionType.toLowerCase() == 'none';
+              final canStart = !noConnection &&
+                  config
+                      .isSignalExcellent(state.networkInfo.wifiSignalStrength);
               return Column(
                 children: [
                   const Padding(
@@ -217,7 +228,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-      Padding(
+                  Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: SizedBox(
                       width: double.infinity,
@@ -232,7 +243,8 @@ class HomeScreen extends StatelessWidget {
                             context,
                             noConnection: noConnection,
                             currentDbm: state.networkInfo.wifiSignalStrength,
-                            excellentThreshold: config.signalExcellentThresholdDbm,
+                            excellentThreshold:
+                                config.signalExcellentThresholdDbm,
                           );
                         },
                       ),

@@ -28,62 +28,66 @@ class _DiagnosticView extends StatelessWidget {
 
     return BlocListener<DiagnosticCubit, DiagnosticState>(
       listener: (context, state) {
-        if (state.finalResults != null && state.globalStatus == GlobalTestStatus.complete) {
+        if (state.finalResults != null &&
+            state.globalStatus == GlobalTestStatus.complete) {
           context.go('/results', extra: state.finalResults);
         }
       },
       child: Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
-        shadowColor: Colors.black12,
-        leading: IconButton(
-          icon: Icon(
-            LucideIcons.arrowLeft,
-            color: isTestRunning ? Colors.grey : const Color(0xFF1E293B),
+        backgroundColor: const Color(0xFFF8FAFC),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 1,
+          shadowColor: Colors.black12,
+          leading: IconButton(
+            icon: Icon(
+              LucideIcons.arrowLeft,
+              color: isTestRunning ? Colors.grey : const Color(0xFF1E293B),
+            ),
+            onPressed: isTestRunning ? null : () => context.pop(),
           ),
-          onPressed: isTestRunning ? null : () => context.pop(),
+          title: const Text('MAX INTERNET',
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          centerTitle: true,
         ),
-        title: const Text('MAX INTERNET', style: TextStyle(fontWeight: FontWeight.bold)),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            const Text(
-              'Diagnóstico de Rede',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Analisando sua conexão MAX Internet',
-              style: TextStyle(fontSize: 16, color: Color(0xFF64748B)),
-            ),
-            const SizedBox(height: 24),
-            _MainProgressCard(
-              progress: state.overallProgress,
-              status: state.globalStatus,
-            ),
-            const SizedBox(height: 24),
-            ListView.separated(
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              itemCount: state.tests.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                return TestItemCard(test: state.tests[index]);
-              },
-            ),
-            const SizedBox(height: 16),
-             if (isTestRunning)
-              const _WarningCard(),
-          ],
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              const Text(
+                'Diagnóstico de Rede',
+                style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1E293B)),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Analisando sua conexão MAX Internet',
+                style: TextStyle(fontSize: 16, color: Color(0xFF64748B)),
+              ),
+              const SizedBox(height: 24),
+              _MainProgressCard(
+                progress: state.overallProgress,
+                status: state.globalStatus,
+              ),
+              const SizedBox(height: 24),
+              ListView.separated(
+                physics: const NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                itemCount: state.tests.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  return TestItemCard(test: state.tests[index]);
+                },
+              ),
+              const SizedBox(height: 16),
+              if (isTestRunning) const _WarningCard(),
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
   }
 }
 
@@ -94,7 +98,7 @@ class _MainProgressCard extends StatelessWidget {
   const _MainProgressCard({required this.progress, required this.status});
 
   String get _statusText {
-    switch(status){
+    switch (status) {
       case GlobalTestStatus.running:
         return 'Em Progresso';
       case GlobalTestStatus.complete:
@@ -152,24 +156,24 @@ class _WarningCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-     return Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFEF3C7),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Row(
-          children: [
-            Icon(LucideIcons.zap, color: Color(0xFF92400E)),
-            SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Não feche o aplicativo durante o diagnóstico',
-                style: TextStyle(fontSize: 14, color: Color(0xFF92400E)),
-              ),
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF3C7),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Row(
+        children: [
+          Icon(LucideIcons.zap, color: Color(0xFF92400E)),
+          SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Não feche o aplicativo durante o diagnóstico',
+              style: TextStyle(fontSize: 14, color: Color(0xFF92400E)),
             ),
-          ],
-        ),
-      );
+          ),
+        ],
+      ),
+    );
   }
 }

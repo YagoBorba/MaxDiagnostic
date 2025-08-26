@@ -34,7 +34,8 @@ class AdviceCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   advice.description,
-                  style: TextStyle(fontSize: 15, color: theme.textColor, height: 1.4),
+                  style: TextStyle(
+                      fontSize: 15, color: theme.textColor, height: 1.4),
                 ),
               ],
             ),
@@ -61,7 +62,7 @@ class AdviceCard extends StatelessWidget {
             textColor: const Color(0xFF92400E),
             iconData: LucideIcons.alertTriangle);
       case AdviceSeverity.good:
-         return _AdviceTheme(
+        return _AdviceTheme(
             backgroundColor: const Color(0xFFF0FDF4),
             iconColor: const Color(0xFF22C55E),
             titleColor: const Color(0xFF15803D),

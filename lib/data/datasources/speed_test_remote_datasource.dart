@@ -16,8 +16,9 @@ abstract class SpeedTestRemoteDataSource {
 /// Implementation of speed test data source using WebView
 /// Communicates with LibreSpeed instance via JavaScript bridge
 class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
-  static const String _speedTestUrl = 'http://10.254.254.222:7000/librespeed_runner.html';
-  
+  static const String _speedTestUrl =
+      'http://10.254.254.222:7000/librespeed_runner.html';
+
   WebViewController? _controller;
   StreamController<DiagnosticProgressModel>? _progressController;
   Completer<SpeedTestResultModel>? _resultCompleter;
@@ -26,9 +27,9 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
   Stream<DiagnosticProgressModel> runSpeedTest() {
     _progressController = StreamController<DiagnosticProgressModel>();
     _resultCompleter = Completer<SpeedTestResultModel>();
-    
+
     _initializeWebView();
-    
+
     return _progressController!.stream;
   }
 
