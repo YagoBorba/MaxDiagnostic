@@ -7,21 +7,17 @@ import '../../core/network/network_info.dart';
 import '../../domain/entities/final_results_entity.dart';
 import '../../domain/repositories/diagnostic_repository.dart';
 // import '../datasources/device_info_local_datasource.dart';
-// import '../datasources/network_info_local_datasource.dart';
+import '../datasources/network_info_local_datasource.dart';
 import '../datasources/speed_test_remote_datasource.dart';
 import '../models/final_results_model.dart';
 
-/// Implementation of DiagnosticRepository
-/// Coordinates data sources and handles error conversion
 class DiagnosticRepositoryImpl implements DiagnosticRepository {
-  // final DeviceInfoLocalDataSource deviceInfoLocalDataSource;
-  // final NetworkInfoLocalDataSource networkInfoLocalDataSource;
+  final NetworkInfoLocalDataSource networkInfoLocalDataSource;
   final SpeedTestRemoteDataSource speedTestRemoteDataSource;
   final NetworkInfo networkInfo;
 
   DiagnosticRepositoryImpl({
-    // required this.deviceInfoLocalDataSource,
-    // required this.networkInfoLocalDataSource,
+  required this.networkInfoLocalDataSource,
     required this.speedTestRemoteDataSource,
     required this.networkInfo,
   });
@@ -29,27 +25,17 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
   @override
   Future<Either<Failure, NetworkInfoEntity>> getInitialNetworkInfo() async {
     try {
-      // Check network connectivity first
       final isConnected = await networkInfo.isConnected;
       if (!isConnected) {
         return const Left(NetworkFailure('No network connection available'));
       }
 
-      // TODO: Re-enable when data sources are implemented
-      // final networkInfoModel = await networkInfoLocalDataSource.getInitialNetworkInfo();
-      // return Right(networkInfoModel);
-      
-      // Temporary mock data
-      const mockNetworkInfo = NetworkInfoEntity(
-        connectionType: 'WiFi',
-        wifiName: 'Loading...',
-        wifiBSSID: 'Loading...',
-        externalIP: 'Loading...',
-        internalIP: 'Loading...',
-      );
-      return const Right(mockNetworkInfo);
+  final networkInfoModel = await networkInfoLocalDataSource.getInitialNetworkInfo();
+  return Right(networkInfoModel);
     } on NetworkException catch (e) {
       return Left(NetworkFailure(e.message));
+    } on PermissionException catch (e) {
+      return Left(PermissionFailure(e.message));
     } catch (e) {
       return Left(NetworkFailure('Failed to get network info: ${e.toString()}'));
     }
@@ -58,14 +44,12 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
   @override
   Stream<Either<Failure, DiagnosticProgressEntity>> runDiagnosticTest() async* {
     try {
-      // Check network connectivity
       final isConnected = await networkInfo.isConnected;
       if (!isConnected) {
         yield const Left(NetworkFailure('No network connection available'));
         return;
       }
 
-      // Emit initial progress
       yield Right(DiagnosticProgressModel(
         stage: DiagnosticStage.initializing,
         progress: 0.0,
@@ -73,7 +57,6 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
         timestamp: DateTime.now(),
       ));
 
-      // Collect device info
       yield Right(DiagnosticProgressModel(
         stage: DiagnosticStage.collectingDeviceInfo,
         progress: 0.1,
@@ -81,7 +64,6 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
         timestamp: DateTime.now(),
       ));
 
-      // Collect network info
       yield Right(DiagnosticProgressModel(
         stage: DiagnosticStage.collectingNetworkInfo,
         progress: 0.2,
@@ -89,7 +71,6 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
         timestamp: DateTime.now(),
       ));
 
-      // Run speed test and forward progress
       await for (final progressResult in speedTestRemoteDataSource.runSpeedTest()) {
         yield Right(progressResult);
       }
@@ -110,7 +91,6 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
       // final deviceInfoModel = await deviceInfoLocalDataSource.getDeviceInfo();
       // return Right(deviceInfoModel);
       
-      // Temporary mock data
       const mockDeviceInfo = DeviceInfoEntity(
         deviceModel: 'Loading...',
         deviceBrand: 'Loading...',
@@ -128,21 +108,12 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
   @override
   Future<Either<Failure, NetworkInfoEntity>> getNetworkInfo() async {
     try {
-      // TODO: Re-enable when data sources are implemented
-      // final networkInfoModel = await networkInfoLocalDataSource.getNetworkInfo();
-      // return Right(networkInfoModel);
-      
-      // Temporary mock data
-      const mockNetworkInfo = NetworkInfoEntity(
-        connectionType: 'WiFi',
-        wifiName: 'Loading...',
-        wifiBSSID: 'Loading...',
-        externalIP: 'Loading...',
-        internalIP: 'Loading...',
-      );
-      return const Right(mockNetworkInfo);
+  final networkInfoModel = await networkInfoLocalDataSource.getNetworkInfo();
+  return Right(networkInfoModel);
     } on NetworkException catch (e) {
       return Left(NetworkFailure(e.message));
+    } on PermissionException catch (e) {
+      return Left(PermissionFailure(e.message));
     } catch (e) {
       return Left(NetworkFailure('Failed to get network info: ${e.toString()}'));
     }
@@ -162,10 +133,7 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
 
   @override
   Future<Either<Failure, void>> saveDiagnosticResults(FinalResultsEntity results) async {
-    // TODO: Implement local storage of diagnostic results
-    // This could use SharedPreferences, SQLite, or another storage solution
     try {
-      // For now, just return success
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure('Failed to save results: ${e.toString()}'));
@@ -174,9 +142,7 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
 
   @override
   Future<Either<Failure, List<FinalResultsEntity>>> getSavedResults() async {
-    // TODO: Implement retrieval of saved diagnostic results
     try {
-      // For now, return empty list
       return const Right([]);
     } catch (e) {
       return Left(CacheFailure('Failed to get saved results: ${e.toString()}'));
@@ -185,9 +151,7 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
 
   @override
   Future<Either<Failure, String>> generatePdfReport(FinalResultsEntity results) async {
-    // TODO: Implement PDF generation using printing package
     try {
-      // For now, just return a placeholder path
       return const Right('/path/to/generated/report.pdf');
     } catch (e) {
       return Left(ServerFailure('Failed to generate PDF: ${e.toString()}'));
