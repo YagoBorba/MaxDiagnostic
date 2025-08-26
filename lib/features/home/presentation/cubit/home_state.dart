@@ -29,3 +29,12 @@ class HomeError extends HomeState {
   @override
   List<Object> get props => [message];
 }
+
+class HomePermissionDenied extends HomeState {
+  final String message;
+
+  const HomePermissionDenied({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:maxt_diagnostic/features/home/presentation/cubit/home_cubit.dart';
+import 'package:maxt_diagnostic/core/config/app_config.dart';
+import 'package:provider/provider.dart';
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/diagnostic_button.dart';
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/network_info_card.dart';
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/quick_tips_card.dart';
@@ -49,7 +51,40 @@ class HomeScreen extends StatelessWidget {
               );
             }
 
+            if (state is HomePermissionDenied) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        state.message,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: () async {
+                          // Dispara a solicitação de permissão e abre configurações se necessário
+                          // ignore: use_build_context_synchronously
+                          await context.read<HomeCubit>().requestLocationPermission();
+                        },
+                        child: const Text('Conceder permissões'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
             if (state is HomeLoaded) {
+              // Iniciar atualização periódica leve para RSSI/frequência
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                context.read<HomeCubit>().startAutoRefresh();
+              });
+              final config = context.read<AppConfig>();
+              final canStart = state.networkInfo.connectionType.toLowerCase() != 'none'
+                  && config.isSignalExcellent(state.networkInfo.wifiSignalStrength);
               return Column(
                 children: [
                   const Padding(
@@ -79,13 +114,13 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Padding(
+      Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: SizedBox(
                       width: double.infinity,
                       height: 56,
                       child: DiagnosticButton(
-                        isEnabled: state.networkInfo.connectionType.toLowerCase() != 'none',
+        isEnabled: canStart,
                         onPressed: () {
                           context.go('/diagnostic');
                         },
