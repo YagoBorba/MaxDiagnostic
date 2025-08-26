@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:provider/provider.dart';
+import '../../../../../core/config/app_config.dart';
 
 class QuickTipsCard extends StatelessWidget {
   const QuickTipsCard({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final tips = [
-      'Aproxime-se do roteador para melhorar o sinal.',
-      'Evite obstáculos como paredes e espelhos.',
-      'Reduza o número de dispositivos conectados à rede.',
-    ];
+  final tips = context.read<AppConfig>().quickTips;
 
     return Card(
       elevation: 2,

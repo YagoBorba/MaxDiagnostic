@@ -15,25 +15,24 @@ class HomeCubit extends Cubit<HomeState> {
   Timer? _refreshTimer;
   bool _isFetching = false;
 
-  HomeCubit({required this.getInitialNetworkInfo, required this.config}) : super(HomeInitial());
+  HomeCubit({required this.getInitialNetworkInfo, required this.config}) : super(const HomeInitial());
 
   Future<void> fetchInitialInfo() async {
     if (_isFetching) return;
     _isFetching = true;
     final isFirstLoad = state is HomeInitial || state is HomeError || state is HomePermissionDenied;
-    if (isFirstLoad) emit(HomeLoading());
+  if (isFirstLoad) emit(const HomeLoading());
     final result = await getInitialNetworkInfo(const NoParams());
     result.fold(
       (failure) {
         final msg = _mapFailure(failure);
         if (msg.toLowerCase().contains('permissionfailure') || msg.toLowerCase().contains('permission')) {
-          emit(HomePermissionDenied(message: 'Permissão de localização negada. Habilite para ler informações do Wi‑Fi.'));
+          emit(const HomePermissionDenied(message: 'Permissão de localização negada. Habilite para ler informações do Wi‑Fi.'));
         } else {
           emit(HomeError(message: msg));
         }
       },
       (info) {
-        // Usa AppConfig para decidir se o teste pode ser iniciado
         emit(HomeLoaded(networkInfo: info));
       },
     );
@@ -41,20 +40,16 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   Future<void> requestLocationPermission() async {
-    // Se já está concedida, apenas refaz a busca
     var status = await Permission.locationWhenInUse.status;
     if (status.isGranted) {
       await fetchInitialInfo();
       return;
     }
 
-    // Se estiver permanentemente negada, abrir configurações
     if (status.isPermanentlyDenied) {
       await openAppSettings();
       return;
     }
-
-    // Solicitar novamente
     final req = await Permission.locationWhenInUse.request();
     if (req.isGranted) {
       await fetchInitialInfo();
