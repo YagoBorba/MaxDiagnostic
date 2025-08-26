@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum SignalQuality {
-  bad,
-  good,
-  excellent,
-}
+enum SignalQuality { poor, normal, excellent }
 
 class SignalStrengthText extends StatelessWidget {
   final int strengthInDbm;
@@ -13,18 +9,18 @@ class SignalStrengthText extends StatelessWidget {
 
   SignalQuality _getSignalQuality(int dBm) {
     final absStrength = dBm.abs();
-    if (absStrength <= 55) return SignalQuality.excellent;
-    if (absStrength <= 75) return SignalQuality.good;
-    return SignalQuality.bad;
+    if (absStrength <= 55) return SignalQuality.excellent; 
+    if (absStrength <= 70) return SignalQuality.normal;
+    return SignalQuality.poor; 
   }
 
   Color _getQualityColor(SignalQuality quality) {
     switch (quality) {
       case SignalQuality.excellent:
         return const Color(0xFF16A34A); // Green
-      case SignalQuality.good:
+      case SignalQuality.normal:
         return const Color(0xFFD97706); // Amber
-      case SignalQuality.bad:
+      case SignalQuality.poor:
         return const Color(0xFFDC2626); // Red
     }
   }
@@ -33,9 +29,9 @@ class SignalStrengthText extends StatelessWidget {
     switch (quality) {
       case SignalQuality.excellent:
         return 'Excelente';
-      case SignalQuality.good:
-        return 'Bom';
-      case SignalQuality.bad:
+      case SignalQuality.normal:
+        return 'Normal';
+      case SignalQuality.poor:
         return 'Ruim';
     }
   }
