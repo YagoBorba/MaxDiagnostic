@@ -1,5 +1,1 @@
-package com.example.maxt_diagnostic
-
-import io.flutter.embedding.android.FlutterActivity
-
-class MainActivity : FlutterActivity()
+// Obsolete file in wrong package. Intentionally left blank to avoid duplicate Activity.

@@ -1,4 +1,3 @@
-// lib/features/home/presentation/cubit/home_state.dart
 part of 'home_cubit.dart';
 
 abstract class HomeState extends Equatable {
@@ -8,9 +7,13 @@ abstract class HomeState extends Equatable {
   List<Object> get props => [];
 }
 
-class HomeInitial extends HomeState {}
+class HomeInitial extends HomeState {
+  const HomeInitial();
+}
 
-class HomeLoading extends HomeState {}
+class HomeLoading extends HomeState {
+  const HomeLoading();
+}
 
 class HomeLoaded extends HomeState {
   final NetworkInfoEntity networkInfo;
@@ -25,6 +28,15 @@ class HomeError extends HomeState {
   final String message;
 
   const HomeError({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}
+
+class HomePermissionDenied extends HomeState {
+  final String message;
+
+  const HomePermissionDenied({required this.message});
 
   @override
   List<Object> get props => [message];

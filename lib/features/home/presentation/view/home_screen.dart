@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:maxt_diagnostic/features/home/presentation/cubit/home_cubit.dart';
+import 'package:maxt_diagnostic/core/config/app_config.dart';
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/diagnostic_button.dart';
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/network_info_card.dart';
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/quick_tips_card.dart';
@@ -9,6 +10,119 @@ import 'package:maxt_diagnostic/features/home/presentation/view/widgets/rotating
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+
+  void _showBlockedStartSheet(
+    BuildContext context, {
+    required bool noConnection,
+    required int? currentDbm,
+    required int excellentThreshold,
+  }) {
+    Color qualityColor(SignalQuality q) {
+      switch (q) {
+        case SignalQuality.excellent:
+          return const Color(0xFF16A34A);
+        case SignalQuality.normal:
+          return const Color(0xFFD97706);
+        case SignalQuality.poor:
+          return const Color(0xFFDC2626);
+      }
+    }
+
+    final config = context.read<AppConfig>();
+    final quality = config.getSignalQuality(currentDbm);
+    double progress;
+    if (currentDbm == null) {
+      progress = 0;
+    } else {
+      final min = config.signalNormalThresholdDbm.toDouble();
+      final max = config.signalExcellentThresholdDbm.toDouble();
+      progress = ((currentDbm - min) / (max - min)).clamp(0.0, 1.0);
+    }
+    final deficit =
+        currentDbm == null ? null : (excellentThreshold - currentDbm);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: false,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Row(
+                children: <Widget>[
+                  Icon(Icons.info_outline, color: Colors.orange),
+                  SizedBox(width: 8),
+                  Text(
+                    'Não é possível iniciar o teste',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              if (noConnection) ...[
+                const Text(
+                    'Conecte-se a uma rede Wi‑Fi para iniciar o diagnóstico.'),
+              ] else ...[
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: qualityColor(quality).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        config.qualityLabel(quality),
+                        style: TextStyle(
+                          color: qualityColor(quality),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                        'Sinal atual: ${currentDbm != null ? '$currentDbm dBm' : 'indisponível'}'),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 8,
+                  backgroundColor: Colors.grey.shade200,
+                  color: qualityColor(quality),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                    'Necessário: ≥ $excellentThreshold dBm (Excelente, mais próximo de 0).'),
+                if (deficit != null && deficit > 0) ...[
+                  Text('Faltam ${deficit.abs()} dB para atingir Excelente.'),
+                ],
+              ],
+              const SizedBox(height: 12),
+              const Text(
+                'Para melhorar o sinal, siga as Dicas rápidas exibidas na tela.',
+                style: TextStyle(fontStyle: FontStyle.italic),
+              ),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Entendi'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +163,42 @@ class HomeScreen extends StatelessWidget {
               );
             }
 
+            if (state is HomePermissionDenied) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        state.message,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton(
+                        onPressed: () async {
+                          await context
+                              .read<HomeCubit>()
+                              .requestLocationPermission();
+                        },
+                        child: const Text('Conceder permissões'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
             if (state is HomeLoaded) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                context.read<HomeCubit>().startAutoRefresh();
+              });
+              final config = context.read<AppConfig>();
+              final noConnection =
+                  state.networkInfo.connectionType.toLowerCase() == 'none';
+              final canStart = !noConnection &&
+                  config
+                      .isSignalExcellent(state.networkInfo.wifiSignalStrength);
               return Column(
                 children: [
                   const Padding(
@@ -85,9 +234,18 @@ class HomeScreen extends StatelessWidget {
                       width: double.infinity,
                       height: 56,
                       child: DiagnosticButton(
-                        isEnabled: state.networkInfo.connectionType.toLowerCase() != 'none',
+                        isEnabled: canStart,
                         onPressed: () {
                           context.go('/diagnostic');
+                        },
+                        onBlockedTap: () {
+                          _showBlockedStartSheet(
+                            context,
+                            noConnection: noConnection,
+                            currentDbm: state.networkInfo.wifiSignalStrength,
+                            excellentThreshold:
+                                config.signalExcellentThresholdDbm,
+                          );
                         },
                       ),
                     ),

@@ -6,26 +6,28 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../network/network_info.dart';
 import '../../data/datasources/speed_test_remote_datasource.dart';
+import '../../data/datasources/network_info_local_datasource.dart';
 import '../../data/repositories/diagnostic_repository_impl.dart';
 import '../../domain/repositories/diagnostic_repository.dart';
+import '../../domain/usecases/get_initial_network_info.dart';
 import '../../features/home/presentation/cubit/home_cubit.dart';
 import '../../features/diagnostic/presentation/cubit/diagnostic_cubit.dart';
+import '../config/app_config.dart';
 
 final sl = GetIt.instance;
 
 Future<void> init() async {
-  // Features - Cubits
-  sl.registerFactory(() => HomeCubit());
+  sl.registerFactory(
+      () => HomeCubit(getInitialNetworkInfo: sl(), config: sl()));
   sl.registerFactory(() => DiagnosticCubit());
 
-  // Use cases (TODO: Re-enable when import issues are resolved)
-  // sl.registerLazySingleton(() => GetInitialNetworkInfo(sl()));
+  sl.registerLazySingleton(() => GetInitialNetworkInfo(sl()));
 
-  //! Repository
   sl.registerLazySingleton<DiagnosticRepository>(
     () => DiagnosticRepositoryImpl(
       speedTestRemoteDataSource: sl(),
       networkInfo: sl(),
+      networkInfoLocalDataSource: sl(),
     ),
   );
 
@@ -36,22 +38,20 @@ Future<void> init() async {
   //   ),
   // );
 
-  // sl.registerLazySingleton<NetworkInfoLocalDataSource>(
-  //   () => NetworkInfoLocalDataSourceImpl(
-  //     networkInfo: sl(),
-  //     connectivity: sl(),
-  //     wifiInfo: sl(),
-  //   ),
-  // );
+  sl.registerLazySingleton<NetworkInfoLocalDataSource>(
+    () => NetworkInfoLocalDataSourceImpl(
+      networkInfo: sl(),
+      connectivity: sl(),
+    ),
+  );
 
   sl.registerLazySingleton<SpeedTestRemoteDataSource>(
     () => SpeedTestRemoteDataSourceImpl(),
   );
 
-  //! Core
   sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
+  sl.registerLazySingleton<AppConfig>(() => AppConfig());
 
-  //! External
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton(() => sharedPreferences);
   sl.registerLazySingleton(() => DeviceInfoPlugin());
