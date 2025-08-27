@@ -3,13 +3,16 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:get_it/get_it.dart';
 import 'package:network_info_plus/network_info_plus.dart' as network_info_plus;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../network/network_info.dart';
 import '../../data/datasources/speed_test_remote_datasource.dart';
 import '../../data/datasources/network_info_local_datasource.dart';
+import '../../data/datasources/device_info_local_datasource.dart';
 import '../../data/repositories/diagnostic_repository_impl.dart';
 import '../../domain/repositories/diagnostic_repository.dart';
 import '../../domain/usecases/get_initial_network_info.dart';
+import '../../domain/usecases/run_diagnostic_test.dart';
 import '../../features/home/presentation/cubit/home_cubit.dart';
 import '../../features/diagnostic/presentation/cubit/diagnostic_cubit.dart';
 import '../config/app_config.dart';
@@ -17,26 +20,32 @@ import '../config/app_config.dart';
 final sl = GetIt.instance;
 
 Future<void> init() async {
+  // Load environment variables if present (do not fail if missing)
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (_) {}
   sl.registerFactory(
       () => HomeCubit(getInitialNetworkInfo: sl(), config: sl()));
-  sl.registerFactory(() => DiagnosticCubit());
+  sl.registerFactory(() => DiagnosticCubit(runDiagnosticTestUseCase: sl()));
 
   sl.registerLazySingleton(() => GetInitialNetworkInfo(sl()));
+  sl.registerLazySingleton(() => RunDiagnosticTest(sl()));
 
   sl.registerLazySingleton<DiagnosticRepository>(
     () => DiagnosticRepositoryImpl(
       speedTestRemoteDataSource: sl(),
       networkInfo: sl(),
       networkInfoLocalDataSource: sl(),
+      deviceInfoLocalDataSource: sl(),
     ),
   );
 
-  //! Data sources (TODO: Re-enable when all import issues are resolved)
-  // sl.registerLazySingleton<DeviceInfoLocalDataSource>(
-  //   () => DeviceInfoLocalDataSourceImpl(
-  //     deviceInfo: sl(),
-  //   ),
-  // );
+  // Data sources
+  sl.registerLazySingleton<DeviceInfoLocalDataSource>(
+    () => DeviceInfoLocalDataSourceImpl(
+      deviceInfo: sl(),
+    ),
+  );
 
   sl.registerLazySingleton<NetworkInfoLocalDataSource>(
     () => NetworkInfoLocalDataSourceImpl(
@@ -46,11 +55,13 @@ Future<void> init() async {
   );
 
   sl.registerLazySingleton<SpeedTestRemoteDataSource>(
-    () => SpeedTestRemoteDataSourceImpl(),
+    () => SpeedTestRemoteDataSourceImpl(config: sl()),
   );
 
   sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
-  sl.registerLazySingleton<AppConfig>(() => AppConfig());
+  sl.registerLazySingleton<AppConfig>(() => AppConfig(
+        speedTestUrl: dotenv.maybeGet('SPEED_TEST_URL') ?? 'about:blank',
+      ));
 
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton(() => sharedPreferences);

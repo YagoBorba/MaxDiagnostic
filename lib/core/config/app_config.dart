@@ -8,6 +8,7 @@ class AppConfig {
 
   final List<String> quickTips;
   final String disabledStartMessage;
+  final String speedTestUrl;
 
   AppConfig({
     this.signalExcellentThresholdDbm = -45,
@@ -19,6 +20,7 @@ class AppConfig {
       'Reduza o número de dispositivos conectados à rede.',
     ],
     this.disabledStartMessage = 'Aproxime-se do roteador para iniciar o teste.',
+    this.speedTestUrl = 'about:blank',
   });
 
   bool isSignalExcellent(int? dbm) {
