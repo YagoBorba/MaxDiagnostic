@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 
 import '../../core/error/failures.dart';
 import '../entities/final_results_entity.dart';
+import '../entities/diagnostic_flow.dart';
 
 /// Repository contract for diagnostic operations
 /// This defines what operations are available without specifying how they work
@@ -10,8 +11,8 @@ abstract class DiagnosticRepository {
   Future<Either<Failure, NetworkInfoEntity>> getInitialNetworkInfo();
 
   /// Run the complete diagnostic test
-  /// Returns a stream of progress updates followed by final results
-  Stream<Either<Failure, DiagnosticProgressEntity>> runDiagnosticTest();
+  /// Returns a stream of progress updates followed by a final results event
+  Stream<Either<Failure, DiagnosticFlowEvent>> runDiagnosticTest();
 
   /// Get device information
   Future<Either<Failure, DeviceInfoEntity>> getDeviceInfo();

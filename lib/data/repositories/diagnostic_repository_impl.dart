@@ -6,8 +6,10 @@ import '../../core/error/failures.dart';
 import '../../core/network/network_info.dart';
 import '../../domain/entities/final_results_entity.dart';
 import '../../domain/repositories/diagnostic_repository.dart';
+import '../../domain/entities/diagnostic_flow.dart';
 // import '../datasources/device_info_local_datasource.dart';
 import '../datasources/network_info_local_datasource.dart';
+import '../datasources/device_info_local_datasource.dart';
 import '../datasources/speed_test_remote_datasource.dart';
 import '../models/final_results_model.dart';
 
@@ -15,11 +17,13 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
   final NetworkInfoLocalDataSource networkInfoLocalDataSource;
   final SpeedTestRemoteDataSource speedTestRemoteDataSource;
   final NetworkInfo networkInfo;
+  final DeviceInfoLocalDataSource deviceInfoLocalDataSource;
 
   DiagnosticRepositoryImpl({
     required this.networkInfoLocalDataSource,
     required this.speedTestRemoteDataSource,
     required this.networkInfo,
+    required this.deviceInfoLocalDataSource,
   });
 
   @override
@@ -44,43 +48,75 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
   }
 
   @override
-  Stream<Either<Failure, DiagnosticProgressEntity>> runDiagnosticTest() async* {
+  Stream<Either<Failure, DiagnosticFlowEvent>> runDiagnosticTest() async* {
     try {
       final isConnected = await networkInfo.isConnected;
       if (!isConnected) {
-        yield const Left(NetworkFailure('No network connection available'));
+  yield const Left(NetworkFailure('No network connection available'));
         return;
       }
 
-      yield Right(DiagnosticProgressModel(
+  yield Right(DiagnosticProgressUpdate(DiagnosticProgressModel(
         stage: DiagnosticStage.initializing,
         progress: 0.0,
         message: 'Iniciando diagnóstico...',
         timestamp: DateTime.now(),
-      ));
+  )));
 
-      yield Right(DiagnosticProgressModel(
+  yield Right(DiagnosticProgressUpdate(DiagnosticProgressModel(
         stage: DiagnosticStage.collectingDeviceInfo,
         progress: 0.1,
         message: 'Coletando informações do dispositivo...',
         timestamp: DateTime.now(),
-      ));
+  )));
 
-      yield Right(DiagnosticProgressModel(
+  final deviceInfo = await deviceInfoLocalDataSource.getDeviceInfo();
+
+  yield Right(DiagnosticProgressUpdate(DiagnosticProgressModel(
         stage: DiagnosticStage.collectingNetworkInfo,
         progress: 0.2,
         message: 'Coletando informações de rede...',
         timestamp: DateTime.now(),
-      ));
+  )));
 
-      await for (final progressResult
-          in speedTestRemoteDataSource.runSpeedTest()) {
-        yield Right(progressResult);
+      final initialNetworkInfo =
+          await networkInfoLocalDataSource.getNetworkInfo();
+
+      // Bridge progress from WebView
+      final progressStream = speedTestRemoteDataSource.runSpeedTest();
+      await for (final progressResult in progressStream) {
+        yield Right(DiagnosticProgressUpdate(progressResult));
+        if (progressResult.stage == DiagnosticStage.completed) {
+          // When completed, fetch final data and emit FinalResults
+          final speedResult =
+              await speedTestRemoteDataSource.getSpeedTestResult();
+          final finalNetworkInfo =
+              await networkInfoLocalDataSource.getNetworkInfo();
+
+          final finalResults = FinalResultsModel(
+            timestamp: DateTime.now(),
+            deviceInfo: deviceInfo,
+            networkInfo: finalNetworkInfo.wifiName != null
+                ? finalNetworkInfo
+                : initialNetworkInfo,
+            speedTestResult: speedResult,
+          );
+
+          // Emit final results event
+          yield Right(DiagnosticCompleted(finalResults));
+
+          // Optionally, results would be saved here (omitted)
+
+          // After emitting completion, we can stop listening
+          break;
+        }
       }
     } on NetworkException catch (e) {
-      yield Left(NetworkFailure(e.message));
+  yield Left(NetworkFailure(e.message));
     } on SpeedTestException catch (e) {
-      yield Left(SpeedTestFailure(e.message));
+  yield Left(SpeedTestFailure(e.message));
+    } on DeviceInfoException catch (e) {
+  yield Left(DeviceInfoFailure(e.message));
     } catch (e) {
       yield Left(ServerFailure('Diagnostic test failed: ${e.toString()}'));
     }
@@ -89,17 +125,8 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
   @override
   Future<Either<Failure, DeviceInfoEntity>> getDeviceInfo() async {
     try {
-      // TODO: Re-enable when data sources are implemented
-      // final deviceInfoModel = await deviceInfoLocalDataSource.getDeviceInfo();
-      // return Right(deviceInfoModel);
-
-      const mockDeviceInfo = DeviceInfoEntity(
-        deviceModel: 'Loading...',
-        deviceBrand: 'Loading...',
-        operatingSystem: 'Loading...',
-        osVersion: 'Loading...',
-      );
-      return const Right(mockDeviceInfo);
+  final deviceInfoModel = await deviceInfoLocalDataSource.getDeviceInfo();
+  return Right(deviceInfoModel);
     } on DeviceInfoException catch (e) {
       return Left(DeviceInfoFailure(e.message));
     } catch (e) {
