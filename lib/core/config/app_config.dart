@@ -11,7 +11,8 @@ class AppConfig {
   final String speedTestUrl;
 
   AppConfig({
-    this.signalExcellentThresholdDbm = -45,
+  // Lowered to -60 dBm to allow starting the test farther from the router (project default was -45)
+  this.signalExcellentThresholdDbm = -60,
     this.signalNormalThresholdDbm = -70,
     this.homeRefreshInterval = const Duration(seconds: 4),
     this.quickTips = const [
