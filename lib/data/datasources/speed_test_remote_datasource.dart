@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../core/error/exceptions.dart';
+import '../../core/config/app_config.dart';
 import '../models/final_results_model.dart';
 import '../../domain/entities/final_results_entity.dart';
 
@@ -11,17 +12,20 @@ import '../../domain/entities/final_results_entity.dart';
 abstract class SpeedTestRemoteDataSource {
   Stream<DiagnosticProgressModel> runSpeedTest();
   Future<SpeedTestResultModel> getSpeedTestResult();
+  Widget get widget;
 }
 
 /// Implementation of speed test data source using WebView
 /// Communicates with LibreSpeed instance via JavaScript bridge
 class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
-  static const String _speedTestUrl =
-      'http://10.254.254.222:7000/librespeed_runner.html';
+  final AppConfig config;
+
+  SpeedTestRemoteDataSourceImpl({required this.config});
 
   WebViewController? _controller;
   StreamController<DiagnosticProgressModel>? _progressController;
   Completer<SpeedTestResultModel>? _resultCompleter;
+  late final WebViewWidget _widget;
 
   @override
   Stream<DiagnosticProgressModel> runSpeedTest() {
@@ -42,7 +46,7 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
   }
 
   void _initializeWebView() {
-    _controller = WebViewController()
+  _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
       ..setNavigationDelegate(
@@ -71,11 +75,12 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
         ),
       );
 
+  _widget = WebViewWidget(controller: _controller!);
     _loadSpeedTestPage();
   }
 
   void _setupJavaScriptChannels() {
-    _controller!.addJavaScriptChannel(
+  _controller!.addJavaScriptChannel(
       'FlutterSpeedTest',
       onMessageReceived: (JavaScriptMessage message) {
         _handleJavaScriptMessage(message.message);
@@ -85,7 +90,8 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
 
   void _loadSpeedTestPage() {
     try {
-      _controller!.loadRequest(Uri.parse(_speedTestUrl));
+      final url = config.speedTestUrl;
+      _controller!.loadRequest(Uri.parse(url));
     } catch (e) {
       _handleError('Falha ao carregar teste de velocidade: ${e.toString()}');
     }
@@ -99,14 +105,41 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
       };
       
       // Start the speed test
-      if (typeof startSpeedTest === 'function') {
-        startSpeedTest();
-      } else {
-        window.postMessageToFlutter({
-          type: 'error',
-          message: 'Speed test function not found'
-        });
-      }
+      (function(){
+        function send(type, payload){
+          window.postMessageToFlutter(Object.assign({ type: type }, payload || {}));
+        }
+
+        try {
+          // Expected LibreSpeed integration API
+          if (typeof startSpeedTest === 'function') {
+            startSpeedTest();
+          } else if (typeof window.libreSpeedStart === 'function') {
+            window.libreSpeedStart();
+          } else {
+            send('error', { message: 'Speed test function not found' });
+          }
+
+          // If the page exposes a global event emitter, hook it
+          if (window.addEventListener) {
+            window.addEventListener('librespeed-progress', function(e){
+              var d = e && e.detail ? e.detail : {};
+              send('progress', {
+                stage: d.stage || d.phase || 'starting',
+                progress: d.progress || d.p || 0,
+                message: d.message || d.msg || ''
+              });
+            });
+
+            window.addEventListener('librespeed-end', function(e){
+              var r = e && e.detail ? e.detail : {};
+              send('end', { results: r });
+            });
+          }
+        } catch (err) {
+          send('error', { message: String(err && err.message || err) });
+        }
+      })();
     ''';
 
     _controller!.runJavaScript(jsCode).catchError((error) {
@@ -116,14 +149,15 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
 
   void _handleJavaScriptMessage(String message) {
     try {
-      final data = json.decode(message) as Map<String, dynamic>;
-      final type = data['type'] as String?;
+  final data = json.decode(message) as Map<String, dynamic>;
+  final type = data['type'] as String?;
 
       switch (type) {
         case 'progress':
           _handleProgressMessage(data);
           break;
         case 'result':
+        case 'end':
           _handleResultMessage(data);
           break;
         case 'error':
@@ -149,12 +183,17 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
 
   void _handleResultMessage(Map<String, dynamic> data) {
     try {
+      // Accept either flat data or wrapped in results
+      final payload = (data['results'] is Map<String, dynamic>)
+          ? (data['results'] as Map<String, dynamic>)
+          : data;
+
       final result = SpeedTestResultModel(
-        downloadSpeed: (data['downloadSpeed'] as num?)?.toDouble() ?? 0.0,
-        uploadSpeed: (data['uploadSpeed'] as num?)?.toDouble() ?? 0.0,
-        ping: (data['ping'] as num?)?.toDouble() ?? 0.0,
-        jitter: (data['jitter'] as num?)?.toDouble() ?? 0.0,
-        serverLocation: data['serverLocation'] as String? ?? 'Unknown',
+        downloadSpeed: (payload['download'] as num? ?? payload['downloadSpeed'])?.toDouble() ?? 0.0,
+        uploadSpeed: (payload['upload'] as num? ?? payload['uploadSpeed'])?.toDouble() ?? 0.0,
+        ping: (payload['ping'] as num?)?.toDouble() ?? 0.0,
+        jitter: (payload['jitter'] as num?)?.toDouble() ?? 0.0,
+        serverLocation: payload['server'] as String? ?? payload['serverLocation'] as String? ?? 'Unknown',
         testStartTime: DateTime.now().subtract(const Duration(minutes: 1)),
         testEndTime: DateTime.now(),
         testCompleted: true,
@@ -230,5 +269,16 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
     _progressController?.close();
     _resultCompleter = null;
     _controller = null;
+  }
+
+  @override
+  Widget get widget {
+    // Ensure a controller exists
+    _controller ??= (WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(const Color(0x00000000))
+      ..setNavigationDelegate(NavigationDelegate()));
+    _widget = WebViewWidget(controller: _controller!);
+    return _widget;
   }
 }
