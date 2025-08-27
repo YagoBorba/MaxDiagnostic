@@ -55,7 +55,6 @@ class _DiagnosticView extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              // Hidden host to keep WebView alive during the diagnostic
               const _SpeedTestWebViewHost(),
               const Text(
                 'Diagnóstico de Rede',

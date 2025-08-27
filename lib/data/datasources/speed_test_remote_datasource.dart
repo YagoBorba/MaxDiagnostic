@@ -43,34 +43,37 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
   }
 
   void _initializeWebView() {
-  _controller = WebViewController()
+    final navigation = NavigationDelegate(
+      onProgress: (int progress) {
+        _emitProgress(
+          DiagnosticStage.startingSpeedTest,
+          progress / 100.0,
+          'Carregando teste de velocidade...',
+        );
+      },
+      onPageStarted: (String url) {
+        _emitProgress(
+          DiagnosticStage.initializing,
+          0.0,
+          'Iniciando teste de velocidade...',
+        );
+      },
+      onPageFinished: (String url) {
+        _setupJavaScriptChannels();
+        _startSpeedTest();
+      },
+      onWebResourceError: (WebResourceError error) {
+        _handleError('Erro ao carregar página: ${error.description}');
+      },
+    );
+
+  _controller ??= WebViewController();
+
+    _controller!
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onProgress: (int progress) {
-            _emitProgress(
-              DiagnosticStage.startingSpeedTest,
-              progress / 100.0,
-              'Carregando teste de velocidade...',
-            );
-          },
-          onPageStarted: (String url) {
-            _emitProgress(
-              DiagnosticStage.initializing,
-              0.0,
-              'Iniciando teste de velocidade...',
-            );
-          },
-          onPageFinished: (String url) {
-            _setupJavaScriptChannels();
-            _startSpeedTest();
-          },
-          onWebResourceError: (WebResourceError error) {
-            _handleError('Erro ao carregar página: ${error.description}');
-          },
-        ),
-      );
+      ..setNavigationDelegate(navigation);
+
     _loadSpeedTestPage();
   }
 
@@ -159,7 +162,7 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
           _handleError(data['message'] as String? ?? 'Erro desconhecido');
           break;
         default:
-          print('Unknown message type: $type');
+          debugPrint('Unknown message type: $type');
       }
     } catch (e) {
       _handleError('Erro ao processar mensagem: ${e.toString()}');
@@ -265,10 +268,11 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
 
   @override
   Widget get widget {
-    _controller ??= (WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(const Color(0x00000000))
-      ..setNavigationDelegate(NavigationDelegate()));
+    // Ensure a controller exists so the offstage host can mount the platform view early.
+  _controller ??= (WebViewController()
+        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..setBackgroundColor(const Color(0x00000000))
+        ..setNavigationDelegate(NavigationDelegate()));
     return WebViewWidget(controller: _controller!);
   }
 }
