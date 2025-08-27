@@ -8,15 +8,12 @@ import '../../core/config/app_config.dart';
 import '../models/final_results_model.dart';
 import '../../domain/entities/final_results_entity.dart';
 
-/// Abstract contract for speed test data source
 abstract class SpeedTestRemoteDataSource {
   Stream<DiagnosticProgressModel> runSpeedTest();
   Future<SpeedTestResultModel> getSpeedTestResult();
   Widget get widget;
 }
 
-/// Implementation of speed test data source using WebView
-/// Communicates with LibreSpeed instance via JavaScript bridge
 class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
   final AppConfig config;
 
@@ -25,7 +22,7 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
   WebViewController? _controller;
   StreamController<DiagnosticProgressModel>? _progressController;
   Completer<SpeedTestResultModel>? _resultCompleter;
-  late final WebViewWidget _widget;
+  // Keep only the controller as state; build the widget on demand.
 
   @override
   Stream<DiagnosticProgressModel> runSpeedTest() {
@@ -74,8 +71,6 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
           },
         ),
       );
-
-  _widget = WebViewWidget(controller: _controller!);
     _loadSpeedTestPage();
   }
 
@@ -164,8 +159,6 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
           _handleError(data['message'] as String? ?? 'Erro desconhecido');
           break;
         default:
-          // TODO: Replace with proper logging framework
-          // ignore: avoid_print
           print('Unknown message type: $type');
       }
     } catch (e) {
@@ -183,7 +176,6 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
 
   void _handleResultMessage(Map<String, dynamic> data) {
     try {
-      // Accept either flat data or wrapped in results
       final payload = (data['results'] is Map<String, dynamic>)
           ? (data['results'] as Map<String, dynamic>)
           : data;
@@ -273,12 +265,10 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
 
   @override
   Widget get widget {
-    // Ensure a controller exists
     _controller ??= (WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
       ..setNavigationDelegate(NavigationDelegate()));
-    _widget = WebViewWidget(controller: _controller!);
-    return _widget;
+    return WebViewWidget(controller: _controller!);
   }
 }
