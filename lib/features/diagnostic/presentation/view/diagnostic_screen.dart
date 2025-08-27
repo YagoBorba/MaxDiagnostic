@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:maxt_diagnostic/core/di/injection_container.dart';
+import 'package:maxt_diagnostic/data/datasources/speed_test_remote_datasource.dart';
 import 'package:maxt_diagnostic/features/diagnostic/presentation/cubit/diagnostic_cubit.dart';
 import 'package:maxt_diagnostic/features/diagnostic/presentation/view/widgets/test_item_card.dart';
 
@@ -12,7 +13,7 @@ class DiagnosticScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => sl<DiagnosticCubit>()..startMockTest(),
+  create: (_) => sl<DiagnosticCubit>()..startTest(),
       child: const _DiagnosticView(),
     );
   }
@@ -54,6 +55,8 @@ class _DiagnosticView extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
+              // Hidden host to keep WebView alive during the diagnostic
+              const _SpeedTestWebViewHost(),
               const Text(
                 'Diagnóstico de Rede',
                 style: TextStyle(
@@ -87,6 +90,19 @@ class _DiagnosticView extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _SpeedTestWebViewHost extends StatelessWidget {
+  const _SpeedTestWebViewHost();
+
+  @override
+  Widget build(BuildContext context) {
+    final ds = sl<SpeedTestRemoteDataSource>();
+    return Offstage(
+      offstage: true,
+      child: SizedBox(width: 1, height: 1, child: ds.widget),
     );
   }
 }
