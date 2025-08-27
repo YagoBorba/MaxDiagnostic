@@ -2,11 +2,109 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:maxt_diagnostic/domain/entities/final_results_entity.dart';
+import 'package:maxt_diagnostic/domain/entities/diagnostic_flow.dart';
+import 'package:dartz/dartz.dart';
+import 'package:maxt_diagnostic/core/error/failures.dart';
+import 'package:maxt_diagnostic/domain/usecases/run_diagnostic_test.dart';
+import 'package:maxt_diagnostic/core/usecases/usecase.dart';
 
 part 'diagnostic_state.dart';
 
 class DiagnosticCubit extends Cubit<DiagnosticState> {
-  DiagnosticCubit() : super(DiagnosticState.initial());
+  final RunDiagnosticTest runDiagnosticTestUseCase;
+
+  StreamSubscription? _sub;
+
+  DiagnosticCubit({required this.runDiagnosticTestUseCase}) : super(DiagnosticState.initial());
+
+  Future<void> startTest() async {
+    _sub?.cancel();
+    emit(DiagnosticState.initial().copyWith(
+      globalStatus: GlobalTestStatus.running,
+    ));
+
+    final eitherStream = await runDiagnosticTestUseCase(const NoParams());
+    eitherStream.fold((failure) {
+      emit(state.copyWith(
+        globalStatus: GlobalTestStatus.error,
+        tests:
+            state.tests.map((t) => t.copyWith(status: TestStatus.error)).toList(),
+      ));
+    }, (stream) {
+      _sub = stream.listen((Either<Failure, DiagnosticFlowEvent> either) {
+      either.fold((failure) {
+        emit(state.copyWith(
+          globalStatus: GlobalTestStatus.error,
+          tests: state.tests
+              .map((t) => t.copyWith(status: TestStatus.error))
+              .toList(),
+        ));
+      }, (event) {
+        if (event is DiagnosticProgressUpdate) {
+          _applyProgress(event.progress);
+        } else if (event is DiagnosticCompleted) {
+          emit(state.copyWith(
+            globalStatus: GlobalTestStatus.complete,
+            overallProgress: 100,
+            tests: state.tests
+                .map((t) => t.copyWith(status: TestStatus.complete, progress: 1))
+                .toList(),
+            finalResults: event.results,
+          ));
+        }
+      });
+      });
+    });
+  }
+
+  void _applyProgress(DiagnosticProgressEntity p) {
+    double overall = state.overallProgress;
+    List<TestUIState> updated = state.tests;
+    switch (p.stage) {
+      case DiagnosticStage.initializing:
+        overall = 0;
+        break;
+      case DiagnosticStage.collectingDeviceInfo:
+      case DiagnosticStage.collectingNetworkInfo:
+        overall = 10 + p.progress * 10;
+        break;
+      case DiagnosticStage.startingSpeedTest:
+        overall = 25;
+        break;
+      case DiagnosticStage.runningDownloadTest:
+        overall = 25 + (p.progress * 25);
+        updated = _updateTest('download', TestStatus.running,
+            '${(p.progress * 100).toStringAsFixed(0)}%');
+        break;
+      case DiagnosticStage.runningUploadTest:
+        overall = 50 + (p.progress * 25);
+        updated = _updateTest('upload', TestStatus.running,
+            '${(p.progress * 100).toStringAsFixed(0)}%');
+        break;
+      case DiagnosticStage.runningPingTest:
+        overall = 75 + (p.progress * 15);
+        updated = _updateTest('latency', TestStatus.running,
+            '${(p.progress * 100).toStringAsFixed(0)}%');
+        break;
+      case DiagnosticStage.completed:
+        overall = 95;
+        break;
+      case DiagnosticStage.error:
+        overall = state.overallProgress;
+        break;
+    }
+
+    emit(state.copyWith(overallProgress: overall, tests: updated));
+  }
+
+  List<TestUIState> _updateTest(String id, TestStatus status, String text) {
+    return state.tests.map((t) {
+      if (t.id == id) {
+        return t.copyWith(status: status, resultText: text);
+      }
+      return t;
+    }).toList();
+  }
 
   Future<void> startMockTest() async {
     emit(DiagnosticState.initial());
