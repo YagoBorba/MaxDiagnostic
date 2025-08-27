@@ -52,7 +52,7 @@ void main() {
       // Arrange
       when(() => networkInfo.isConnected).thenAnswer((_) async => true);
 
-      final device = const DeviceInfoEntity(
+  const device = DeviceInfoEntity(
         deviceModel: 'Pixel 7',
         deviceBrand: 'Google',
         operatingSystem: 'Android',
@@ -61,14 +61,14 @@ void main() {
       when(() => deviceInfoLocalDataSource.getDeviceInfo())
           .thenAnswer((_) async => device);
 
-      final netInitial = const NetworkInfoEntity(
+  const netInitial = NetworkInfoEntity(
         connectionType: 'WiFi',
         wifiName: 'MyWiFi',
         wifiFrequency: '5 GHz',
         wifiSignalStrength: -50,
         wifiLinkSpeed: 300,
       );
-      final netFinal = const NetworkInfoEntity(
+  const netFinal = NetworkInfoEntity(
         connectionType: 'WiFi',
         wifiName: 'MyWiFi',
         wifiFrequency: '5 GHz',

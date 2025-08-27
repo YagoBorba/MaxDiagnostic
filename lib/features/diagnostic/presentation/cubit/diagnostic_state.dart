@@ -8,7 +8,7 @@ class TestUIState extends Equatable {
   final String id;
   final String name;
   final TestStatus status;
-  final double progress; // 0.0 to 1.0
+  final double progress; 
   final String? resultText;
 
   const TestUIState({
@@ -76,7 +76,7 @@ class DiagnosticState extends Equatable {
       ],
       overallProgress: 0.0,
       globalStatus: GlobalTestStatus.pending,
-      isWebViewReady: false, // Começa como falso até a WebView carregar
+      isWebViewReady: false, 
     );
   }
 

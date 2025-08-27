@@ -62,6 +62,8 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
+  assets:
+    - .env
 
 dependency_overrides:
   win32: ^5.14.0

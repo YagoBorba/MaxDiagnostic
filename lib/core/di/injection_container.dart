@@ -20,7 +20,6 @@ import '../config/app_config.dart';
 final sl = GetIt.instance;
 
 Future<void> init() async {
-  // Load environment variables if present (do not fail if missing)
   try {
     await dotenv.load(fileName: '.env');
   } catch (_) {}
@@ -40,7 +39,6 @@ Future<void> init() async {
     ),
   );
 
-  // Data sources
   sl.registerLazySingleton<DeviceInfoLocalDataSource>(
     () => DeviceInfoLocalDataSourceImpl(
       deviceInfo: sl(),
@@ -59,9 +57,19 @@ Future<void> init() async {
   );
 
   sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
-  sl.registerLazySingleton<AppConfig>(() => AppConfig(
-        speedTestUrl: dotenv.maybeGet('SPEED_TEST_URL') ?? 'about:blank',
-      ));
+  sl.registerLazySingleton<AppConfig>(() {
+    String url = 'about:blank';
+    try {
+      if (dotenv.isInitialized) {
+        // Use get with fallback to avoid exceptions on missing key
+        url = dotenv.get('SPEED_TEST_URL', fallback: 'about:blank');
+      }
+    } catch (_) {
+      // Keep safe default when dotenv isn't available or key missing
+      url = 'about:blank';
+    }
+    return AppConfig(speedTestUrl: url);
+  });
 
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton(() => sharedPreferences);

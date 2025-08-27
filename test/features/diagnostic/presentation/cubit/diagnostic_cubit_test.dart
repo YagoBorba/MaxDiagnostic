@@ -34,14 +34,13 @@ void main() {
       when(() => usecase(const NoParams()))
           .thenAnswer((_) async => Right(controller.stream));
 
-      // Schedule events after cubit subscribes
-      Future.microtask(() {
-        controller.add(Right(DiagnosticProgressUpdate(DiagnosticProgressEntity(
+    Future.microtask(() {
+  controller.add(Right(DiagnosticProgressUpdate(DiagnosticProgressEntity(
           stage: DiagnosticStage.runningDownloadTest,
           progress: 0.6,
           message: 'down',
           timestamp: DateTime.now(),
-        ))));
+  ))));
         controller.add(Right(DiagnosticCompleted(FinalResultsEntity(
           timestamp: DateTime.now(),
           deviceInfo: const DeviceInfoEntity(
@@ -70,7 +69,6 @@ void main() {
     verify: (c) {
       expect(c.state.globalStatus, GlobalTestStatus.complete);
       expect(c.state.finalResults, isNotNull);
-      // Download test should have progressed
       final download = c.state.tests.firstWhere((t) => t.id == 'download');
       expect(download.status, isNot(TestStatus.pending));
     },
@@ -79,8 +77,8 @@ void main() {
   blocTest<DiagnosticCubit, DiagnosticState>(
     'emits error state when usecase returns Left',
     build: () {
-      when(() => usecase(const NoParams()))
-          .thenAnswer((_) async => Left(ServerFailure('x')));
+    when(() => usecase(const NoParams()))
+      .thenAnswer((_) async => const Left(ServerFailure('x')));
       return cubit;
     },
     act: (c) => c.startTest(),
