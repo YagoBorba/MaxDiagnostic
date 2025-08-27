@@ -24,7 +24,7 @@ class DeviceInfoLocalDataSourceImpl implements DeviceInfoLocalDataSource {
 							deviceBrand: info.brand,
 							operatingSystem: 'Android',
 							osVersion: info.version.release,
-					deviceId: null, // Intentionally omitted for privacy
+					deviceId: null, 
 				);
 			} else if (Platform.isIOS) {
 						final info = await deviceInfo.iosInfo;
@@ -33,11 +33,10 @@ class DeviceInfoLocalDataSourceImpl implements DeviceInfoLocalDataSource {
 							deviceBrand: 'Apple',
 							operatingSystem: 'iOS',
 							osVersion: info.systemVersion,
-					deviceId: null, // Intentionally omitted for privacy
+					deviceId: null, 
 				);
 			}
 
-			// Fallback for other platforms
 			return const DeviceInfoEntity(
 				deviceModel: 'Unknown Device',
 				deviceBrand: 'Unknown',

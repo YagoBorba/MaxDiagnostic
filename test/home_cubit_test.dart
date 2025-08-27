@@ -4,12 +4,10 @@ import 'package:maxt_diagnostic/features/home/presentation/cubit/home_cubit.dart
 void main() {
   group('HomeCubit Basic Tests', () {
     test('HomeCubit should exist and be properly defined', () {
-      // Test that the class exists and can be referenced
       expect(HomeCubit, isA<Type>());
     });
 
     test('HomeState hierarchy should be properly defined', () {
-      // Test that the state classes exist
       expect(HomeInitial, isA<Type>());
       expect(HomeLoading, isA<Type>());
       expect(HomeLoaded, isA<Type>());
