@@ -6,6 +6,7 @@
     <title>LibreSpeed Runner for Flutter</title>
     <script type="text/javascript" src="speedtest.js"></script>
     <style>
+        /* Simplified styles for visual debugging. */
         body { font-family: monospace; margin: 0; padding: 10px; background-color: #1e1e1e; color: #d4d4d4; font-size: 12px; }
         p { margin: 5px 0; }
         #info { font-weight: bold; color: #569cd6; }
@@ -17,10 +18,11 @@
     </style>
 </head>
 <body>
-    <p id="info">Runner: Aguardando comandos do Flutter...</p>
-    <pre id="logOutput">Log de Eventos:</pre>
+    <p id="info">Runner: Waiting for Flutter commands...</p>
+    <pre id="logOutput">Event Log:</pre>
 
     <script type="text/javascript">
+        // --- WEBVIEW CONTROL MODULE ---
         const state = {
             speedtest: null,
             isRunning: false,
@@ -46,18 +48,18 @@
                 const message = JSON.stringify({ event, payload: payload || {} });
                 if (window.FlutterChannel && window.FlutterChannel.postMessage) {
                     window.FlutterChannel.postMessage(message);
-                    log(`-> Enviado para Flutter: ${event}`);
+                    log(`-> Sent to Flutter: ${event}`);
                 } else {
-                    log("ERRO: Canal 'FlutterChannel' não disponível para enviar evento: " + event);
+                    log("ERROR: 'FlutterChannel' not available to send event: " + event);
                 }
             } catch (e) {
-                log(`ERRO ao serializar mensagem [${event}]: ${e.message}`);
+                log(`ERROR serializing message [${event}]: ${e.message}`);
             }
         }
 
         function fetchIpInfo() {
             return new Promise((resolve) => {
-                log("Buscando informações de IP...");
+                log("Fetching IP info...");
                 const server = state.speedtest.getSelectedServer();
                 const url = (server && server.getIpURL ? server.getIpURL : "/backend/getIP.php") + "?isp=true&r=" + Math.random();
                 
@@ -68,34 +70,35 @@
                     if (xhr.status === 200) {
                         try {
                             result = JSON.parse(xhr.responseText);
-                            log(`IP Info recebido com sucesso.`);
+                            log(`IP Info received successfully.`);
                         } catch(e) {
-                            result = { error: "Falha ao parsear resposta do IP.", response: xhr.responseText };
+                            result = { error: "Failed to parse IP response.", response: xhr.responseText };
                         }
                     } else {
-                        result = { error: `Falha ao buscar IP (status ${xhr.status})` };
+                        result = { error: `Failed to fetch IP (status ${xhr.status})` };
                     }
                     resolve(result);
                 };
                 xhr.onerror = function () {
-                    log("ERRO de rede na busca de IP (XHR.onerror).");
-                    resolve({ error: "Erro de rede ao buscar IP." });
+                    log("ERROR: Network error during IP fetch (XHR.onerror).");
+                    resolve({ error: "Network error fetching IP." });
                 };
                 xhr.send();
             });
         }
 
+        // --- GLOBAL API FOR FLUTTER CONTROL ---
         window.initialize = function() {
-            log("initialize() chamado pelo Flutter.");
+            log("initialize() called by Flutter.");
             if (state.speedtest) {
-                log("Aviso: Speedtest já inicializado.");
+                log("Warning: Speedtest already initialized.");
                 return;
             }
             try {
                 state.speedtest = new Speedtest();
                 
                 state.speedtest.setSelectedServer({
-                    name: "Servidor Interno Max Internet", 
+                    name: "Max Internet Internal Server", 
                     server: "http://10.254.254.222:7000",
                     dlURL: "/backend/garbage.php", ulURL: "/backend/empty.php",
                     pingURL: "/backend/empty.php", getIpURL: "/backend/getIP.php"
@@ -117,9 +120,9 @@
                 };
 
                 state.speedtest.onend = function(aborted) {
-                    log("Teste finalizado (onend). Abortado: " + aborted);
+                    log("Test finished (onend). Aborted: " + aborted);
                     state.isRunning = false;
-                    document.getElementById("info").textContent = "Runner: Teste Concluído.";
+                    document.getElementById("info").textContent = "Runner: Test Completed.";
                     
                     const finalData = state.lastProgressData;
 
@@ -133,46 +136,47 @@
                     });
                 };
 
-                log("Speedtest inicializado e pronto.");
+                log("Speedtest initialized and ready.");
                 
             } catch (e) {
-                log(`ERRO FATAL na inicialização: ${e.message}`);
+                log(`FATAL ERROR during initialization: ${e.message}`);
                 sendMessage('error', { message: `Initialization failed: ${e.message}` });
             }
         }
 
         window.startTest = async function() {
-            log("startTest() chamado pelo Flutter.");
+            log("startTest() called by Flutter.");
             if (!state.speedtest) {
                 sendMessage('error', { message: "Not initialized. Call initialize() first." });
                 return;
             }
             if (state.isRunning) {
-                log("Aviso: Teste já em execução.");
+                log("Warning: Test is already running.");
                 return;
             }
 
             state.isRunning = true;
-            document.getElementById("info").textContent = "Runner: Teste em andamento...";
+            document.getElementById("info").textContent = "Runner: Test in progress...";
             
             try {
                 state.ipInfo = await fetchIpInfo();
                 if (state.isRunning) {
                     state.speedtest.start();
-                    log("Comando speedtest.start() executado.");
+                    log("speedtest.start() command executed.");
                 } else {
-                    log("Teste abortado durante busca de IP.");
+                    log("Test was aborted during IP fetch.");
                 }
             } catch(e) {
                 state.isRunning = false;
-                log(`ERRO ao chamar speedtest.start(): ${e.message}`);
+                log(`ERROR calling speedtest.start(): ${e.message}`);
                 sendMessage('error', { message: `Failed to start test: ${e.message}` });
             }
         }
 
+        // --- SCRIPT ENTRY POINT ---
         document.addEventListener('DOMContentLoaded', function() {
-            log("DOM Carregado. Runner aguardando comandos do Flutter.");
-            document.getElementById("info").textContent = "Runner: Pronto para inicialização.";
+            log("DOM Loaded. Runner waiting for Flutter commands.");
+            document.getElementById("info").textContent = "Runner: Ready for initialization.";
         });
     </script>
 </body>
