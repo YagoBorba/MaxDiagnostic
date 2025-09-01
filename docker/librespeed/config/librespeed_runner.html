@@ -97,9 +97,11 @@
             try {
                 state.speedtest = new Speedtest();
                 
+                const currentHost = window.location.origin;
+                
                 state.speedtest.setSelectedServer({
-                    name: "Max Internet Internal Server", 
-                    server: "http://10.254.254.222:7000",
+                    name: "Local LibreSpeed Server", 
+                    server: currentHost,
                     dlURL: "/backend/garbage.php", ulURL: "/backend/empty.php",
                     pingURL: "/backend/empty.php", getIpURL: "/backend/getIP.php"
                 });
