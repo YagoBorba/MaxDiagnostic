@@ -7,21 +7,21 @@ import '../../core/error/exceptions.dart';
 import '../models/final_results_model.dart';
 import '../../domain/entities/final_results_entity.dart';
 
-/// Abstract contract for speed test data source
 abstract class SpeedTestRemoteDataSource {
   Stream<DiagnosticProgressModel> runSpeedTest();
   Future<SpeedTestResultModel> getSpeedTestResult();
 }
 
-/// Implementation of speed test data source using WebView
-/// Communicates with LibreSpeed instance via JavaScript bridge
 class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
-  static const String _speedTestUrl =
-      'http://10.254.254.222:7000/librespeed_runner.html';
+  late final String _speedTestUrl;
 
   WebViewController? _controller;
   StreamController<DiagnosticProgressModel>? _progressController;
   Completer<SpeedTestResultModel>? _resultCompleter;
+
+  SpeedTestRemoteDataSourceImpl({String? speedTestUrl}) {
+    _speedTestUrl = speedTestUrl ?? 'http://localhost:7000/librespeed_runner.html';
+  }
 
   @override
   Stream<DiagnosticProgressModel> runSpeedTest() {
