@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>LibreSpeed Runner for Flutter</title>
+    <script type="text/javascript" src="speedtest.js"></script>
+    <style>
+        /* Simplified styles for visual debugging. */
+        body { font-family: monospace; margin: 0; padding: 10px; background-color: #1e1e1e; color: #d4d4d4; font-size: 12px; }
+        p { margin: 5px 0; }
+        #info { font-weight: bold; color: #569cd6; }
+        pre#logOutput {
+            font-size: 10px; white-space: pre-wrap; word-break: break-all;
+            height: 250px; overflow-y: auto; background-color: #252526;
+            border: 1px solid #333; padding: 8px; margin-top: 10px; border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <p id="info">Runner: Waiting for Flutter commands...</p>
+    <pre id="logOutput">Event Log:</pre>
+
+    <script type="text/javascript">
+        // --- WEBVIEW CONTROL MODULE ---
+        const state = {
+            speedtest: null,
+            isRunning: false,
+            ipInfo: null,
+            lastProgressData: {} 
+        };
+
+        function log(message) {
+            const logEl = document.getElementById("logOutput");
+            if (logEl) {
+                const timestamp = new Date().toLocaleTimeString();
+                const newLogContent = `[${timestamp}] ${message}\n`;
+                logEl.textContent = newLogContent + logEl.textContent;
+                if (logEl.textContent.length > 5000) {
+                    logEl.textContent = logEl.textContent.substring(0, 5000);
+                }
+            }
+            console.log(`[WebView] ${message}`);
+        }
+
+        function sendMessage(event, payload) {
+            try {
+                const message = JSON.stringify({ event, payload: payload || {} });
+                if (window.FlutterChannel && window.FlutterChannel.postMessage) {
+                    window.FlutterChannel.postMessage(message);
+                    log(`-> Sent to Flutter: ${event}`);
+                } else {
+                    log("ERROR: 'FlutterChannel' not available to send event: " + event);
+                }
+            } catch (e) {
+                log(`ERROR serializing message [${event}]: ${e.message}`);
+            }
+        }
+
+        function fetchIpInfo() {
+            return new Promise((resolve) => {
+                log("Fetching IP info...");
+                const server = state.speedtest.getSelectedServer();
+                const url = (server && server.getIpURL ? server.getIpURL : "/backend/getIP.php") + "?isp=true&r=" + Math.random();
+                
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', url, true);
+                xhr.onload = function () {
+                    let result;
+                    if (xhr.status === 200) {
+                        try {
+                            result = JSON.parse(xhr.responseText);
+                            log(`IP Info received successfully.`);
+                        } catch(e) {
+                            result = { error: "Failed to parse IP response.", response: xhr.responseText };
+                        }
+                    } else {
+                        result = { error: `Failed to fetch IP (status ${xhr.status})` };
+                    }
+                    resolve(result);
+                };
+                xhr.onerror = function () {
+                    log("ERROR: Network error during IP fetch (XHR.onerror).");
+                    resolve({ error: "Network error fetching IP." });
+                };
+                xhr.send();
+            });
+        }
+
+        // --- GLOBAL API FOR FLUTTER CONTROL ---
+        window.initialize = function() {
+            log("initialize() called by Flutter.");
+            if (state.speedtest) {
+                log("Warning: Speedtest already initialized.");
+                return;
+            }
+            try {
+                state.speedtest = new Speedtest();
+                
+                const currentHost = window.location.origin;
+                
+                state.speedtest.setSelectedServer({
+                    name: "Local LibreSpeed Server", 
+                    server: currentHost,
+                    dlURL: "/backend/garbage.php", ulURL: "/backend/empty.php",
+                    pingURL: "/backend/empty.php", getIpURL: "/backend/getIP.php"
+                });
+                state.speedtest.setParameter("test_order", "I_D_U_P");
+                state.speedtest.setParameter("time_dl_max", "15");
+                state.speedtest.setParameter("time_ul_max", "15");
+
+                state.speedtest.onupdate = function(data) {
+                    state.lastProgressData = data; 
+                    
+                    const stageMap = { '1': 'download', '2': 'upload', '3': 'ping' };
+                    const type = stageMap[data.testState] || 'progress';
+                    sendMessage('progress', {
+                        type: type,
+                        speed: type === 'download' ? data.dlStatus : (type === 'upload' ? data.ulStatus : data.pingStatus),
+                        progress: data.dlProgress || data.ulProgress || data.pingProgress || 0
+                    });
+                };
+
+                state.speedtest.onend = function(aborted) {
+                    log("Test finished (onend). Aborted: " + aborted);
+                    state.isRunning = false;
+                    document.getElementById("info").textContent = "Runner: Test Completed.";
+                    
+                    const finalData = state.lastProgressData;
+
+                    sendMessage('end', {
+                        aborted: aborted,
+                        download: finalData.dlStatus || "0",
+                        upload: finalData.ulStatus || "0",
+                        ping: finalData.pingStatus || "0",
+                        jitter: finalData.jitterStatus || "0",
+                        ipInfo: state.ipInfo
+                    });
+                };
+
+                log("Speedtest initialized and ready.");
+                
+            } catch (e) {
+                log(`FATAL ERROR during initialization: ${e.message}`);
+                sendMessage('error', { message: `Initialization failed: ${e.message}` });
+            }
+        }
+
+        window.startTest = async function() {
+            log("startTest() called by Flutter.");
+            if (!state.speedtest) {
+                sendMessage('error', { message: "Not initialized. Call initialize() first." });
+                return;
+            }
+            if (state.isRunning) {
+                log("Warning: Test is already running.");
+                return;
+            }
+
+            state.isRunning = true;
+            document.getElementById("info").textContent = "Runner: Test in progress...";
+            
+            try {
+                state.ipInfo = await fetchIpInfo();
+                if (state.isRunning) {
+                    state.speedtest.start();
+                    log("speedtest.start() command executed.");
+                } else {
+                    log("Test was aborted during IP fetch.");
+                }
+            } catch(e) {
+                state.isRunning = false;
+                log(`ERROR calling speedtest.start(): ${e.message}`);
+                sendMessage('error', { message: `Failed to start test: ${e.message}` });
+            }
+        }
+
+        // --- SCRIPT ENTRY POINT ---
+        document.addEventListener('DOMContentLoaded', function() {
+            log("DOM Loaded. Runner waiting for Flutter commands.");
+            document.getElementById("info").textContent = "Runner: Ready for initialization.";
+        });
+    </script>
+</body>
+</html>
