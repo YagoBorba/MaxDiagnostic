@@ -29,12 +29,11 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
 
   @override
   Future<NetworkInfoEntity> getInitialNetworkInfo() async {
-    // Para plataforma web, retorna dados mock
     if (kIsWeb) {
       return const NetworkInfoEntity(
         connectionType: 'WiFi',
         wifiName: 'MAX-5G-Demo',
-        wifiSignalStrength: -45, // Sinal excelente para permitir teste
+        wifiSignalStrength: -45, 
         wifiFrequency: '5 GHz',
         wifiLinkSpeed: 150,
         wifiBSSID: '00:11:22:33:44:55',
@@ -94,7 +93,6 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
   }
 
   Future<bool> _ensureLocationPermission() async {
-    // Na web, não há permissões de localização para WiFi
     if (kIsWeb) return true;
     
     if (Platform.isAndroid || Platform.isIOS) {
@@ -107,14 +105,13 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
   }
 
   Future<List<_WifiEntry>> _scanWifi() async {
-    // Na web, retorna lista mock
     if (kIsWeb) {
       return [
         _WifiEntry(
           ssid: 'MAX-5G-Demo',
           bssid: '00:11:22:33:44:55',
-          level: -45, // Sinal excelente
-          frequency: 5180, // 5 GHz
+          level: -45, 
+          frequency: 5180, 
         ),
       ];
     }
@@ -152,8 +149,7 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
   }
 
   Future<int?> _getLinkSpeed() async {
-    // Na web, retorna velocidade mock
-    if (kIsWeb) return 150; // 150 Mbps
+    if (kIsWeb) return 150; 
     
     if (!Platform.isAndroid) return null;
     try {

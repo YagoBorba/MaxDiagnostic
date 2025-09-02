@@ -111,7 +111,7 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
   }
 
   void _applyProgress(DiagnosticProgressEntity p) {
-    final overall = _progressCalculator.calculateOverallProgress(p.stage, p.progress);
+  final overall = _progressCalculator.calculateOverallProgress(p.stage, p.progress);
     
     List<TestUIState> updated = state.tests;
     

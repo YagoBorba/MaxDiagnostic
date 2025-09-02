@@ -30,9 +30,9 @@ Future<void> init({bool useMockDiagnostic = false}) async {
   sl.registerFactory(
       () => HomeCubit(getInitialNetworkInfo: sl(), config: sl()));
   sl.registerFactory(() => DiagnosticCubit(
-    runDiagnosticTestUseCase: sl(),
-    progressCalculator: sl(),
-  ));
+        runDiagnosticTestUseCase: sl(),
+        progressCalculator: sl<ProgressCalculator>(),
+      ));
 
   // Domain - Use cases
   sl.registerLazySingleton(() => GetInitialNetworkInfo(sl()));
@@ -47,7 +47,7 @@ Future<void> init({bool useMockDiagnostic = false}) async {
   }
 
   // Utils
-  sl.registerLazySingleton(() => ProgressCalculator.defaultConfig());
+  sl.registerLazySingleton<ProgressCalculator>(() => ProgressCalculator.defaultConfig());
 
   sl.registerLazySingleton<DiagnosticRepository>(
     () => DiagnosticRepositoryImpl(

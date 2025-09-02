@@ -11,7 +11,6 @@ class AppConfig {
   final String speedTestUrl;
 
   AppConfig({
-  // Lowered to -60 dBm to allow starting the test farther from the router (project default was -45)
   this.signalExcellentThresholdDbm = -60,
     this.signalNormalThresholdDbm = -70,
     this.homeRefreshInterval = const Duration(seconds: 4),
@@ -26,12 +25,12 @@ class AppConfig {
 
   bool isSignalExcellent(int? dbm) {
     if (dbm == null) return false;
-    return dbm >= signalExcellentThresholdDbm;
+  return dbm > signalExcellentThresholdDbm;
   }
 
   SignalQuality getSignalQuality(int? dbm) {
     if (dbm == null) return SignalQuality.poor;
-    if (dbm >= signalExcellentThresholdDbm) return SignalQuality.excellent;
+  if (dbm > signalExcellentThresholdDbm) return SignalQuality.excellent;
     if (dbm >= signalNormalThresholdDbm) return SignalQuality.normal;
     return SignalQuality.poor;
   }
