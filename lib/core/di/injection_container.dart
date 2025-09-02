@@ -15,20 +15,39 @@ import '../../domain/usecases/get_initial_network_info.dart';
 import '../../domain/usecases/run_diagnostic_test.dart';
 import '../../features/home/presentation/cubit/home_cubit.dart';
 import '../../features/diagnostic/presentation/cubit/diagnostic_cubit.dart';
+import '../../features/diagnostic/presentation/mock/mock_run_diagnostic_test_usecase.dart';
+import '../../features/diagnostic/presentation/utils/progress_calculator.dart';
 import '../config/app_config.dart';
 
 final sl = GetIt.instance;
 
-Future<void> init() async {
+Future<void> init({bool useMockDiagnostic = false}) async {
   try {
     await dotenv.load(fileName: '.env');
   } catch (_) {}
+  
+  // Features - Presentation
   sl.registerFactory(
       () => HomeCubit(getInitialNetworkInfo: sl(), config: sl()));
-  sl.registerFactory(() => DiagnosticCubit(runDiagnosticTestUseCase: sl()));
+  sl.registerFactory(() => DiagnosticCubit(
+    runDiagnosticTestUseCase: sl(),
+    progressCalculator: sl(),
+  ));
 
+  // Domain - Use cases
   sl.registerLazySingleton(() => GetInitialNetworkInfo(sl()));
-  sl.registerLazySingleton(() => RunDiagnosticTest(sl()));
+  
+  // Registra o UseCase baseado no modo
+  if (useMockDiagnostic) {
+    sl.registerLazySingleton<RunDiagnosticTest>(
+      () => RunDiagnosticTest.mock(const MockRunDiagnosticTestUseCase()),
+    );
+  } else {
+    sl.registerLazySingleton<RunDiagnosticTest>(() => RunDiagnosticTest(sl()));
+  }
+
+  // Utils
+  sl.registerLazySingleton(() => ProgressCalculator.defaultConfig());
 
   sl.registerLazySingleton<DiagnosticRepository>(
     () => DiagnosticRepositoryImpl(
@@ -61,11 +80,9 @@ Future<void> init() async {
     String url = 'about:blank';
     try {
       if (dotenv.isInitialized) {
-        // Use get with fallback to avoid exceptions on missing key
         url = dotenv.get('SPEED_TEST_URL', fallback: 'about:blank');
       }
     } catch (_) {
-      // Keep safe default when dotenv isn't available or key missing
       url = 'about:blank';
     }
     return AppConfig(speedTestUrl: url);
