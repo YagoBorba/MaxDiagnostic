@@ -21,7 +21,7 @@ class DeviceInfoLocalDataSourceImpl implements DeviceInfoLocalDataSource {
 			if (kIsWeb) {
 				final webInfo = await deviceInfo.webBrowserInfo;
 				return DeviceInfoEntity(
-					deviceModel: '${webInfo.browserName?.name ?? 'Browser'} ${webInfo.platform?.toString() ?? 'Web'}',
+					deviceModel: '${webInfo.browserName.name} ${webInfo.platform?.toString() ?? 'Web'}',
 					deviceBrand: webInfo.vendor ?? 'Web Browser',
 					operatingSystem: 'Web',
 					osVersion: webInfo.userAgent ?? 'Unknown',
@@ -30,22 +30,22 @@ class DeviceInfoLocalDataSourceImpl implements DeviceInfoLocalDataSource {
 			}
 
 			if (Platform.isAndroid) {
-						final info = await deviceInfo.androidInfo;
-						return DeviceInfoEntity(
-							deviceModel: info.model,
-							deviceBrand: info.brand,
-							operatingSystem: 'Android',
-							osVersion: info.version.release,
-					deviceId: null, 
+				final info = await deviceInfo.androidInfo;
+				return DeviceInfoEntity(
+					deviceModel: info.model,
+					deviceBrand: info.brand,
+					operatingSystem: 'Android',
+					osVersion: info.version.release,
+					deviceId: null,
 				);
 			} else if (Platform.isIOS) {
-						final info = await deviceInfo.iosInfo;
-						return DeviceInfoEntity(
-							deviceModel: info.utsname.machine,
-							deviceBrand: 'Apple',
-							operatingSystem: 'iOS',
-							osVersion: info.systemVersion,
-					deviceId: null, 
+				final info = await deviceInfo.iosInfo;
+				return DeviceInfoEntity(
+					deviceModel: info.utsname.machine,
+					deviceBrand: 'Apple',
+					operatingSystem: 'iOS',
+					osVersion: info.systemVersion,
+					deviceId: null,
 				);
 			}
 
