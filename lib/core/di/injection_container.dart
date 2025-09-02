@@ -3,6 +3,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:get_it/get_it.dart';
 import 'package:network_info_plus/network_info_plus.dart' as network_info_plus;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
 
 import '../network/network_info.dart';
 import '../../data/datasources/speed_test_remote_datasource.dart';
@@ -15,6 +16,25 @@ import '../../features/diagnostic/presentation/cubit/diagnostic_cubit.dart';
 import '../config/app_config.dart';
 
 final sl = GetIt.instance;
+
+String _getSpeedTestUrl() {
+  try {
+    final envFile = File('.env');
+    if (envFile.existsSync()) {
+      final content = envFile.readAsStringSync();
+      final lines = content.split('\n');
+      for (final line in lines) {
+        if (line.trim().startsWith('SPEED_TEST_URL=')) {
+          return line.split('=')[1].trim();
+        }
+      }
+    }
+  } catch (e) {
+    // .
+  }
+  
+  return 'http://localhost:7000/librespeed_runner.html';
+}
 
 Future<void> init() async {
   sl.registerFactory(
@@ -46,7 +66,9 @@ Future<void> init() async {
   );
 
   sl.registerLazySingleton<SpeedTestRemoteDataSource>(
-    () => SpeedTestRemoteDataSourceImpl(),
+    () => SpeedTestRemoteDataSourceImpl(
+      speedTestUrl: _getSpeedTestUrl(),
+    ),
   );
 
   sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
