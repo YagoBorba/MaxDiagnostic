@@ -5,6 +5,7 @@ import 'package:network_info_plus/network_info_plus.dart' as nip;
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:wifi_scan/wifi_scan.dart' as wscan;
+import 'package:flutter/foundation.dart';
 
 import '../../core/error/exceptions.dart';
 import '../../domain/entities/final_results_entity.dart';
@@ -28,6 +29,20 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
 
   @override
   Future<NetworkInfoEntity> getInitialNetworkInfo() async {
+    // Para plataforma web, retorna dados mock
+    if (kIsWeb) {
+      return const NetworkInfoEntity(
+        connectionType: 'WiFi',
+        wifiName: 'MAX-5G-Demo',
+        wifiSignalStrength: -45, // Sinal excelente para permitir teste
+        wifiFrequency: '5 GHz',
+        wifiLinkSpeed: 150,
+        wifiBSSID: '00:11:22:33:44:55',
+        internalIP: '192.168.1.100',
+        externalIP: '203.0.113.1',
+      );
+    }
+
     final granted = await _ensureLocationPermission();
     if (!granted) {
       throw const PermissionException('Location permission not granted');
@@ -79,6 +94,9 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
   }
 
   Future<bool> _ensureLocationPermission() async {
+    // Na web, não há permissões de localização para WiFi
+    if (kIsWeb) return true;
+    
     if (Platform.isAndroid || Platform.isIOS) {
       final status = await Permission.locationWhenInUse.status;
       if (status.isGranted) return true;
@@ -89,10 +107,25 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
   }
 
   Future<List<_WifiEntry>> _scanWifi() async {
+    // Na web, retorna lista mock
+    if (kIsWeb) {
+      return [
+        _WifiEntry(
+          ssid: 'MAX-5G-Demo',
+          bssid: '00:11:22:33:44:55',
+          level: -45, // Sinal excelente
+          frequency: 5180, // 5 GHz
+        ),
+      ];
+    }
+
     try {
       final can =
           await wscan.WiFiScan.instance.canStartScan(askPermissions: false);
       if (can != wscan.CanStartScan.yes) {
+        if (can == wscan.CanStartScan.notSupported) {
+          throw const NetworkException('WiFi scan not supported');
+        }
         await _ensureLocationPermission();
       }
       await wscan.WiFiScan.instance.startScan();
@@ -119,6 +152,9 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
   }
 
   Future<int?> _getLinkSpeed() async {
+    // Na web, retorna velocidade mock
+    if (kIsWeb) return 150; // 150 Mbps
+    
     if (!Platform.isAndroid) return null;
     try {
       final speed = await _wifiChannel.invokeMethod<int>('getLinkSpeed');

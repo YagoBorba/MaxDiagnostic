@@ -13,7 +13,7 @@ class DiagnosticScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-  create: (_) => sl<DiagnosticCubit>()..startTest(),
+      create: (_) => sl<DiagnosticCubit>()..startTest(),
       child: const _DiagnosticView(),
     );
   }

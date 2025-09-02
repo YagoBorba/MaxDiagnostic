@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../core/error/exceptions.dart';
 import '../../domain/entities/final_results_entity.dart';
@@ -17,6 +18,17 @@ class DeviceInfoLocalDataSourceImpl implements DeviceInfoLocalDataSource {
 	@override
 	Future<DeviceInfoEntity> getDeviceInfo() async {
 		try {
+			if (kIsWeb) {
+				final webInfo = await deviceInfo.webBrowserInfo;
+				return DeviceInfoEntity(
+					deviceModel: '${webInfo.browserName?.name ?? 'Browser'} ${webInfo.platform?.toString() ?? 'Web'}',
+					deviceBrand: webInfo.vendor ?? 'Web Browser',
+					operatingSystem: 'Web',
+					osVersion: webInfo.userAgent ?? 'Unknown',
+					deviceId: null,
+				);
+			}
+
 			if (Platform.isAndroid) {
 						final info = await deviceInfo.androidInfo;
 						return DeviceInfoEntity(
