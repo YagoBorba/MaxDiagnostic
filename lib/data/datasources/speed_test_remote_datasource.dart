@@ -18,12 +18,16 @@ abstract class SpeedTestRemoteDataSource {
 class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
   final AppConfig config;
 
-  late final WebViewController _controller;
+  final bool _supportsEmbeddedWebView = !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS);
+
+  WebViewController? _controller; 
   StreamController<DiagnosticProgressModel>? _progressController;
   Completer<SpeedTestResultModel>? _resultCompleter;
 
   SpeedTestRemoteDataSourceImpl({required this.config}) {
-    if (!kIsWeb) {
+    if (_supportsEmbeddedWebView) {
       _controller = WebViewController()
         ..setJavaScriptMode(JavaScriptMode.unrestricted)
         ..setBackgroundColor(const Color(0x00000000));
@@ -35,8 +39,8 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
     _progressController = StreamController<DiagnosticProgressModel>.broadcast();
     _resultCompleter = Completer<SpeedTestResultModel>();
 
-    if (kIsWeb) {
-      _runWebSpeedTestSimulation();
+    if (kIsWeb || !_supportsEmbeddedWebView) {
+      _runSpeedTestSimulationFallback();
     } else {
       _initializeAndRunWebViewTest();
     }
@@ -56,14 +60,20 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
   }
 
   void _initializeAndRunWebViewTest() {
+    final controller = _controller;
+    if (controller == null) {
+      _handleError('WebView não suportada nesta plataforma.');
+      return;
+    }
+
     final navigationDelegate = NavigationDelegate(
       onPageFinished: (String url) async {
         debugPrint('✅ Página carregada: $url. Comandando o runner...');
         try {
-          await _controller.runJavaScript('window.initialize()');
+          await controller.runJavaScript('window.initialize()');
           debugPrint('✅ Dart: Comando initialize() executado no JS.');
 
-          await _controller.runJavaScript('window.startTest()');
+          await controller.runJavaScript('window.startTest()');
           debugPrint('✅ Dart: Comando startTest() executado no JS.');
         } catch (e) {
           _handleError('Falha ao executar comandos de inicialização no JS: ${e.toString()}');
@@ -74,7 +84,7 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
       },
     );
 
-    _controller
+    controller
       ..setNavigationDelegate(navigationDelegate)
       ..addJavaScriptChannel(
         'FlutterChannel', 
@@ -83,7 +93,7 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
         },
       ).then((_) {
          debugPrint('🌐 Canal configurado. Carregando URL: ${config.speedTestUrl}');
-         _controller.loadRequest(Uri.parse(config.speedTestUrl));
+         controller.loadRequest(Uri.parse(config.speedTestUrl));
       }).catchError((e) {
         _handleError('Falha crítica ao configurar o canal de comunicação: ${e.toString()}');
       });
@@ -217,8 +227,13 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
 
   @override
   Widget get widget {
-    if (kIsWeb) return const SizedBox(width: 1, height: 1);
-    return Offstage(offstage: true, child: WebViewWidget(controller: _controller));
+    if (kIsWeb || !_supportsEmbeddedWebView) {
+      return const SizedBox.shrink();
+    }
+    return Offstage(
+      offstage: true,
+      child: WebViewWidget(controller: _controller!),
+    );
   }
 
   @override
@@ -227,7 +242,28 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
     _resultCompleter = null;
   }
 
-  void _runWebSpeedTestSimulation() async {
-    debugPrint('🌐 Iniciando simulação de teste para web...');
+  void _runSpeedTestSimulationFallback() async {
+    debugPrint('🧪 Iniciando simulação de teste de velocidade (fallback sem WebView)...');
+    final stages = <DiagnosticStage>[
+      DiagnosticStage.startingSpeedTest,
+      DiagnosticStage.runningDownloadTest,
+      DiagnosticStage.runningUploadTest,
+      DiagnosticStage.runningPingTest,
+    ];
+    for (final s in stages) {
+      for (int i = 1; i <= 5; i++) {
+        await Future.delayed(const Duration(milliseconds: 120));
+        _emitProgress(s, i / 5.0, 'Simulando ${s.name}');
+      }
+    }
+    await Future.delayed(const Duration(milliseconds: 200));
+    _handleResultMessage({
+      'download': 50.0,
+      'upload': 20.0,
+      'ping': 12.0,
+      'jitter': 3.0,
+      'ipInfo': {'isp': 'Simulado'},
+      'aborted': false,
+    });
   }
 }
