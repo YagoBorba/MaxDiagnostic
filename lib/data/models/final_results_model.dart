@@ -137,6 +137,20 @@ class SpeedTestResultModel extends SpeedTestResultEntity {
     );
   }
 
+  factory SpeedTestResultModel.error(String errorMessage) {
+    return SpeedTestResultModel(
+      downloadSpeed: 0.0,
+      uploadSpeed: 0.0,
+      ping: 0.0,
+      jitter: 0.0,
+      serverLocation: '',
+      testStartTime: DateTime.now(),
+      testEndTime: DateTime.now(),
+      testCompleted: false,
+      errorMessage: errorMessage,
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'downloadSpeed': downloadSpeed,
