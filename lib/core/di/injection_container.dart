@@ -1,5 +1,6 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:network_info_plus/network_info_plus.dart' as network_info_plus;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -85,6 +86,7 @@ Future<void> init({bool useMockDiagnostic = false}) async {
     } catch (_) {
       url = 'about:blank';
     }
+    debugPrint('[AppConfig] SPEED_TEST_URL resolved: $url');
     return AppConfig(speedTestUrl: url);
   });
 

@@ -123,7 +123,7 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
       case DiagnosticStage.runningUploadTest:
         updated = _updateTest('upload', TestStatus.running, p.message, p.progress);
         break;
-      case DiagnosticStage.runningPingTest:
+      case DiagnosticStage.runningLatencyTest:
         updated = _updateTest('latency', TestStatus.running, p.message, p.progress);
         break;
       case DiagnosticStage.collectingDeviceInfo:

@@ -25,9 +25,11 @@ class ProgressCalculator extends Equatable {
       DiagnosticStage.collectingDeviceInfo: StageConfig(startProgress: 5.0, weight: 5.0),
       DiagnosticStage.collectingNetworkInfo: StageConfig(startProgress: 10.0, weight: 5.0),
       DiagnosticStage.startingSpeedTest: StageConfig(startProgress: 15.0, weight: 10.0),
-      DiagnosticStage.runningDownloadTest: StageConfig(startProgress: 25.0, weight: 30.0),
-      DiagnosticStage.runningUploadTest: StageConfig(startProgress: 55.0, weight: 25.0),
-      DiagnosticStage.runningPingTest: StageConfig(startProgress: 80.0, weight: 15.0),
+      DiagnosticStage.runningDownloadTest: StageConfig(startProgress: 25.0, weight: 25.0),
+      DiagnosticStage.runningUploadTest: StageConfig(startProgress: 50.0, weight: 20.0),
+      DiagnosticStage.runningLatencyTest: StageConfig(startProgress: 70.0, weight: 10.0),
+      DiagnosticStage.runningJitterTest: StageConfig(startProgress: 80.0, weight: 10.0),
+      DiagnosticStage.collectingAdditionalInfo: StageConfig(startProgress: 90.0, weight: 5.0),
       DiagnosticStage.completed: StageConfig(startProgress: 95.0, weight: 5.0),
     });
   }

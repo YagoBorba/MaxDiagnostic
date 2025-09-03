@@ -149,7 +149,9 @@ enum DiagnosticStage {
   startingSpeedTest,
   runningDownloadTest,
   runningUploadTest,
-  runningPingTest,
+  runningLatencyTest,
+  runningJitterTest,
+  collectingAdditionalInfo,
   completed,
   error,
 }
@@ -169,8 +171,12 @@ extension DiagnosticStageExtension on DiagnosticStage {
         return 'Testando velocidade de download...';
       case DiagnosticStage.runningUploadTest:
         return 'Testando velocidade de upload...';
-      case DiagnosticStage.runningPingTest:
+      case DiagnosticStage.runningLatencyTest:
         return 'Testando latência...';
+      case DiagnosticStage.runningJitterTest:
+        return 'Testando jitter...';
+      case DiagnosticStage.collectingAdditionalInfo:
+        return 'Coletando informações adicionais...';
       case DiagnosticStage.completed:
         return 'Teste concluído!';
       case DiagnosticStage.error:

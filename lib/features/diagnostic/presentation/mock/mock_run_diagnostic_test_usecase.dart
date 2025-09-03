@@ -49,7 +49,19 @@ class MockRunDiagnosticTestUseCase
             DiagnosticStage.runningUploadTest, 1.0, 'Upload finalizado');
 
         await emitProgress(
-            DiagnosticStage.runningPingTest, 1.0, 'Ping finalizado');
+            DiagnosticStage.runningLatencyTest, 0.30, 'Latência iniciando');
+        await emitProgress(
+            DiagnosticStage.runningLatencyTest, 1.0, 'Latência finalizada');
+
+        await emitProgress(
+            DiagnosticStage.runningJitterTest, 0.30, 'Jitter iniciando');
+        await emitProgress(
+            DiagnosticStage.runningJitterTest, 1.0, 'Jitter finalizado');
+
+        await emitProgress(
+            DiagnosticStage.collectingAdditionalInfo, 0.50, 'Coletando informações adicionais...');
+        await emitProgress(
+            DiagnosticStage.collectingAdditionalInfo, 1.0, 'Informações coletadas');
 
         final results = FinalResultsEntity(
           timestamp: DateTime.now(),
