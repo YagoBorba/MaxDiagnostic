@@ -9,6 +9,10 @@ import 'core/config/app_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // WebView debugging é automaticamente habilitado em debug builds
+  debugPrint('🔧 Starting MaxDiagnostic in debug mode - WebView debugging enabled');
+  
   await di.init();
   runApp(const MyApp());
 }
