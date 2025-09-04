@@ -27,7 +27,6 @@ Future<void> init({bool useMockDiagnostic = false}) async {
     await dotenv.load(fileName: '.env');
   } catch (_) {}
   
-  // Features - Presentation
   sl.registerFactory(
       () => HomeCubit(getInitialNetworkInfo: sl(), config: sl()));
   sl.registerFactory(() => DiagnosticCubit(
@@ -35,10 +34,8 @@ Future<void> init({bool useMockDiagnostic = false}) async {
         progressCalculator: sl<ProgressCalculator>(),
       ));
 
-  // Domain - Use cases
   sl.registerLazySingleton(() => GetInitialNetworkInfo(sl()));
   
-  // Registra o UseCase baseado no modo
   if (useMockDiagnostic) {
     sl.registerLazySingleton<RunDiagnosticTest>(
       () => RunDiagnosticTest.mock(const MockRunDiagnosticTestUseCase()),
@@ -47,7 +44,6 @@ Future<void> init({bool useMockDiagnostic = false}) async {
     sl.registerLazySingleton<RunDiagnosticTest>(() => RunDiagnosticTest(sl()));
   }
 
-  // Utils
   sl.registerLazySingleton<ProgressCalculator>(() => ProgressCalculator.defaultConfig());
 
   sl.registerLazySingleton<DiagnosticRepository>(
