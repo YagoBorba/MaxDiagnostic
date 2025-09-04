@@ -1,9 +1,10 @@
 import 'package:equatable/equatable.dart';
-import 'package:maxt_diagnostic/domain/entities/final_results_entity.dart';
+// REFACTORED: Added missing import
+import 'package:maxt_diagnostic/domain/entities/diagnostic_flow.dart';
 
 class StageConfig extends Equatable {
-  final double startProgress; 
-  final double weight; 
+  final double startProgress;
+  final double weight;
 
   const StageConfig({required this.startProgress, required this.weight});
 
@@ -20,15 +21,16 @@ class ProgressCalculator extends Equatable {
   const ProgressCalculator._(this._config);
 
   factory ProgressCalculator.defaultConfig() {
+    // REFACTORED: Removed 'runningJitterTest' and redistributed its weight (10%)
+    // to download (+5) and upload (+5) to keep the total at 100.
     return ProgressCalculator.custom(const {
       DiagnosticStage.initializing: StageConfig(startProgress: 0.0, weight: 5.0),
       DiagnosticStage.collectingDeviceInfo: StageConfig(startProgress: 5.0, weight: 5.0),
       DiagnosticStage.collectingNetworkInfo: StageConfig(startProgress: 10.0, weight: 5.0),
-      DiagnosticStage.startingSpeedTest: StageConfig(startProgress: 15.0, weight: 10.0),
-      DiagnosticStage.runningDownloadTest: StageConfig(startProgress: 25.0, weight: 25.0),
-      DiagnosticStage.runningUploadTest: StageConfig(startProgress: 50.0, weight: 20.0),
-      DiagnosticStage.runningLatencyTest: StageConfig(startProgress: 70.0, weight: 10.0),
-      DiagnosticStage.runningJitterTest: StageConfig(startProgress: 80.0, weight: 10.0),
+      DiagnosticStage.startingSpeedTest: StageConfig(startProgress: 15.0, weight: 5.0), // Reduced weight
+      DiagnosticStage.runningDownloadTest: StageConfig(startProgress: 20.0, weight: 30.0), // Increased weight
+      DiagnosticStage.runningUploadTest: StageConfig(startProgress: 50.0, weight: 25.0), // Increased weight
+      DiagnosticStage.runningLatencyTest: StageConfig(startProgress: 75.0, weight: 15.0), // Increased weight
       DiagnosticStage.collectingAdditionalInfo: StageConfig(startProgress: 90.0, weight: 5.0),
       DiagnosticStage.completed: StageConfig(startProgress: 95.0, weight: 5.0),
     });
@@ -41,15 +43,17 @@ class ProgressCalculator extends Equatable {
 
   double calculateOverallProgress(DiagnosticStage stage, double stageProgress) {
     final cfg = _config[stage];
-    if (cfg == null) return 0.0;
+    if (cfg == null) return stage == DiagnosticStage.completed ? 100.0 : 0.0;
     final p = stageProgress.clamp(0.0, 1.0);
     return (cfg.startProgress + cfg.weight * p).clamp(0.0, 100.0);
   }
 
-  double getStageStartProgress(DiagnosticStage stage) => _config[stage]?.startProgress ?? 0.0;
+  double getStageStartProgress(DiagnosticStage stage) =>
+      _config[stage]?.startProgress ?? 0.0;
   double getStageWeight(DiagnosticStage stage) => _config[stage]?.weight ?? 0.0;
   Set<DiagnosticStage> get configuredStages => _config.keys.toSet();
-  bool isConfigurationValid() => (_config.values.fold(0.0, (a, b) => a + b.weight) - 100.0).abs() <= 0.01;
+  bool isConfigurationValid() =>
+      (_config.values.fold(0.0, (a, b) => a + b.weight) - 100.0).abs() <= 0.01;
 
   static void _validate(Map<DiagnosticStage, StageConfig> cfg) {
     if (cfg.isEmpty) throw ArgumentError('Configuration cannot be empty');
