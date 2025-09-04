@@ -1,13 +1,11 @@
 import '../../domain/entities/final_results_entity.dart';
 
-/// Data model for FinalResultsEntity
-/// Handles JSON serialization/deserialization
 class FinalResultsModel extends FinalResultsEntity {
   const FinalResultsModel({
     required super.timestamp,
-    required super.deviceInfo,
-    required super.networkInfo,
-    required super.speedTestResult,
+    required DeviceInfoModel super.deviceInfo,
+    required NetworkInfoModel super.networkInfo,
+    required SpeedTestResultModel super.speedTestResult,
   });
 
   factory FinalResultsModel.fromJson(Map<String, dynamic> json) {
@@ -19,6 +17,15 @@ class FinalResultsModel extends FinalResultsEntity {
     );
   }
 
+  factory FinalResultsModel.fromEntity(FinalResultsEntity entity) {
+    return FinalResultsModel(
+      timestamp: entity.timestamp,
+      deviceInfo: DeviceInfoModel.fromEntity(entity.deviceInfo),
+      networkInfo: NetworkInfoModel.fromEntity(entity.networkInfo),
+      speedTestResult: SpeedTestResultModel.fromEntity(entity.speedTestResult),
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'timestamp': timestamp.toIso8601String(),
@@ -27,18 +34,8 @@ class FinalResultsModel extends FinalResultsEntity {
       'speedTestResult': (speedTestResult as SpeedTestResultModel).toJson(),
     };
   }
-
-  factory FinalResultsModel.fromEntity(FinalResultsEntity entity) {
-    return FinalResultsModel(
-      timestamp: entity.timestamp,
-      deviceInfo: entity.deviceInfo,
-      networkInfo: entity.networkInfo,
-      speedTestResult: entity.speedTestResult,
-    );
-  }
 }
 
-/// Data model for DeviceInfoEntity
 class DeviceInfoModel extends DeviceInfoEntity {
   const DeviceInfoModel({
     required super.deviceModel,
@@ -48,13 +45,23 @@ class DeviceInfoModel extends DeviceInfoEntity {
     super.deviceId,
   });
 
+  factory DeviceInfoModel.fromEntity(DeviceInfoEntity entity) {
+    return DeviceInfoModel(
+      deviceModel: entity.deviceModel,
+      deviceBrand: entity.deviceBrand,
+      operatingSystem: entity.operatingSystem,
+      osVersion: entity.osVersion,
+      deviceId: entity.deviceId,
+    );
+  }
+
   factory DeviceInfoModel.fromJson(Map<String, dynamic> json) {
     return DeviceInfoModel(
-      deviceModel: json['deviceModel'],
-      deviceBrand: json['deviceBrand'],
-      operatingSystem: json['operatingSystem'],
-      osVersion: json['osVersion'],
-      deviceId: json['deviceId'],
+      deviceModel: json['deviceModel'] as String,
+      deviceBrand: json['deviceBrand'] as String,
+      operatingSystem: json['operatingSystem'] as String,
+      osVersion: json['osVersion'] as String,
+      deviceId: json['deviceId'] as String?,
     );
   }
 
@@ -69,7 +76,6 @@ class DeviceInfoModel extends DeviceInfoEntity {
   }
 }
 
-/// Data model for NetworkInfoEntity
 class NetworkInfoModel extends NetworkInfoEntity {
   const NetworkInfoModel({
     required super.connectionType,
@@ -82,16 +88,29 @@ class NetworkInfoModel extends NetworkInfoEntity {
     super.internalIP,
   });
 
+  factory NetworkInfoModel.fromEntity(NetworkInfoEntity entity) {
+    return NetworkInfoModel(
+      connectionType: entity.connectionType,
+      wifiName: entity.wifiName,
+      wifiFrequency: entity.wifiFrequency,
+      wifiSignalStrength: entity.wifiSignalStrength,
+      wifiLinkSpeed: entity.wifiLinkSpeed,
+      wifiBSSID: entity.wifiBSSID,
+      externalIP: entity.externalIP,
+      internalIP: entity.internalIP,
+    );
+  }
+
   factory NetworkInfoModel.fromJson(Map<String, dynamic> json) {
     return NetworkInfoModel(
-      connectionType: json['connectionType'],
-      wifiName: json['wifiName'],
-      wifiFrequency: json['wifiFrequency'],
-      wifiSignalStrength: json['wifiSignalStrength'],
-      wifiLinkSpeed: json['wifiLinkSpeed'],
-      wifiBSSID: json['wifiBSSID'],
-      externalIP: json['externalIP'],
-      internalIP: json['internalIP'],
+      connectionType: json['connectionType'] as String,
+      wifiName: json['wifiName'] as String?,
+      wifiFrequency: json['wifiFrequency'] as String?,
+      wifiSignalStrength: json['wifiSignalStrength'] as int?,
+      wifiLinkSpeed: json['wifiLinkSpeed'] as int?,
+      wifiBSSID: json['wifiBSSID'] as String?,
+      externalIP: json['externalIP'] as String?,
+      internalIP: json['internalIP'] as String?,
     );
   }
 
@@ -109,7 +128,6 @@ class NetworkInfoModel extends NetworkInfoEntity {
   }
 }
 
-/// Data model for SpeedTestResultEntity
 class SpeedTestResultModel extends SpeedTestResultEntity {
   const SpeedTestResultModel({
     required super.downloadSpeed,
@@ -123,31 +141,31 @@ class SpeedTestResultModel extends SpeedTestResultEntity {
     super.errorMessage,
   });
 
-  factory SpeedTestResultModel.fromJson(Map<String, dynamic> json) {
+  factory SpeedTestResultModel.fromEntity(SpeedTestResultEntity entity) {
     return SpeedTestResultModel(
-      downloadSpeed: json['downloadSpeed']?.toDouble() ?? 0.0,
-      uploadSpeed: json['uploadSpeed']?.toDouble() ?? 0.0,
-      ping: json['ping']?.toDouble() ?? 0.0,
-      jitter: json['jitter']?.toDouble() ?? 0.0,
-      serverLocation: json['serverLocation'] ?? '',
-      testStartTime: DateTime.parse(json['testStartTime']),
-      testEndTime: DateTime.parse(json['testEndTime']),
-      testCompleted: json['testCompleted'] ?? false,
-      errorMessage: json['errorMessage'],
+      downloadSpeed: entity.downloadSpeed,
+      uploadSpeed: entity.uploadSpeed,
+      ping: entity.ping,
+      jitter: entity.jitter,
+      serverLocation: entity.serverLocation,
+      testStartTime: entity.testStartTime,
+      testEndTime: entity.testEndTime,
+      testCompleted: entity.testCompleted,
+      errorMessage: entity.errorMessage,
     );
   }
 
-  factory SpeedTestResultModel.error(String errorMessage) {
+  factory SpeedTestResultModel.fromJson(Map<String, dynamic> json) {
     return SpeedTestResultModel(
-      downloadSpeed: 0.0,
-      uploadSpeed: 0.0,
-      ping: 0.0,
-      jitter: 0.0,
-      serverLocation: '',
-      testStartTime: DateTime.now(),
-      testEndTime: DateTime.now(),
-      testCompleted: false,
-      errorMessage: errorMessage,
+      downloadSpeed: (json['downloadSpeed'] as num?)?.toDouble() ?? 0.0,
+      uploadSpeed: (json['uploadSpeed'] as num?)?.toDouble() ?? 0.0,
+      ping: (json['ping'] as num?)?.toDouble() ?? 0.0,
+      jitter: (json['jitter'] as num?)?.toDouble() ?? 0.0,
+      serverLocation: json['serverLocation'] as String? ?? '',
+      testStartTime: DateTime.parse(json['testStartTime']),
+      testEndTime: DateTime.parse(json['testEndTime']),
+      testCompleted: json['testCompleted'] as bool? ?? false,
+      errorMessage: json['errorMessage'] as String?,
     );
   }
 
@@ -162,37 +180,6 @@ class SpeedTestResultModel extends SpeedTestResultEntity {
       'testEndTime': testEndTime.toIso8601String(),
       'testCompleted': testCompleted,
       'errorMessage': errorMessage,
-    };
-  }
-}
-
-/// Data model for DiagnosticProgressEntity
-class DiagnosticProgressModel extends DiagnosticProgressEntity {
-  const DiagnosticProgressModel({
-    required super.stage,
-    required super.progress,
-    required super.message,
-    required super.timestamp,
-  });
-
-  factory DiagnosticProgressModel.fromJson(Map<String, dynamic> json) {
-    return DiagnosticProgressModel(
-      stage: DiagnosticStage.values.firstWhere(
-        (e) => e.toString() == json['stage'],
-        orElse: () => DiagnosticStage.initializing,
-      ),
-      progress: json['progress']?.toDouble() ?? 0.0,
-      message: json['message'] ?? '',
-      timestamp: DateTime.parse(json['timestamp']),
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'stage': stage.toString(),
-      'progress': progress,
-      'message': message,
-      'timestamp': timestamp.toIso8601String(),
     };
   }
 }
