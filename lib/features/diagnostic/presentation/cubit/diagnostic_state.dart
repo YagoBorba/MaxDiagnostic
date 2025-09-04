@@ -8,13 +8,13 @@ class TestUIState extends Equatable {
   final String id;
   final String name;
   final TestStatus status;
-  final double progress; 
+  final double progress;
   final String? resultText;
 
   const TestUIState({
     required this.id,
     required this.name,
-    required this.status,
+    this.status = TestStatus.pending,
     this.progress = 0.0,
     this.resultText,
   });
@@ -38,68 +38,53 @@ class TestUIState extends Equatable {
 }
 
 class DiagnosticState extends Equatable {
-  final List<TestUIState> tests;
+  // REFACTORED: Changed from List to Map for O(1) updates.
+  final Map<String, TestUIState> tests;
   final double overallProgress;
   final GlobalTestStatus globalStatus;
-  final bool isWebViewReady;
-  final String? webViewErrorMessage;
   final FinalResultsEntity? finalResults;
+  // WebView related state can be kept if needed elsewhere, but for simplicity
+  // in this refactor, let's assume error messages are handled more globally.
+  final String? errorMessage;
+
 
   const DiagnosticState({
     required this.tests,
     required this.overallProgress,
     required this.globalStatus,
-    required this.isWebViewReady,
-    this.webViewErrorMessage,
     this.finalResults,
+    this.errorMessage,
   });
 
   factory DiagnosticState.initial() {
     return const DiagnosticState(
-      tests: [
-        TestUIState(
-            id: 'download',
-            name: 'Teste de Download',
-            status: TestStatus.pending),
-        TestUIState(
-            id: 'upload', name: 'Teste de Upload', status: TestStatus.pending),
-        TestUIState(
-            id: 'latency',
-            name: 'Teste de Latência',
-            status: TestStatus.pending),
-        TestUIState(
-            id: 'jitter', name: 'Teste de Jitter', status: TestStatus.pending),
-        TestUIState(
-            id: 'additionalInfo',
-            name: 'Coletando Informações Adicionais',
-            status: TestStatus.pending),
-      ],
+      tests: {
+        'download': TestUIState(id: 'download', name: 'Teste de Download'),
+        'upload': TestUIState(id: 'upload', name: 'Teste de Upload'),
+        'latency': TestUIState(id: 'latency', name: 'Teste de Latência'),
+        'jitter': TestUIState(id: 'jitter', name: 'Teste de Jitter'),
+        'additionalInfo': TestUIState(id: 'additionalInfo', name: 'Informações Adicionais'),
+      },
       overallProgress: 0.0,
       globalStatus: GlobalTestStatus.pending,
-      isWebViewReady: false, 
     );
   }
 
   DiagnosticState copyWith({
-    List<TestUIState>? tests,
+    Map<String, TestUIState>? tests,
     double? overallProgress,
     GlobalTestStatus? globalStatus,
-    bool? isWebViewReady,
-    String? webViewErrorMessage,
     FinalResultsEntity? finalResults,
+    String? errorMessage,
+    bool clearError = false, // Flag to explicitly clear the error
   }) {
-    final newWebViewErrorMessage =
-        (globalStatus != null && globalStatus != this.globalStatus)
-            ? null
-            : webViewErrorMessage ?? this.webViewErrorMessage;
-
     return DiagnosticState(
       tests: tests ?? this.tests,
       overallProgress: overallProgress ?? this.overallProgress,
       globalStatus: globalStatus ?? this.globalStatus,
-      isWebViewReady: isWebViewReady ?? this.isWebViewReady,
-      webViewErrorMessage: newWebViewErrorMessage,
       finalResults: finalResults ?? this.finalResults,
+      // REFACTORED: Logic moved to Cubit. State is now simpler.
+      errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
     );
   }
 
@@ -108,8 +93,7 @@ class DiagnosticState extends Equatable {
         tests,
         overallProgress,
         globalStatus,
-        isWebViewReady,
-        webViewErrorMessage,
-        finalResults
+        finalResults,
+        errorMessage,
       ];
 }
