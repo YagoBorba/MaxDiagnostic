@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:dartz/dartz.dart';
 import 'package:maxt_diagnostic/core/error/failures.dart';
 import 'package:maxt_diagnostic/core/usecases/usecase.dart';
@@ -17,12 +16,12 @@ class MockRunDiagnosticTestUseCase
 
     Future<void> emitProgress(
         DiagnosticStage stage, double progress, String msg) async {
-      controller.add(Right(DiagnosticProgressUpdate(DiagnosticProgressEntity(
+      controller.add(Right(DiagnosticProgressEntity(
         stage: stage,
         progress: progress,
         message: msg,
         timestamp: DateTime.now(),
-      ))));
+      )));
       await Future.delayed(const Duration(milliseconds: 50));
     }
 
@@ -30,8 +29,8 @@ class MockRunDiagnosticTestUseCase
       try {
         await emitProgress(DiagnosticStage.collectingDeviceInfo, 0.25,
             'Coletando informações do dispositivo...');
-        await emitProgress(DiagnosticStage.collectingDeviceInfo, 1.0,
-            'Dispositivo coletado');
+        await emitProgress(
+            DiagnosticStage.collectingDeviceInfo, 1.0, 'Dispositivo coletado');
 
         await emitProgress(
             DiagnosticStage.collectingNetworkInfo, 0.30, 'Coletando rede...');
@@ -40,8 +39,8 @@ class MockRunDiagnosticTestUseCase
 
         await emitProgress(
             DiagnosticStage.runningDownloadTest, 0.20, 'Download iniciando');
-        await emitProgress(DiagnosticStage.runningDownloadTest, 1.0,
-            'Download finalizado');
+        await emitProgress(
+            DiagnosticStage.runningDownloadTest, 1.0, 'Download finalizado');
 
         await emitProgress(
             DiagnosticStage.runningUploadTest, 0.30, 'Upload iniciando');
@@ -53,15 +52,10 @@ class MockRunDiagnosticTestUseCase
         await emitProgress(
             DiagnosticStage.runningLatencyTest, 1.0, 'Latência finalizada');
 
-        await emitProgress(
-            DiagnosticStage.runningJitterTest, 0.30, 'Jitter iniciando');
-        await emitProgress(
-            DiagnosticStage.runningJitterTest, 1.0, 'Jitter finalizado');
-
-        await emitProgress(
-            DiagnosticStage.collectingAdditionalInfo, 0.50, 'Coletando informações adicionais...');
-        await emitProgress(
-            DiagnosticStage.collectingAdditionalInfo, 1.0, 'Informações coletadas');
+        await emitProgress(DiagnosticStage.collectingAdditionalInfo, 0.50,
+            'Coletando informações adicionais...');
+        await emitProgress(DiagnosticStage.collectingAdditionalInfo, 1.0,
+            'Informações coletadas');
 
         final results = FinalResultsEntity(
           timestamp: DateTime.now(),
@@ -90,7 +84,7 @@ class MockRunDiagnosticTestUseCase
 
         controller.add(Right(DiagnosticCompleted(results)));
       } catch (e) {
-        controller.add(Left(ServerFailure('Mock error: $e')));
+        controller.add(Left(ServerFailure(message: 'Mock error: $e')));
       } finally {
         await Future.delayed(const Duration(milliseconds: 50));
         await controller.close();
