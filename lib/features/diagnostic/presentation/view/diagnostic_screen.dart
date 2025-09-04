@@ -80,7 +80,8 @@ class _DiagnosticView extends StatelessWidget {
                 itemCount: state.tests.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
-                  return TestItemCard(test: state.tests[index]);
+                  final test = state.tests.values.elementAt(index);
+                  return TestItemCard(test: test);
                 },
               ),
               const SizedBox(height: 16),
