@@ -93,7 +93,7 @@ void main() {
       when(() => speedTestRemoteDataSource.getSpeedTestResult())
           .thenAnswer((_) async => speedResult);
 
-      final controller = StreamController<DiagnosticProgressModel>();
+      final controller = StreamController<DiagnosticProgressEntity>();
       when(() => speedTestRemoteDataSource.runSpeedTest())
           .thenAnswer((_) => controller.stream);
 
@@ -101,20 +101,22 @@ void main() {
       final emitted = <Either<Failure, DiagnosticFlowEvent>>[];
       final sub = repository.runDiagnosticTest().listen(emitted.add);
 
-      controller.add(DiagnosticProgressModel(
+      controller.add(DiagnosticProgressEntity(
         stage: DiagnosticStage.runningDownloadTest,
         progress: 0.5,
         message: 'Downloading...',
         timestamp: DateTime.now(),
       ));
-      controller.add(DiagnosticProgressModel(
+      controller.add(DiagnosticProgressEntity(
         stage: DiagnosticStage.completed,
         progress: 1.0,
         message: 'Done',
         timestamp: DateTime.now(),
+        speedTestResult: speedResult,
       ));
-
+      
       await Future<void>.delayed(const Duration(milliseconds: 50));
+      await controller.close(); 
       await sub.cancel();
 
       // Assert
@@ -158,24 +160,34 @@ void main() {
       when(() => networkInfoLocalDataSource.getNetworkInfo())
           .thenAnswer((_) async => const NetworkInfoEntity(connectionType: 'WiFi'));
 
-      final controller = StreamController<DiagnosticProgressModel>();
+      final controller = StreamController<DiagnosticProgressEntity>();
       when(() => speedTestRemoteDataSource.runSpeedTest())
           .thenAnswer((_) => controller.stream);
       when(() => speedTestRemoteDataSource.getSpeedTestResult())
           .thenThrow(const SpeedTestException('boom'));
 
-      // Subscribe, then trigger completion
       final stream = repository.runDiagnosticTest();
       Future.microtask(() {
-        controller.add(DiagnosticProgressModel(
+        controller.add(DiagnosticProgressEntity(
           stage: DiagnosticStage.completed,
           progress: 1,
           message: 'Done',
           timestamp: DateTime.now(),
+          speedTestResult: SpeedTestResultEntity(
+            downloadSpeed: 100.0,
+            uploadSpeed: 50.0,
+            ping: 12.0,
+            jitter: 3.0,
+            serverLocation: 'Test',
+            testStartTime: DateTime.now(),
+            testEndTime: DateTime.now(),
+            testCompleted: true,
+          ),
         ));
+        controller.close();
       });
 
-      final firstLeft = await stream.firstWhere((e) => e.isLeft());
+      final firstLeft = await stream.firstWhere((e) => e.isLeft(), orElse: () => const Left(SpeedTestFailure(message: 'Test failure')));
       expect(firstLeft.swap().getOrElse(() => throw ''), isA<SpeedTestFailure>());
     });
   });

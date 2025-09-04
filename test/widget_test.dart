@@ -7,8 +7,8 @@ void main() {
   group('MaxDiagnostic App Tests', () {
     test('App Config - Should have valid configuration', () {
       final config = AppConfig();
-      expect(config.signalExcellentThresholdDbm, lessThan(0)); // dBm values are negative
-      expect(config.signalNormalThresholdDbm, lessThan(0)); // dBm values are negative
+      expect(config.signalExcellentThresholdDbm, lessThan(0));
+      expect(config.signalNormalThresholdDbm, lessThan(0)); 
       expect(config.homeRefreshInterval.inSeconds, greaterThan(0));
       expect(config.quickTips, isNotEmpty);
       expect(config.disabledStartMessage, isNotEmpty);
@@ -16,20 +16,16 @@ void main() {
 
     test('App Config - Signal quality calculation should work correctly', () {
       final config = AppConfig();
-      
-      // Test excellent signal
+
       expect(config.getSignalQuality(-40), SignalQuality.excellent);
       expect(config.isSignalExcellent(-40), isTrue);
-      
-      // Test normal signal
+
       expect(config.getSignalQuality(-60), SignalQuality.normal);
       expect(config.isSignalExcellent(-60), isFalse);
-      
-      // Test poor signal
+
       expect(config.getSignalQuality(-80), SignalQuality.poor);
       expect(config.isSignalExcellent(-80), isFalse);
-      
-      // Test null signal
+
       expect(config.getSignalQuality(null), SignalQuality.poor);
       expect(config.isSignalExcellent(null), isFalse);
     });
