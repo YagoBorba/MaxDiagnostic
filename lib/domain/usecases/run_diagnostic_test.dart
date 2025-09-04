@@ -23,13 +23,13 @@ class RunDiagnosticTest
       }
       
       if (repository == null) {
-        return const Left(ServerFailure('Repository not initialized'));
+        return const Left(ServerFailure(message: 'Repository not initialized'));
       }
       
       final stream = repository!.runDiagnosticTest();
       return Right(stream);
     } catch (e) {
-      return Left(ServerFailure('Failed to start diagnostic: ${e.toString()}'));
+      return Left(ServerFailure(message: 'Failed to start diagnostic: ${e.toString()}'));
     }
   }
 }
