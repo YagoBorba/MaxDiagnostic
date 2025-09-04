@@ -13,7 +13,6 @@ class PlatformNetworkServiceImpl implements PlatformNetworkService {
   @override
   Future<String?> getWifiName() async {
     if (Platform.isWindows) {
-      // Mock para desenvolvimento Windows
       return "MockWiFi-Development";
     }
     return await _networkInfo.getWifiName();
@@ -30,15 +29,14 @@ class PlatformNetworkServiceImpl implements PlatformNetworkService {
   @override
   Future<int?> getWifiSpeed() async {
     if (Platform.isWindows) {
-      return 100; // Mock 100 Mbps
+      return 100; 
     }
-    // No Android, implementar speed test real
+
     return await _performSpeedTest();
   }
 
   Future<int?> _performSpeedTest() async {
-    // Implementação real do speed test
-    // usando HTTP requests, etc.
+
     return null;
   }
 }
