@@ -34,7 +34,7 @@ dependencies:
   permission_handler: ^11.3.1
 
   # WebView for Speed Test
-  webview_flutter: ^4.8.0
+  flutter_inappwebview: ^6.0.0
 
   # PDF & Sharing
   printing: ^5.12.0
