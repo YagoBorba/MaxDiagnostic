@@ -52,15 +52,27 @@ class AdviceService {
       ),
     ),
     _Rule(
-      id: 'high_jitter_and_ping',
+      id: 'high_latency_and_jitter',
       condition: (r) =>
-          (r.speedTestResult.ping) > 100 && (r.speedTestResult.jitter) > 40,
-      advice: (r) => const AdviceEntity(
-        id: 'high_jitter_and_ping',
+          (r.pingResult.averageLatencyMs) > 100 &&
+          (r.pingResult.jitterMs) > 20,
+      advice: (r) => AdviceEntity(
+        id: 'high_latency_and_jitter',
         title: 'Conexão Lenta e Instável',
         description:
-            'Sua conexão apresenta tanto um tempo de resposta alto (ping) quanto alta variação (jitter). Isso afeta negativamente jogos, vídeos e navegação. Reiniciar o roteador pode ajudar.',
+            'Sua conexão apresenta tempo de resposta alto (${r.pingResult.averageLatencyMs.toStringAsFixed(0)} ms) e grande variação (jitter de ${r.pingResult.jitterMs.toStringAsFixed(0)} ms). Isso compromete jogos online e chamadas de vídeo. Reinicie o modem/roteador e verifique interferências.',
         severity: AdviceSeverity.warning,
+      ),
+    ),
+    _Rule(
+      id: 'packet_loss_detected',
+      condition: (r) => r.pingResult.packetLossPercentage > 5,
+      advice: (r) => AdviceEntity(
+        id: 'packet_loss_detected',
+        title: 'Perda de Pacotes Elevada',
+        description:
+            'Detectamos perda de pacotes de ${r.pingResult.packetLossPercentage.toStringAsFixed(1)}%. Isso causa travamentos e instabilidade. Certifique-se de que os cabos estejam firmes e que não haja muita distância do roteador.',
+        severity: AdviceSeverity.critical,
       ),
     ),
     _Rule(

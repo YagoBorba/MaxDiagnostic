@@ -29,6 +29,10 @@ class SpeedTestFailure extends Failure {
   const SpeedTestFailure({required super.message});
 }
 
+class PingFailure extends Failure {
+  const PingFailure({required super.message});
+}
+
 class PermissionFailure extends Failure {
   const PermissionFailure({required super.message});
 }

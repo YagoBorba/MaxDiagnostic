@@ -4,7 +4,6 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   connectivity_plus
-  flutter_inappwebview_windows
   permission_handler_windows
   printing
   share_plus

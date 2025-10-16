@@ -41,6 +41,21 @@ void main() {
           message: 'down',
           timestamp: DateTime.now(),
         )));
+        controller.add(Right(DiagnosticProgressEntity(
+          stage: DiagnosticStage.runningPingTest,
+          progress: 1.0,
+          message: 'Latência média 20.0 ms',
+          timestamp: DateTime.now(),
+          pingResult: const PingResultEntity(
+            averageLatencyMs: 20.0,
+            minLatencyMs: 18.0,
+            maxLatencyMs: 25.0,
+            jitterMs: 3.0,
+            packetLossPercentage: 0.0,
+            transmitted: 5,
+            received: 5,
+          ),
+        )));
         controller.add(Right(DiagnosticCompleted(FinalResultsEntity(
           timestamp: DateTime.now(),
           deviceInfo: const DeviceInfoEntity(
@@ -60,6 +75,15 @@ void main() {
             testEndTime: DateTime(2020, 1, 1, 0, 1),
             testCompleted: true,
           ),
+          pingResult: const PingResultEntity(
+            averageLatencyMs: 20.0,
+            minLatencyMs: 18.0,
+            maxLatencyMs: 25.0,
+            jitterMs: 3.0,
+            packetLossPercentage: 0.0,
+            transmitted: 5,
+            received: 5,
+          ),
         ))));
       });
       return cubit;
@@ -72,6 +96,12 @@ void main() {
       final download = c.state.tests['download'];
       expect(download, isNotNull);
       expect(download!.status, isNot(TestStatus.pending));
+      final latency = c.state.tests['latency'];
+      expect(latency?.resultText, contains('20.0 ms'));
+      final jitter = c.state.tests['jitter'];
+      expect(jitter?.resultText, contains('3.0 ms'));
+      final info = c.state.tests['additionalInfo'];
+      expect(info?.resultText, contains('Perda'));
     },
   );
 

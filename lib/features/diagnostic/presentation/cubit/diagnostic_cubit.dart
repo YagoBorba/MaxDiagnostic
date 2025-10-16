@@ -29,6 +29,7 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
     DiagnosticStage.runningDownloadTest: 'download',
     DiagnosticStage.runningUploadTest: 'upload',
     DiagnosticStage.runningLatencyTest: 'latency',
+    DiagnosticStage.runningPingTest: 'latency',
     // Note: Jitter is derived from final results, not a separate stage here.
     DiagnosticStage.collectingDeviceInfo: 'additionalInfo',
     DiagnosticStage.collectingNetworkInfo: 'additionalInfo',
@@ -94,11 +95,31 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
     
     // Update individual test results with final data
     final finalTests = Map.of(state.tests);
-    finalTests['download'] = finalTests['download']!.copyWith(status: TestStatus.complete, progress: 1.0, resultText: '${results.speedTestResult.downloadSpeed.toStringAsFixed(2)} Mbps');
-    finalTests['upload'] = finalTests['upload']!.copyWith(status: TestStatus.complete, progress: 1.0, resultText: '${results.speedTestResult.uploadSpeed.toStringAsFixed(2)} Mbps');
-    finalTests['latency'] = finalTests['latency']!.copyWith(status: TestStatus.complete, progress: 1.0, resultText: '${results.speedTestResult.ping.toStringAsFixed(1)} ms');
-    finalTests['jitter'] = finalTests['jitter']!.copyWith(status: TestStatus.complete, progress: 1.0, resultText: '${results.speedTestResult.jitter.toStringAsFixed(1)} ms');
-    finalTests['additionalInfo'] = finalTests['additionalInfo']!.copyWith(status: TestStatus.complete, progress: 1.0, resultText: 'Concluído');
+    finalTests['download'] = finalTests['download']!.copyWith(
+      status: TestStatus.complete,
+      progress: 1.0,
+      resultText: '${results.speedTestResult.downloadSpeed.toStringAsFixed(2)} Mbps',
+    );
+    finalTests['upload'] = finalTests['upload']!.copyWith(
+      status: TestStatus.complete,
+      progress: 1.0,
+      resultText: '${results.speedTestResult.uploadSpeed.toStringAsFixed(2)} Mbps',
+    );
+    finalTests['latency'] = finalTests['latency']!.copyWith(
+      status: TestStatus.complete,
+      progress: 1.0,
+      resultText: '${results.pingResult.averageLatencyMs.toStringAsFixed(1)} ms',
+    );
+    finalTests['jitter'] = finalTests['jitter']!.copyWith(
+      status: TestStatus.complete,
+      progress: 1.0,
+      resultText: '${results.pingResult.jitterMs.toStringAsFixed(1)} ms',
+    );
+    finalTests['additionalInfo'] = finalTests['additionalInfo']!.copyWith(
+      status: TestStatus.complete,
+      progress: 1.0,
+      resultText: 'Pacotes ${results.pingResult.received}/${results.pingResult.transmitted} • Perda ${results.pingResult.packetLossPercentage.toStringAsFixed(1)}%',
+    );
 
 
     emit(state.copyWith(
@@ -122,6 +143,18 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
     }
     
     final updatedTests = _updateTest(testId, TestStatus.running, p.message, p.progress);
+
+    if (p.stage == DiagnosticStage.runningPingTest && p.pingResult != null) {
+      final jitterText = 'Jitter ${p.pingResult!.jitterMs.toStringAsFixed(1)} ms • Perda ${(p.pingResult!.packetLossPercentage).toStringAsFixed(1)}%';
+      final jitterState = updatedTests['jitter'];
+      if (jitterState != null) {
+        updatedTests['jitter'] = jitterState.copyWith(
+          status: TestStatus.running,
+          progress: p.progress,
+          resultText: jitterText,
+        );
+      }
+    }
 
     emit(state.copyWith(
       overallProgress: overall,

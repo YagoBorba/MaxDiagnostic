@@ -47,10 +47,10 @@ class MockRunDiagnosticTestUseCase
         await emitProgress(
             DiagnosticStage.runningUploadTest, 1.0, 'Upload finalizado');
 
-        await emitProgress(
-            DiagnosticStage.runningLatencyTest, 0.30, 'Latência iniciando');
-        await emitProgress(
-            DiagnosticStage.runningLatencyTest, 1.0, 'Latência finalizada');
+    await emitProgress(
+      DiagnosticStage.runningPingTest, 0.30, 'Latência iniciando');
+    await emitProgress(
+      DiagnosticStage.runningPingTest, 1.0, 'Latência finalizada');
 
         await emitProgress(DiagnosticStage.collectingAdditionalInfo, 0.50,
             'Coletando informações adicionais...');
@@ -79,6 +79,15 @@ class MockRunDiagnosticTestUseCase
             testStartTime: DateTime.now().subtract(const Duration(seconds: 8)),
             testEndTime: DateTime.now(),
             testCompleted: true,
+          ),
+          pingResult: const PingResultEntity(
+            averageLatencyMs: 15.0,
+            minLatencyMs: 12.0,
+            maxLatencyMs: 18.0,
+            jitterMs: 2.0,
+            packetLossPercentage: 0.0,
+            transmitted: 6,
+            received: 6,
           ),
         );
 

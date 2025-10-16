@@ -9,17 +9,21 @@ import '../../domain/repositories/diagnostic_repository.dart';
 import '../datasources/network_info_local_datasource.dart';
 import '../datasources/device_info_local_datasource.dart';
 import '../datasources/speed_test_remote_datasource.dart';
+import '../datasources/ping_remote_datasource.dart';
 import '../models/final_results_model.dart';
+import '../models/ping_result_model.dart';
 
 class DiagnosticRepositoryImpl implements DiagnosticRepository {
   final NetworkInfoLocalDataSource networkInfoLocalDataSource;
   final SpeedTestRemoteDataSource speedTestRemoteDataSource;
+  final PingRemoteDataSource pingRemoteDataSource;
   final NetworkInfo networkInfo;
   final DeviceInfoLocalDataSource deviceInfoLocalDataSource;
 
   DiagnosticRepositoryImpl({
     required this.networkInfoLocalDataSource,
     required this.speedTestRemoteDataSource,
+    required this.pingRemoteDataSource,
     required this.networkInfo,
     required this.deviceInfoLocalDataSource,
   });
@@ -60,41 +64,57 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
       await for (final progress in progressStream) {
         yield Right(progress);
 
-        if (progress.stage == DiagnosticStage.completed && progress.speedTestResult != null) {
-          final finalNetworkInfo = await networkInfoLocalDataSource.getNetworkInfo();
-
-          final finalResults = FinalResultsModel(
-            timestamp: DateTime.now(),
-            deviceInfo: DeviceInfoModel.fromEntity(deviceInfo),
-            networkInfo: NetworkInfoModel.fromEntity(finalNetworkInfo.wifiName != null ? finalNetworkInfo : initialNetworkInfo),
-            speedTestResult: SpeedTestResultModel.fromEntity(progress.speedTestResult!),
-          );
-
-          yield Right(DiagnosticCompleted(finalResults));
-          
-          // Give the DataSource time to finish cleanup, then dispose
-          Future.delayed(const Duration(milliseconds: 100), () {
-            speedTestRemoteDataSource.dispose();
-          });
-          return;
+        if (progress.speedTestResult != null) {
+          break;
         }
       }
 
-      yield const Left(SpeedTestFailure(message: 'Speed test stream ended unexpectedly.'));
-      speedTestRemoteDataSource.dispose();
+      final resolvedSpeedResult = await speedTestRemoteDataSource.getSpeedTestResult();
+
+      final pingProgressStream = pingRemoteDataSource.runPingTest();
+
+      await for (final progress in pingProgressStream) {
+        yield Right(progress);
+
+        if (progress.pingResult != null) {
+          break;
+        }
+      }
+
+      final resolvedPingResult = await pingRemoteDataSource.getPingResult();
+
+      final finalNetworkInfo = await networkInfoLocalDataSource.getNetworkInfo();
+
+      yield Right(DiagnosticProgressEntity(
+        stage: DiagnosticStage.collectingAdditionalInfo,
+        progress: 1.0,
+        message: 'Consolidando resultados...',
+        timestamp: DateTime.now(),
+      ));
+
+      final finalResults = FinalResultsModel(
+        timestamp: DateTime.now(),
+        deviceInfo: DeviceInfoModel.fromEntity(deviceInfo),
+        networkInfo: NetworkInfoModel.fromEntity(finalNetworkInfo.wifiName != null ? finalNetworkInfo : initialNetworkInfo),
+        speedTestResult: SpeedTestResultModel.fromEntity(resolvedSpeedResult),
+        pingResult: PingResultModel.fromEntity(resolvedPingResult),
+      );
+
+      yield Right(DiagnosticCompleted(finalResults));
 
     } on NetworkException catch (e) {
       yield Left(NetworkFailure(message: e.message));
-      speedTestRemoteDataSource.dispose();
     } on SpeedTestException catch (e) {
       yield Left(SpeedTestFailure(message: e.message));
-      speedTestRemoteDataSource.dispose();
+    } on PingException catch (e) {
+      yield Left(PingFailure(message: e.message));
     } on DeviceInfoException catch (e) {
       yield Left(DeviceInfoFailure(message: e.message));
-      speedTestRemoteDataSource.dispose();
     } catch (e) {
       yield Left(ServerFailure(message: 'Diagnostic test failed: ${e.toString()}'));
+    } finally {
       speedTestRemoteDataSource.dispose();
+      await pingRemoteDataSource.dispose();
     }
   }
 
