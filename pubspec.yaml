@@ -33,8 +33,8 @@ dependencies:
   wifi_scan: ^0.4.1
   permission_handler: ^11.3.1
 
-  # WebView for Speed Test
-  flutter_inappwebview: ^6.0.0
+  # Native Speed Test
+  flutter_internet_speed_test: ^1.0.1
 
   # PDF & Sharing
   printing: ^5.12.0
@@ -51,6 +51,7 @@ dependencies:
 
   # Icons
   lucide_icons: ^0.257.0
+  dart_ping: ^9.0.1
 
 dev_dependencies:
   flutter_test:

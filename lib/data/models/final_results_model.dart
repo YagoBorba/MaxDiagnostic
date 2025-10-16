@@ -1,4 +1,5 @@
 import '../../domain/entities/final_results_entity.dart';
+import 'ping_result_model.dart';
 
 class FinalResultsModel extends FinalResultsEntity {
   const FinalResultsModel({
@@ -6,6 +7,7 @@ class FinalResultsModel extends FinalResultsEntity {
     required DeviceInfoModel super.deviceInfo,
     required NetworkInfoModel super.networkInfo,
     required SpeedTestResultModel super.speedTestResult,
+    required PingResultModel super.pingResult,
   });
 
   factory FinalResultsModel.fromJson(Map<String, dynamic> json) {
@@ -14,6 +16,9 @@ class FinalResultsModel extends FinalResultsEntity {
       deviceInfo: DeviceInfoModel.fromJson(json['deviceInfo']),
       networkInfo: NetworkInfoModel.fromJson(json['networkInfo']),
       speedTestResult: SpeedTestResultModel.fromJson(json['speedTestResult']),
+      pingResult: json['pingResult'] != null
+          ? PingResultModel.fromJson(json['pingResult'])
+          : const PingResultModel.empty(),
     );
   }
 
@@ -23,6 +28,7 @@ class FinalResultsModel extends FinalResultsEntity {
       deviceInfo: DeviceInfoModel.fromEntity(entity.deviceInfo),
       networkInfo: NetworkInfoModel.fromEntity(entity.networkInfo),
       speedTestResult: SpeedTestResultModel.fromEntity(entity.speedTestResult),
+      pingResult: PingResultModel.fromEntity(entity.pingResult),
     );
   }
 
@@ -32,6 +38,7 @@ class FinalResultsModel extends FinalResultsEntity {
       'deviceInfo': (deviceInfo as DeviceInfoModel).toJson(),
       'networkInfo': (networkInfo as NetworkInfoModel).toJson(),
       'speedTestResult': (speedTestResult as SpeedTestResultModel).toJson(),
+      'pingResult': (pingResult as PingResultModel).toJson(),
     };
   }
 }

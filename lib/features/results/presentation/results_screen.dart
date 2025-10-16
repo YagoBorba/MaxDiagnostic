@@ -68,18 +68,54 @@ class ResultsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 _ResultSection(
-                  title: 'Qualidade da Conexão',
+                  title: 'Latência e Estabilidade',
                   children: [
                     _ResultTile(
-                        icon: LucideIcons.activity,
-                        label: 'Latência',
-                        value: results.speedTestResult.ping,
-                        unit: 'ms'),
+                      icon: LucideIcons.gauge,
+                      label: 'Latência média',
+                      value: results.pingResult.averageLatencyMs,
+                      unit: 'ms',
+                      precision: 1,
+                    ),
                     _ResultTile(
-                        icon: LucideIcons.activity,
-                        label: 'Jitter',
-                        value: results.speedTestResult.jitter,
-                        unit: 'ms'),
+                      icon: LucideIcons.arrowDownUp,
+                      label: 'Latência mín/máx',
+                      formattedValue:
+                          '${results.pingResult.minLatencyMs.toStringAsFixed(1)} / ${results.pingResult.maxLatencyMs.toStringAsFixed(1)} ms',
+                    ),
+                    _ResultTile(
+                      icon: LucideIcons.activity,
+                      label: 'Jitter',
+                      value: results.pingResult.jitterMs,
+                      unit: 'ms',
+                      precision: 1,
+                    ),
+                    _ResultTile(
+                      icon: LucideIcons.wifiOff,
+                      label: 'Perda de pacotes',
+                      value: results.pingResult.packetLossPercentage,
+                      unit: '%',
+                      precision: 1,
+                    ),
+                    _ResultTile(
+                      icon: LucideIcons.badgeCheck,
+                      label: 'Taxa de sucesso',
+                      value: results.pingResult.successRate * 100,
+                      unit: '%',
+                      precision: 1,
+                    ),
+                    if (results.pingResult.samplesMs.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4.0, bottom: 12.0),
+                        child: Text(
+                          '${results.pingResult.samplesMs.length} amostras analisadas',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF94A3B8),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -132,17 +168,25 @@ class _ResultTile extends StatelessWidget {
   final String label;
   final double? value;
   final String unit;
+  final int precision;
+  final String? formattedValue;
 
-  const _ResultTile(
-      {required this.icon,
-      required this.label,
-      this.value,
-      required this.unit});
+  const _ResultTile({
+    required this.icon,
+    required this.label,
+    this.value,
+    this.unit = '',
+    this.precision = 2,
+    this.formattedValue,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final displayValue =
-        (value != null) ? '${value!.toStringAsFixed(2)} $unit' : 'Falha';
+    final displayValue = formattedValue ?? (() {
+      if (value == null) return 'Falha';
+      final suffix = unit.isNotEmpty ? ' $unit' : '';
+      return '${value!.toStringAsFixed(precision)}$suffix';
+    }());
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),

@@ -29,6 +29,12 @@ class SpeedTestException implements Exception {
   const SpeedTestException(this.message);
 }
 
+class PingException implements Exception {
+  final String message;
+
+  const PingException(this.message);
+}
+
 class PermissionException implements Exception {
   final String message;
 

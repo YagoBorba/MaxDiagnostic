@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'final_results_entity.dart';
 import '../../data/models/speed_test_result_model.dart';
+import '../../data/models/ping_result_model.dart';
 
 enum DiagnosticStage {
   initializing,
@@ -10,6 +11,7 @@ enum DiagnosticStage {
   runningDownloadTest,
   runningUploadTest,
   runningLatencyTest,
+  runningPingTest,
   collectingAdditionalInfo,
   completed,
   error,
@@ -32,6 +34,8 @@ extension DiagnosticStageExtension on DiagnosticStage {
         return 'Testando velocidade de upload...';
       case DiagnosticStage.runningLatencyTest:
         return 'Testando latência e jitter...';
+      case DiagnosticStage.runningPingTest:
+        return 'Medindo latência e perda de pacotes...';
       case DiagnosticStage.collectingAdditionalInfo:
         return 'Coletando informações adicionais...';
       case DiagnosticStage.completed:
@@ -55,6 +59,7 @@ class DiagnosticProgressEntity extends DiagnosticFlowEvent {
   final String message;
   final DateTime timestamp;
   final SpeedTestResultEntity? speedTestResult;
+  final PingResultEntity? pingResult;
 
   const DiagnosticProgressEntity({
     required this.stage,
@@ -62,10 +67,11 @@ class DiagnosticProgressEntity extends DiagnosticFlowEvent {
     required this.message,
     required this.timestamp,
     this.speedTestResult,
+    this.pingResult,
   });
 
   @override
-  List<Object?> get props => [stage, progress, message, timestamp, speedTestResult];
+  List<Object?> get props => [stage, progress, message, timestamp, speedTestResult, pingResult];
 }
 
 class DiagnosticCompleted extends DiagnosticFlowEvent {
@@ -84,6 +90,7 @@ class DiagnosticProgressModel extends DiagnosticProgressEntity {
     required super.message,
     required super.timestamp,
     super.speedTestResult,
+    super.pingResult,
   });
 
   factory DiagnosticProgressModel.fromJson(Map<String, dynamic> json) {
@@ -99,6 +106,9 @@ class DiagnosticProgressModel extends DiagnosticProgressEntity {
       speedTestResult: json['speedTestResult'] != null
           ? SpeedTestResultModel.fromJson(json['speedTestResult'])
           : null,
+      pingResult: json['pingResult'] != null
+          ? PingResultModel.fromJson(json['pingResult'])
+          : null,
     );
   }
 
@@ -109,6 +119,7 @@ class DiagnosticProgressModel extends DiagnosticProgressEntity {
       'message': message,
       'timestamp': timestamp.toIso8601String(),
       'speedTestResult': speedTestResult != null ? (speedTestResult as SpeedTestResultModel).toJson() : null,
+      'pingResult': pingResult != null ? (pingResult as PingResultModel).toJson() : null,
     };
   }
 }

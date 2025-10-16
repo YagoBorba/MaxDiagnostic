@@ -1,217 +1,197 @@
-import 'dart:convert';
+import 'dart:async';
+
+import 'package:flutter_internet_speed_test/flutter_internet_speed_test.dart';
+import 'package:flutter_internet_speed_test/src/flutter_internet_speed_test_platform_interface.dart'
+  as fist;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+
 import 'package:maxt_diagnostic/core/config/app_config.dart';
+import 'package:maxt_diagnostic/core/error/exceptions.dart';
 import 'package:maxt_diagnostic/data/datasources/speed_test_remote_datasource.dart';
+import 'package:maxt_diagnostic/domain/entities/diagnostic_flow.dart';
+
+class _MockSpeedTestClient extends Mock implements SpeedTestClient {}
+
+class _TestClock {
+  _TestClock(DateTime initial) : _current = initial;
+
+  DateTime _current;
+
+  DateTime call() {
+    final now = _current;
+    _current = _current.add(const Duration(milliseconds: 250));
+    return now;
+  }
+}
 
 void main() {
-  group('SpeedTestRemoteDataSource with HeadlessInAppWebView Tests', () {
-    late SpeedTestRemoteDataSourceImpl dataSource;
-    late AppConfig mockConfig;
+  late _MockSpeedTestClient mockClient;
+  late SpeedTestRemoteDataSourceImpl dataSource;
+  late _TestClock clock;
+  late AppConfig config;
 
-    setUp(() {
-      mockConfig = AppConfig(
-        speedTestUrl: 'http://test.example.com',
+  setUp(() {
+    mockClient = _MockSpeedTestClient();
+    clock = _TestClock(DateTime(2025, 1, 1));
+    config = AppConfig(
+      speedTestUrl: 'https://speedtest.example.com',
+      speedTestDownloadUrl: 'https://download.example.com/file',
+      speedTestUploadUrl: 'https://upload.example.com/',
+      speedTestFileSizeBytes: 200000,
+    );
+    dataSource = SpeedTestRemoteDataSourceImpl(
+      config: config,
+      speedTestClient: mockClient,
+      now: () => clock(),
+    );
+  });
+
+  group('runSpeedTest', () {
+    test('emits download, upload and completion events with final result', () async {
+      when(() => mockClient.startDownloadTesting(
+            onDone: any(named: 'onDone'),
+            onProgress: any(named: 'onProgress'),
+            onError: any(named: 'onError'),
+            fileSize: any(named: 'fileSize'),
+            testServer: any(named: 'testServer'),
+          )).thenAnswer((invocation) {
+        final onProgress =
+            invocation.namedArguments[const Symbol('onProgress')] as fist.ProgressCallback;
+        final onDone =
+            invocation.namedArguments[const Symbol('onDone')] as fist.DoneCallback;
+
+        onProgress(45, 42000, SpeedUnit.Kbps);
+        onDone(82000, SpeedUnit.Kbps);
+        return Future.value(() {});
+      });
+
+      when(() => mockClient.startUploadTesting(
+            onDone: any(named: 'onDone'),
+            onProgress: any(named: 'onProgress'),
+            onError: any(named: 'onError'),
+            fileSize: any(named: 'fileSize'),
+            testServer: any(named: 'testServer'),
+          )).thenAnswer((invocation) {
+        final onProgress =
+            invocation.namedArguments[const Symbol('onProgress')] as fist.ProgressCallback;
+        final onDone =
+            invocation.namedArguments[const Symbol('onDone')] as fist.DoneCallback;
+
+        onProgress(55, 23000, SpeedUnit.Kbps);
+        onDone(35000, SpeedUnit.Kbps);
+        return Future.value(() {});
+      });
+
+      final stream = dataSource.runSpeedTest();
+      final events = await stream.toList();
+
+      expect(events.first.stage, DiagnosticStage.startingSpeedTest);
+      expect(events.last.stage, DiagnosticStage.completed);
+      expect(
+        events.where((event) => event.stage == DiagnosticStage.runningDownloadTest),
+        isNotEmpty,
       );
-      dataSource = SpeedTestRemoteDataSourceImpl(config: mockConfig);
+      expect(
+        events.where((event) => event.stage == DiagnosticStage.runningUploadTest),
+        isNotEmpty,
+      );
+
+      final completedEvent = events.last;
+      expect(completedEvent.speedTestResult, isNotNull);
+      expect(completedEvent.speedTestResult!.downloadSpeed, closeTo(82, 0.001));
+      expect(completedEvent.speedTestResult!.uploadSpeed, closeTo(35, 0.001));
+
+      final result = await dataSource.getSpeedTestResult();
+      expect(result.downloadSpeed, closeTo(82, 0.001));
+      expect(result.uploadSpeed, closeTo(35, 0.001));
+      expect(result.testCompleted, isTrue);
+      expect(result.serverLocation, config.speedTestUrl);
     });
 
-    tearDown(() {
-      dataSource.dispose();
+    test('emits error and completes with SpeedTestException when download fails', () async {
+      when(() => mockClient.startDownloadTesting(
+            onDone: any(named: 'onDone'),
+            onProgress: any(named: 'onProgress'),
+            onError: any(named: 'onError'),
+            fileSize: any(named: 'fileSize'),
+            testServer: any(named: 'testServer'),
+          )).thenAnswer((invocation) {
+        final onError =
+            invocation.namedArguments[const Symbol('onError')] as fist.ErrorCallback;
+        onError('Falha ao iniciar download', 'timeout');
+        return Future.value(() {});
+      });
+
+      final stream = dataSource.runSpeedTest();
+      final events = await stream.toList();
+
+      expect(events.first.stage, DiagnosticStage.startingSpeedTest);
+      expect(events.last.stage, DiagnosticStage.error);
+      expect(events.last.message, contains('Falha ao iniciar download'));
+
+      final resultFuture = dataSource.getSpeedTestResult();
+      expect(resultFuture, throwsA(isA<SpeedTestException>()));
     });
 
-    group('HeadlessInAppWebView Architecture', () {
-      test('should initialize without requiring widget tree', () {
-        // Testa que o HeadlessInAppWebView não precisa de widget tree
-        expect(dataSource, isNotNull);
-        expect(() => dataSource.runSpeedTest(), returnsNormally);
+    test('emits error when upload fails after download', () async {
+      when(() => mockClient.startDownloadTesting(
+            onDone: any(named: 'onDone'),
+            onProgress: any(named: 'onProgress'),
+            onError: any(named: 'onError'),
+            fileSize: any(named: 'fileSize'),
+            testServer: any(named: 'testServer'),
+          )).thenAnswer((invocation) {
+        final onDone =
+            invocation.namedArguments[const Symbol('onDone')] as fist.DoneCallback;
+        onDone(75000, SpeedUnit.Kbps);
+        return Future.value(() {});
       });
 
-      test('should handle debug mode configuration correctly', () {
-        // Verifica que as configurações de debug são aplicadas corretamente
-        expect(dataSource.toString(), isNotNull);
-        // Em modo de teste, deveria funcionar sem problemas
+      when(() => mockClient.startUploadTesting(
+            onDone: any(named: 'onDone'),
+            onProgress: any(named: 'onProgress'),
+            onError: any(named: 'onError'),
+            fileSize: any(named: 'fileSize'),
+            testServer: any(named: 'testServer'),
+          )).thenAnswer((invocation) {
+        final onError =
+            invocation.namedArguments[const Symbol('onError')] as fist.ErrorCallback;
+        onError('Falha no upload', 'connection-lost');
+        return Future.value(() {});
       });
+
+      final stream = dataSource.runSpeedTest();
+      final events = await stream.toList();
+
+      expect(events.last.stage, DiagnosticStage.error);
+      expect(events.last.message, contains('Falha no upload'));
+      final resultFuture = dataSource.getSpeedTestResult();
+      expect(resultFuture, throwsA(isA<SpeedTestException>()));
+    });
+  });
+
+  test('dispose impede novas execuções após cancelamento', () async {
+    final downloadCompleter = Completer<void>();
+    when(() => mockClient.startDownloadTesting(
+          onDone: any(named: 'onDone'),
+          onProgress: any(named: 'onProgress'),
+          onError: any(named: 'onError'),
+          fileSize: any(named: 'fileSize'),
+          testServer: any(named: 'testServer'),
+        )).thenAnswer((_) {
+      downloadCompleter.complete();
+      return Future.value(() {});
     });
 
-    group('JSON Parsing with flutter_inappwebview', () {
-      test('should handle numeric values correctly with new parsing method', () {
-        // Test com valores válidos
-        final validJson = {
-          'type': 'download',
-          'progress': 0.5,
-          'speed': 50.5,
-          'message': 'test',
-          'download': 100.5,
-          'upload': 50.25,
-          'ping': 12.5,
-          'jitter': 3.2,
-          'ipInfo': {'isp': 'Test ISP'},
-          'aborted': false,
-        };
+    dataSource.runSpeedTest();
+    await downloadCompleter.future;
 
-        final jsonString = json.encode({'event': 'end', 'payload': validJson});
-        
-        // Este teste verifica que o parsing não lança exceção
-        expect(() => json.decode(jsonString), returnsNormally);
-      });
+    dataSource.dispose();
 
-      test('should handle null values gracefully with new parsing method', () {
-        // Test com valores nulos que podem causar problemas no parsing antigo
-        final nullJson = {
-          'type': 'download',
-          'progress': null,
-          'speed': null,
-          'message': null,
-          'download': null,
-          'upload': null,
-          'ping': null,
-          'jitter': null,
-          'ipInfo': {},
-          'aborted': null,
-        };
-
-        final jsonString = json.encode({'event': 'end', 'payload': nullJson});
-        
-        // Verifica que o parsing não lança exceção com valores nulos
-        expect(() => json.decode(jsonString), returnsNormally);
-      });
-
-      test('should handle mixed numeric types (int/double) correctly', () {
-        // Test com tipos numéricos mistos
-        final mixedJson = {
-          'type': 'download',
-          'progress': 0.75, // double
-          'speed': 50,      // int
-          'download': 100,  // int
-          'upload': 50.5,   // double
-          'ping': 12,       // int
-          'jitter': 3.2,    // double
-          'ipInfo': {'isp': 'Test ISP'},
-          'aborted': false,
-        };
-
-        final jsonString = json.encode({'event': 'end', 'payload': mixedJson});
-        
-        // Verifica que tipos mistos são tratados corretamente
-        expect(() => json.decode(jsonString), returnsNormally);
-      });
-    });
-
-    group('HeadlessInAppWebView Phase Tracking', () {
-      test('should detect phase transitions correctly', () {
-        // Testa que as mudanças de fase são detectadas corretamente
-        final downloadJson = {
-          'type': 'download',
-          'progress': 0.5,
-          'speed': 50.5,
-        };
-        
-        final uploadJson = {
-          'type': 'upload', 
-          'progress': 0.3,
-          'speed': 25.2,
-        };
-
-        final pingJson = {
-          'type': 'ping',
-          'progress': 0.8,
-          'speed': 12.5,
-        };
-
-        // Verifica que cada tipo de fase pode ser processado
-        expect(downloadJson['type'], equals('download'));
-        expect(uploadJson['type'], equals('upload'));
-        expect(pingJson['type'], equals('ping'));
-      });
-
-      test('should handle ERR_FAILED as expected behavior during cleanup', () {
-        // Documenta que ERR_FAILED durante cleanup é comportamento esperado
-        // URLs típicas que causam ERR_FAILED durante limpeza de conexões
-        final cleanupUrls = [
-          'http://20.169.157.120//backend/garbage.php?r=0.790352293136987&ckSize=100',
-          'http://20.169.157.120//backend/empty.php',
-        ];
-        
-        for (final url in cleanupUrls) {
-          expect(url.contains('garbage.php') || url.contains('empty.php'), isTrue);
-        }
-        
-        // Este comportamento é esperado e não indica erro
-      });
-    });
-
-    group('Timeout and Performance with 5-minute limit', () {
-      test('should handle 5-minute timeout appropriately for slow networks', () async {
-        // Testa que o novo timeout de 5 minutos é adequado
-        final stream = dataSource.runSpeedTest();
-        
-        // Simula um teste mais longo mas dentro do limite
-        await stream.timeout(
-          const Duration(seconds: 10), // Timeout curto para teste
-          onTimeout: (sink) => sink.close(),
-        ).take(1).drain().catchError((_) {
-          // Timeout esperado para este teste rápido
-        });
-        
-        // Verifica que o dataSource continua funcional
-        expect(dataSource, isNotNull);
-      });
-
-      test('should provide detailed timeout information when limits are exceeded', () {
-        // Documenta que timeouts agora incluem informações detalhadas:
-        // - Tempo decorrido
-        // - Estado atual do FSM
-        // - Fase do teste (download/upload/ping)
-        
-        const timeoutMessage = 'Test timeout after 5m 0s in state: running, phase: download';
-        expect(timeoutMessage.contains('Test timeout'), isTrue);
-        expect(timeoutMessage.contains('state:'), isTrue);
-        expect(timeoutMessage.contains('phase:'), isTrue);
-      });
-    });
-
-    test('should successfully handle LibreSpeed v5.4.1 integration', () {
-      // Verifica compatibilidade com LibreSpeed v5.4.1
-      const librespeedLog = 'LibreSpeed by Federico Dossena v5.4.1 - https://github.com/librespeed/speedtest';
-      expect(librespeedLog.contains('v5.4.1'), isTrue);
-      expect(librespeedLog.contains('librespeed'), isTrue);
-    });
-
-    group('Test Start Time Accuracy', () {
-      test('should capture actual test start time when test begins', () async {
-        final beforeStart = DateTime.now();
-        
-        // Inicia o stream de teste
-        final stream = dataSource.runSpeedTest();
-        
-        // Simula um pequeno delay
-        await Future.delayed(const Duration(milliseconds: 100));
-        
-        final afterDelay = DateTime.now();
-        
-        // Aguarda um evento do stream ou timeout
-        await stream.timeout(
-          const Duration(seconds: 2),
-          onTimeout: (sink) => sink.close(),
-        ).take(1).drain().catchError((_) {});
-        
-        // Verifica que o tempo de início foi capturado no momento correto
-        // (deve estar entre beforeStart e afterDelay, não ser uma estimativa)
-        expect(beforeStart.isBefore(afterDelay), isTrue);
-        
-        // Esta verificação confirma que implementamos a captura do tempo real
-        // A lógica real de verificação seria mais complexa mas este teste
-        // documenta a intenção da melhoria
-      });
-    });
-
-    test('should not require widget integration with HeadlessInAppWebView', () {
-      // Verifica que não precisamos mais de widget integration
-      // O HeadlessInAppWebView roda completamente em background
-      expect(dataSource.toString(), isNotNull);
-      
-      // A verificação real seria através de métodos privados
-      // mas este teste documenta que removemos a dependência de UI
-    });
+    expect(
+      () => dataSource.runSpeedTest(),
+      throwsA(isA<SpeedTestException>()),
+    );
   });
 }

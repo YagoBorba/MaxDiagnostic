@@ -8,6 +8,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../network/network_info.dart';
 import '../../data/datasources/speed_test_remote_datasource.dart';
+import '../../data/datasources/ping_remote_datasource.dart';
 import '../../data/datasources/network_info_local_datasource.dart';
 import '../../data/datasources/device_info_local_datasource.dart';
 import '../../data/repositories/diagnostic_repository_impl.dart';
@@ -49,6 +50,7 @@ Future<void> init({bool useMockDiagnostic = false}) async {
   sl.registerLazySingleton<DiagnosticRepository>(
     () => DiagnosticRepositoryImpl(
       speedTestRemoteDataSource: sl(),
+      pingRemoteDataSource: sl(),
       networkInfo: sl(),
       networkInfoLocalDataSource: sl(),
       deviceInfoLocalDataSource: sl(),
@@ -72,18 +74,47 @@ Future<void> init({bool useMockDiagnostic = false}) async {
     () => SpeedTestRemoteDataSourceImpl(config: sl()),
   );
 
+  sl.registerLazySingleton<PingRemoteDataSource>(
+    () => PingRemoteDataSourceImpl(
+      host: sl<AppConfig>().pingHost,
+      count: sl<AppConfig>().pingCount,
+      intervalSeconds: sl<AppConfig>().pingIntervalSeconds,
+      timeoutSeconds: sl<AppConfig>().pingTimeoutSeconds,
+    ),
+  );
+
   sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
   sl.registerLazySingleton<AppConfig>(() {
-    String url = 'about:blank';
+    String runnerUrl = 'about:blank';
+    String downloadUrl = 'http://speedtest.tele2.net/10MB.zip';
+    String uploadUrl = 'http://speedtest.tele2.net/upload.php';
+    int fileSizeBytes = 200000;
+
     try {
       if (dotenv.isInitialized) {
-        url = dotenv.get('SPEED_TEST_URL', fallback: 'about:blank');
+        runnerUrl = dotenv.get('SPEED_TEST_URL', fallback: runnerUrl);
+        downloadUrl = dotenv.get('SPEED_TEST_DOWNLOAD_URL', fallback: downloadUrl);
+        uploadUrl = dotenv.get('SPEED_TEST_UPLOAD_URL', fallback: uploadUrl);
+        fileSizeBytes = int.tryParse(
+              dotenv.get('SPEED_TEST_FILE_SIZE_BYTES', fallback: '$fileSizeBytes'),
+            ) ??
+            fileSizeBytes;
       }
     } catch (_) {
-      url = 'about:blank';
+      // ignore and keep defaults
     }
-    debugPrint('[AppConfig] SPEED_TEST_URL resolved: $url');
-    return AppConfig(speedTestUrl: url);
+
+    debugPrint('[AppConfig] SPEED_TEST_URL resolved: $runnerUrl');
+    debugPrint('[AppConfig] SPEED_TEST_DOWNLOAD_URL resolved: $downloadUrl');
+    debugPrint('[AppConfig] SPEED_TEST_UPLOAD_URL resolved: $uploadUrl');
+    debugPrint('[AppConfig] SPEED_TEST_FILE_SIZE_BYTES: $fileSizeBytes');
+
+    return AppConfig(
+      speedTestUrl: runnerUrl.isEmpty ? 'native-plugin' : runnerUrl,
+      speedTestDownloadUrl: downloadUrl,
+      speedTestUploadUrl: uploadUrl,
+      speedTestFileSizeBytes: fileSizeBytes,
+    );
   });
 
   final sharedPreferences = await SharedPreferences.getInstance();

@@ -5,12 +5,14 @@ class FinalResultsEntity extends Equatable {
   final DeviceInfoEntity deviceInfo;
   final NetworkInfoEntity networkInfo;
   final SpeedTestResultEntity speedTestResult;
+  final PingResultEntity pingResult;
 
   const FinalResultsEntity({
     required this.timestamp,
     required this.deviceInfo,
     required this.networkInfo,
     required this.speedTestResult,
+    required this.pingResult,
   });
 
   @override
@@ -19,6 +21,7 @@ class FinalResultsEntity extends Equatable {
         deviceInfo,
         networkInfo,
         speedTestResult,
+        pingResult,
       ];
 }
 
@@ -117,5 +120,41 @@ class SpeedTestResultEntity extends Equatable {
         testEndTime,
         testCompleted,
         errorMessage,
+      ];
+}
+
+class PingResultEntity extends Equatable {
+  final double averageLatencyMs;
+  final double minLatencyMs;
+  final double maxLatencyMs;
+  final double jitterMs;
+  final double packetLossPercentage;
+  final int transmitted;
+  final int received;
+  final List<double> samplesMs;
+
+  const PingResultEntity({
+    required this.averageLatencyMs,
+    required this.minLatencyMs,
+    required this.maxLatencyMs,
+    required this.jitterMs,
+    required this.packetLossPercentage,
+    required this.transmitted,
+    required this.received,
+    this.samplesMs = const [],
+  });
+
+  double get successRate => transmitted == 0 ? 0 : received / transmitted;
+
+  @override
+  List<Object?> get props => [
+        averageLatencyMs,
+        minLatencyMs,
+        maxLatencyMs,
+        jitterMs,
+        packetLossPercentage,
+        transmitted,
+        received,
+        samplesMs,
       ];
 }

@@ -10,7 +10,9 @@ import 'package:maxt_diagnostic/core/network/network_info.dart';
 import 'package:maxt_diagnostic/data/datasources/device_info_local_datasource.dart';
 import 'package:maxt_diagnostic/data/datasources/network_info_local_datasource.dart';
 import 'package:maxt_diagnostic/data/datasources/speed_test_remote_datasource.dart';
-import 'package:maxt_diagnostic/data/models/final_results_model.dart';
+import 'package:maxt_diagnostic/data/datasources/ping_remote_datasource.dart';
+import 'package:maxt_diagnostic/data/models/speed_test_result_model.dart' as speed_models;
+import 'package:maxt_diagnostic/data/models/ping_result_model.dart' as ping_models;
 import 'package:maxt_diagnostic/data/repositories/diagnostic_repository_impl.dart';
 import 'package:maxt_diagnostic/domain/entities/diagnostic_flow.dart';
 import 'package:maxt_diagnostic/domain/entities/final_results_entity.dart';
@@ -21,6 +23,8 @@ class _MockNetworkInfoLocalDataSource extends Mock
 class _MockSpeedTestRemoteDataSource extends Mock
     implements SpeedTestRemoteDataSource {}
 
+class _MockPingRemoteDataSource extends Mock implements PingRemoteDataSource {}
+
 class _MockNetworkInfo extends Mock implements NetworkInfo {}
 
 class _MockDeviceInfoLocalDataSource extends Mock
@@ -29,6 +33,7 @@ class _MockDeviceInfoLocalDataSource extends Mock
 void main() {
   late _MockNetworkInfoLocalDataSource networkInfoLocalDataSource;
   late _MockSpeedTestRemoteDataSource speedTestRemoteDataSource;
+  late _MockPingRemoteDataSource pingRemoteDataSource;
   late _MockNetworkInfo networkInfo;
   late _MockDeviceInfoLocalDataSource deviceInfoLocalDataSource;
   late DiagnosticRepositoryImpl repository;
@@ -36,15 +41,23 @@ void main() {
   setUp(() {
     networkInfoLocalDataSource = _MockNetworkInfoLocalDataSource();
     speedTestRemoteDataSource = _MockSpeedTestRemoteDataSource();
+    pingRemoteDataSource = _MockPingRemoteDataSource();
     networkInfo = _MockNetworkInfo();
     deviceInfoLocalDataSource = _MockDeviceInfoLocalDataSource();
 
     repository = DiagnosticRepositoryImpl(
       networkInfoLocalDataSource: networkInfoLocalDataSource,
       speedTestRemoteDataSource: speedTestRemoteDataSource,
+      pingRemoteDataSource: pingRemoteDataSource,
       networkInfo: networkInfo,
       deviceInfoLocalDataSource: deviceInfoLocalDataSource,
     );
+
+    when(() => pingRemoteDataSource.runPingTest())
+        .thenAnswer((_) => const Stream<DiagnosticProgressEntity>.empty());
+    when(() => pingRemoteDataSource.getPingResult())
+        .thenAnswer((_) async => const ping_models.PingResultModel.empty());
+    when(() => pingRemoteDataSource.dispose()).thenAnswer((_) async {});
   });
 
   group('runDiagnosticTest', () {
@@ -80,7 +93,7 @@ void main() {
         return (callCount++ == 0) ? netInitial : netFinal;
       });
 
-      final speedResult = SpeedTestResultModel(
+  final speedResult = speed_models.SpeedTestResultModel(
         downloadSpeed: 100.0,
         uploadSpeed: 50.0,
         ping: 12.0,
@@ -90,12 +103,29 @@ void main() {
         testEndTime: DateTime.now(),
         testCompleted: true,
       );
-      when(() => speedTestRemoteDataSource.getSpeedTestResult())
-          .thenAnswer((_) async => speedResult);
+      when(() => speedTestRemoteDataSource.getSpeedTestResult()).thenAnswer(
+        (_) => Future<speed_models.SpeedTestResultModel>.value(speedResult),
+      );
 
       final controller = StreamController<DiagnosticProgressEntity>();
       when(() => speedTestRemoteDataSource.runSpeedTest())
           .thenAnswer((_) => controller.stream);
+
+      final pingController = StreamController<DiagnosticProgressEntity>();
+      const ping_models.PingResultModel pingResult = ping_models.PingResultModel(
+        averageLatencyMs: 18.5,
+        minLatencyMs: 16.0,
+        maxLatencyMs: 22.0,
+        jitterMs: 2.3,
+        packetLossPercentage: 10.0,
+        transmitted: 5,
+        received: 4,
+      );
+      when(() => pingRemoteDataSource.runPingTest())
+          .thenAnswer((_) => pingController.stream);
+      when(() => pingRemoteDataSource.getPingResult())
+          .thenAnswer((_) async => pingResult);
+      when(() => pingRemoteDataSource.dispose()).thenAnswer((_) async {});
 
       // Act
       final emitted = <Either<Failure, DiagnosticFlowEvent>>[];
@@ -114,9 +144,18 @@ void main() {
         timestamp: DateTime.now(),
         speedTestResult: speedResult,
       ));
+      await controller.close();
+
+      pingController.add(DiagnosticProgressEntity(
+        stage: DiagnosticStage.runningPingTest,
+        progress: 1.0,
+        message: 'Ping done',
+        timestamp: DateTime.now(),
+        pingResult: pingResult,
+      ));
+      await pingController.close();
       
       await Future<void>.delayed(const Duration(milliseconds: 50));
-      await controller.close(); 
       await sub.cancel();
 
       // Assert
@@ -134,6 +173,7 @@ void main() {
       expect(finalResults.deviceInfo.deviceModel, device.deviceModel);
       expect(finalResults.networkInfo.wifiLinkSpeed, netFinal.wifiLinkSpeed);
       expect(finalResults.speedTestResult.downloadSpeed, speedResult.downloadSpeed);
+      expect(finalResults.pingResult.averageLatencyMs, pingResult.averageLatencyMs);
     });
 
     test('emits NetworkFailure when not connected', () async {
