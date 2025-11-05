@@ -202,14 +202,15 @@ class HomeScreen extends StatelessWidget {
               return Column(
                 children: [
                   const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16.0),
+                    padding: EdgeInsets.only(top: 40, bottom: 24),
                     child: Column(
                       children: [
                         Text('MAX INTERNET',
                             style: TextStyle(
                                 fontSize: 24, fontWeight: FontWeight.bold)),
+                        SizedBox(height: 8),
                         Text('Status da Rede',
-                            style: TextStyle(fontSize: 16, color: Colors.grey)),
+                            style: TextStyle(fontSize: 16, color: Color(0xFF64748B))),
                       ],
                     ),
                   ),

@@ -35,22 +35,22 @@ class _DiagnosticView extends StatelessWidget {
       },
       child: Scaffold(
         backgroundColor: const Color(0xFFF8FAFC),
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 1,
-          shadowColor: Colors.black12,
-          leading: IconButton(
-            icon: Icon(
-              LucideIcons.arrowLeft,
-              color: isTestRunning ? Colors.grey : const Color(0xFF1E293B),
+            appBar: AppBar(
+              backgroundColor: Colors.white,
+              elevation: 1,
+              shadowColor: Colors.black12,
+              leading: IconButton(
+                icon: Icon(
+                  LucideIcons.arrowLeft,
+                  color: isTestRunning ? Colors.grey : const Color(0xFF1E293B),
+                ),
+                onPressed: isTestRunning ? null : () => context.pop(),
+              ),
+              title: const Text('MAX INTERNET',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              centerTitle: true,
             ),
-            onPressed: isTestRunning ? null : () => context.pop(),
-          ),
-          title: const Text('MAX INTERNET',
-              style: TextStyle(fontWeight: FontWeight.bold)),
-          centerTitle: true,
-        ),
-        body: SingleChildScrollView(
+            body: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
