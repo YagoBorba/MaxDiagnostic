@@ -72,7 +72,6 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
 
           yield Right(DiagnosticCompleted(finalResults));
           
-          // Give the DataSource time to finish cleanup, then dispose
           Future.delayed(const Duration(milliseconds: 100), () {
             speedTestRemoteDataSource.dispose();
           });

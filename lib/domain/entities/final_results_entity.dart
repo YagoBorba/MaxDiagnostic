@@ -47,12 +47,11 @@ class DeviceInfoEntity extends Equatable {
       ];
 }
 
-/// Network information entity
 class NetworkInfoEntity extends Equatable {
   final String connectionType;
   final String? wifiName;
   final String? wifiFrequency;
-  final int? wifiSignalStrength; // RSSI
+  final int? wifiSignalStrength;
   final int? wifiLinkSpeed;
   final String? wifiBSSID;
   final String? externalIP;
@@ -82,12 +81,11 @@ class NetworkInfoEntity extends Equatable {
       ];
 }
 
-/// Speed test result entity
 class SpeedTestResultEntity extends Equatable {
-  final double downloadSpeed; // Mbps
-  final double uploadSpeed; // Mbps
-  final double ping; // ms
-  final double jitter; // ms
+  final double downloadSpeed;
+  final double uploadSpeed;
+  final double ping;
+  final double jitter;
   final String serverLocation;
   final DateTime testStartTime;
   final DateTime testEndTime;

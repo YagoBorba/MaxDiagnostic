@@ -65,8 +65,8 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
         (e) => _sanitizeSsid(e.ssid) == ssid.trim(),
         orElse: () => scanResults.first,
       );
-      rssi = match.level; // dBm
-      final freq = match.frequency; // MHz
+      rssi = match.level;
+      final freq = match.frequency;
       if (freq != null) {
         frequencyLabel = freq >= 5000 ? '5 GHz' : '2.4 GHz';
       }
@@ -173,8 +173,8 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
 class _WifiEntry {
   final String? ssid;
   final String? bssid;
-  final int? level; // dBm
-  final int? frequency; // MHz
+  final int? level;
+  final int? frequency;
 
   _WifiEntry({this.ssid, this.bssid, this.level, this.frequency});
 }
