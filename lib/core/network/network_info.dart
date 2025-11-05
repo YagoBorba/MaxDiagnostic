@@ -1,7 +1,5 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 
-/// Abstract class to handle network connectivity status
-/// This provides a clean interface for checking network availability
 abstract class NetworkInfo {
   Future<bool> get isConnected;
   Future<List<ConnectivityResult>> get connectionTypes;

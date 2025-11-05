@@ -10,6 +10,7 @@ enum DiagnosticStage {
   runningDownloadTest,
   runningUploadTest,
   runningLatencyTest,
+  runningJitterTest,
   collectingAdditionalInfo,
   completed,
   error,
@@ -31,7 +32,9 @@ extension DiagnosticStageExtension on DiagnosticStage {
       case DiagnosticStage.runningUploadTest:
         return 'Testando velocidade de upload...';
       case DiagnosticStage.runningLatencyTest:
-        return 'Testando latência e jitter...';
+        return 'Testando latência...';
+      case DiagnosticStage.runningJitterTest:
+        return 'Testando jitter...';
       case DiagnosticStage.collectingAdditionalInfo:
         return 'Coletando informações adicionais...';
       case DiagnosticStage.completed:
@@ -95,7 +98,6 @@ class DiagnosticProgressModel extends DiagnosticProgressEntity {
       progress: (json['progress'] as num?)?.toDouble() ?? 0.0,
       message: json['message'] as String? ?? '',
       timestamp: DateTime.parse(json['timestamp']),
-      // Assuming speedTestResult might be part of the progress JSON
       speedTestResult: json['speedTestResult'] != null
           ? SpeedTestResultModel.fromJson(json['speedTestResult'])
           : null,
