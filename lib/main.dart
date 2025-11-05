@@ -6,11 +6,11 @@ import 'core/di/injection_container.dart' as di;
 import 'l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'core/config/app_config.dart';
+import 'core/theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // WebView debugging é automaticamente habilitado em debug builds
   debugPrint('🔧 Starting MaxDiagnostic in debug mode - WebView debugging enabled');
   
   await di.init();
@@ -30,13 +30,12 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp.router(
         title: 'MaxT Diagnostic',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
-          useMaterial3: true,
-        ),
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.light,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        routerConfig: router, // Usando a configuração do GoRouter
+        routerConfig: router,
       ),
     );
   }

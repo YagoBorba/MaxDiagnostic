@@ -38,13 +38,10 @@ class TestUIState extends Equatable {
 }
 
 class DiagnosticState extends Equatable {
-  // REFACTORED: Changed from List to Map for O(1) updates.
   final Map<String, TestUIState> tests;
   final double overallProgress;
   final GlobalTestStatus globalStatus;
   final FinalResultsEntity? finalResults;
-  // WebView related state can be kept if needed elsewhere, but for simplicity
-  // in this refactor, let's assume error messages are handled more globally.
   final String? errorMessage;
 
 
@@ -76,14 +73,13 @@ class DiagnosticState extends Equatable {
     GlobalTestStatus? globalStatus,
     FinalResultsEntity? finalResults,
     String? errorMessage,
-    bool clearError = false, // Flag to explicitly clear the error
+    bool clearError = false, 
   }) {
     return DiagnosticState(
       tests: tests ?? this.tests,
       overallProgress: overallProgress ?? this.overallProgress,
       globalStatus: globalStatus ?? this.globalStatus,
       finalResults: finalResults ?? this.finalResults,
-      // REFACTORED: Logic moved to Cubit. State is now simpler.
       errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
     );
   }

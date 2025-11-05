@@ -23,13 +23,10 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
   })  : _progressCalculator = progressCalculator ?? ProgressCalculator.defaultConfig(),
         super(DiagnosticState.initial());
 
-  // REFACTORED: Centralized mapping from Domain to Presentation layer.
-  // This is the single source of truth for connecting a diagnostic stage to a UI element.
   static const Map<DiagnosticStage, String> _stageToTestIdMap = {
     DiagnosticStage.runningDownloadTest: 'download',
     DiagnosticStage.runningUploadTest: 'upload',
     DiagnosticStage.runningLatencyTest: 'latency',
-    // Note: Jitter is derived from final results, not a separate stage here.
     DiagnosticStage.collectingDeviceInfo: 'additionalInfo',
     DiagnosticStage.collectingNetworkInfo: 'additionalInfo',
   };
@@ -74,15 +71,14 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
   }
 
   void _handleDiagnosticEvent(DiagnosticFlowEvent event) {
-  if (event is DiagnosticProgressEntity) { // <-- CORRIGIDO
-    _applyProgress(event); // <-- Passa o próprio evento
+  if (event is DiagnosticProgressEntity) { 
+    _applyProgress(event); 
   } else if (event is DiagnosticCompleted) {
     _handleTestCompletion(event);
   }
 }
 
   void _handleStreamDone() {
-    // This logic is a safeguard. Ideally, the stream always ends with a completion or error event.
     if (state.globalStatus != GlobalTestStatus.complete && state.globalStatus != GlobalTestStatus.error) {
       debugPrint('⚠️ Stream finalizado sem conclusão adequada. Marcando como erro.');
       _handleFailure(const ServerFailure(message: 'O teste foi interrompido inesperadamente.'));
@@ -92,7 +88,6 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
   void _handleTestCompletion(DiagnosticCompleted event) {
     final results = event.results;
     
-    // Update individual test results with final data
     final finalTests = Map.of(state.tests);
     finalTests['download'] = finalTests['download']!.copyWith(status: TestStatus.complete, progress: 1.0, resultText: '${results.speedTestResult.downloadSpeed.toStringAsFixed(2)} Mbps');
     finalTests['upload'] = finalTests['upload']!.copyWith(status: TestStatus.complete, progress: 1.0, resultText: '${results.speedTestResult.uploadSpeed.toStringAsFixed(2)} Mbps');
@@ -106,17 +101,15 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
       overallProgress: 100,
       tests: finalTests,
       finalResults: event.results,
-      clearError: true, // Explicitly clear any previous errors
+      clearError: true, 
     ));
   }
 
   void _applyProgress(DiagnosticProgressEntity p) {
     final overall = _progressCalculator.calculateOverallProgress(p.stage, p.progress);
     
-    // Use the centralized map to find which UI test to update.
     final testId = _stageToTestIdMap[p.stage];
     if (testId == null) {
-      // If the stage doesn't map to a specific test, just update overall progress.
       emit(state.copyWith(overallProgress: overall));
       return;
     }
@@ -126,11 +119,10 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
     emit(state.copyWith(
       overallProgress: overall,
       tests: updatedTests,
-      clearError: true, // Clear error on new progress
+      clearError: true, 
     ));
   }
 
-  // REFACTORED: Now operates on a Map, making it much cleaner and more efficient.
   Map<String, TestUIState> _updateTest(String id, TestStatus status, String text, [double? progress]) {
     final newTests = Map.of(state.tests);
     final currentTest = newTests[id];

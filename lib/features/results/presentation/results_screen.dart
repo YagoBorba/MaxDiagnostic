@@ -20,9 +20,11 @@ class ResultsScreen extends StatelessWidget {
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         backgroundColor: Colors.white,
+        elevation: 1,
+        shadowColor: Colors.black12,
         leading: IconButton(
           icon: const Icon(LucideIcons.arrowLeft),
-          onPressed: () => context.go('/'), // Sempre volta para a Home
+          onPressed: () => context.go('/'),
         ),
         title: const Text('MAX INTERNET',
             style: TextStyle(fontWeight: FontWeight.bold)),
@@ -87,9 +89,9 @@ class ResultsScreen extends StatelessWidget {
                       padding: const EdgeInsets.only(bottom: 16.0),
                       child: AdviceCard(advice: advice),
                     )),
-              ],
+                ],
+              ),
             ),
-          ),
           _FooterActions(),
         ],
       ),
