@@ -8,7 +8,7 @@ import 'package:maxt_diagnostic/domain/entities/diagnostic_flow.dart';
 import 'package:maxt_diagnostic/data/models/final_results_model.dart';
 
 class _SpeedTestConstants {
-  static const globalTimeout = Duration(minutes: 5); // Aumentado para acomodar redes mais lentas
+  static const globalTimeout = Duration(minutes: 5);
   static const jsChannelName = 'FlutterChannel';
 }
 
@@ -43,12 +43,19 @@ class _JsPayload {
         progress = (json['progress'] as num?)?.toDouble() ?? 0.0,
         speed = json['speed'],
         message = json['message'] as String?,
-        download = (json['download'] as num?)?.toDouble(),
-        upload = (json['upload'] as num?)?.toDouble(),
-        ping = (json['ping'] as num?)?.toDouble(),
-        jitter = (json['jitter'] as num?)?.toDouble(),
+        download = _parseNumeric(json['download']),
+        upload = _parseNumeric(json['upload']),
+        ping = _parseNumeric(json['ping']),
+        jitter = _parseNumeric(json['jitter']),
         ipInfo = json['ipInfo'] as Map<String, dynamic>? ?? {},
         aborted = json['aborted'] as bool?;
+
+  static double? _parseNumeric(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
 }
 
 
@@ -71,7 +78,6 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
       debugPrint('🔧 HeadlessInAppWebView initialized for speed test');
       debugPrint('🔧 Using URL: ${config.speedTestUrl}');
       
-      // Habilita debug do WebView para desenvolvimento
       InAppWebViewController.setWebContentsDebuggingEnabled(true);
       debugPrint('🔧 WebView debugging enabled - você pode inspecionar via chrome://inspect');
     }
@@ -83,7 +89,6 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
     _fsmManager.start(streamController);
 
     if (kIsWeb) {
-      // Para web, usamos simulação como fallback
       _runSpeedTestSimulationFallback();
     } else {
       _initializeAndRunHeadlessWebViewTest();
@@ -99,14 +104,11 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
     _headlessWebView = HeadlessInAppWebView(
       initialUrlRequest: URLRequest(url: WebUri(url)),
       initialSettings: InAppWebViewSettings(
-        // Configurações básicas
         javaScriptEnabled: true,
         domStorageEnabled: true,
         databaseEnabled: true,
-        // Configurações para melhor performance em testes de rede
         cacheEnabled: false,
         clearCache: true,
-        // Configurações específicas para Android
         mixedContentMode: MixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,
         allowsInlineMediaPlayback: true,
       ),
@@ -115,7 +117,6 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
         debugPrint('🔧 WebView settings: debugging=$kDebugMode, cache=false');
         _controller = controller;
         
-        // Adiciona o canal de comunicação do JS para o Flutter
         controller.addJavaScriptHandler(
           handlerName: _SpeedTestConstants.jsChannelName,
           callback: (args) {
@@ -137,10 +138,26 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
         debugPrint('✅ Headless WebView Page loaded: $url');
         debugPrint('🔧 Initializing test script...');
         try {
-          // Verifica se os objetos necessários existem antes de inicializar
+          await controller.evaluateJavascript(source: '''
+            (function() {
+              window.FlutterChannel = {
+                postMessage: function(message) {
+                  if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
+                    window.flutter_inappwebview.callHandler('${_SpeedTestConstants.jsChannelName}', message);
+                  }
+                }
+              };
+            })();
+          ''');
+          
+          debugPrint('✅ FlutterChannel injected successfully');
+          
           if (kDebugMode) {
             final windowCheck = await controller.evaluateJavascript(source: 'typeof window');
             debugPrint('🔧 Window object: $windowCheck');
+            
+            final channelCheck = await controller.evaluateJavascript(source: 'typeof window.FlutterChannel');
+            debugPrint('🔧 FlutterChannel: $channelCheck');
             
             final initCheck = await controller.evaluateJavascript(source: 'typeof window.initialize');
             debugPrint('🔧 Initialize function: $initCheck');
@@ -168,14 +185,12 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
       onReceivedError: (controller, request, error) {
         if (_isDisposed) return;
         
-        // O código -2 para net::ERR_FAILED é comum em aborts, podemos ignorá-lo.
         if (error.type == WebResourceErrorType.UNKNOWN && error.description.contains('ERR_FAILED')) {
           debugPrint('💡 Expected ERR_FAILED detected (cleanup operation) - URL: ${request.url}');
           debugPrint('   ✅ This is normal behavior when aborting speed test connections');
           return;
         }
         
-        // Log detalhado apenas para erros reais
         debugPrint('🚨 REAL WebView Error (not cleanup):');
         debugPrint('   URL: ${request.url}');
         debugPrint('   Type: ${error.type}');
@@ -264,24 +279,25 @@ class _SpeedTestFsmManager {
   StreamController<DiagnosticProgressEntity>? _progressController;
   Completer<SpeedTestResultModel>? _resultCompleter;
   Timer? _globalTimeout;
-  Timer? _progressWatchdog; // Timer para detectar progresso travado
-  Timer? _phaseTransitionWatchdog; // Timer para detectar travamento entre fases
-  DateTime? _actualTestStartTime; // Captura o tempo real de início do teste
-  DateTime? _lastProgressTime; // Última vez que houve progresso
-  DateTime? _downloadCompletedTime; // Quando download foi completado
-  double _lastProgressValue = 0.0; // Último valor de progresso recebido
+  Timer? _progressWatchdog;
+  Timer? _phaseTransitionWatchdog;
+  DateTime? _actualTestStartTime;
+  DateTime? _lastProgressTime;
+  DateTime? _downloadCompletedTime;
+  double _lastProgressValue = 0.0; 
 
   _SpeedTestState _currentState = _SpeedTestState.idle;
-  String? _lastTestPhase; // Para rastrear mudanças de fase
+  String? _lastTestPhase;
+  final Map<String, bool> _phaseCompleted = {}; 
 
-  static const Duration _progressTimeoutDuration = Duration(seconds: 30); // 30s sem progresso = problema
+  static const Duration _progressTimeoutDuration = Duration(seconds: 30); 
 
   void start(StreamController<DiagnosticProgressEntity> controller) {
     _progressController = controller;
     _resultCompleter = Completer<SpeedTestResultModel>();
-    _actualTestStartTime = DateTime.now(); // Captura o tempo real de início
-    _lastProgressTime = DateTime.now(); // Inicializa o tempo de progresso
-    _lastProgressValue = 0.0; // Reset do progresso
+    _actualTestStartTime = DateTime.now(); 
+    _lastProgressTime = DateTime.now();
+    _lastProgressValue = 0.0; 
     transitionTo(_SpeedTestState.initializing);
 
     _globalTimeout = Timer(_SpeedTestConstants.globalTimeout, () {
@@ -299,11 +315,10 @@ class _SpeedTestFsmManager {
 
   void _startProgressWatchdog() {
     _progressWatchdog?.cancel();
-    _progressWatchdog = Timer.periodic(Duration(seconds: 10), (timer) { // Check a cada 10s
+    _progressWatchdog = Timer.periodic(const Duration(seconds: 10), (timer) {
       final now = DateTime.now();
       final timeSinceLastProgress = now.difference(_lastProgressTime ?? now);
-      
-      // Log do status a cada check
+
       if (kDebugMode) {
         debugPrint('🐕 Watchdog Check: Last progress ${timeSinceLastProgress.inSeconds}s ago at ${(_lastProgressValue * 100).toStringAsFixed(1)}%');
       }
@@ -312,7 +327,6 @@ class _SpeedTestFsmManager {
         debugPrint('🐕 Progress Watchdog: No progress for ${timeSinceLastProgress.inSeconds}s');
         debugPrint('🐕 Last progress: ${(_lastProgressValue * 100).toStringAsFixed(1)}% in phase: ${_lastTestPhase ?? 'unknown'}');
         
-        // Se travou no meio de uma fase (especialmente download em ~50%), pode ser problema de rede
         if (_lastProgressValue > 0.3 && _lastProgressValue < 0.8) {
           debugPrint('� Test stuck in middle of phase - attempting recovery');
           debugPrint('💡 Tip: This often happens with unstable network connections');
@@ -332,7 +346,7 @@ class _SpeedTestFsmManager {
     _phaseTransitionWatchdog?.cancel();
     debugPrint('🕐 Phase Transition Watchdog: Aguardando transição download → upload (30s)');
     
-    _phaseTransitionWatchdog = Timer(Duration(seconds: 30), () {
+    _phaseTransitionWatchdog = Timer(const Duration(seconds: 30), () {
       final elapsed = DateTime.now().difference(_downloadCompletedTime ?? DateTime.now());
       debugPrint('🚨 PHASE TRANSITION TIMEOUT! Download completou há ${elapsed.inSeconds}s mas não mudou para upload!');
       debugPrint('🚨 Isso indica problema na configuração do LibreSpeed ou comunicação JS');
@@ -345,19 +359,17 @@ class _SpeedTestFsmManager {
     final now = DateTime.now();
     final progressPercent = (progress * 100).toStringAsFixed(1);
     
-    // Atualiza sempre o último tempo, mas só considera "progresso real" se aumentou pelo menos 0.5%
     _lastProgressTime = now;
     
-    if (progress > _lastProgressValue + 0.005) { // 0.5% em vez de 1%
+    if (progress > _lastProgressValue + 0.005) {
       _lastProgressValue = progress;
       
       if (kDebugMode) {
-        debugPrint('📈 Real Progress: ${progressPercent}% (watchdog reset)');
+        debugPrint('📈 Real Progress: $progressPercent% (watchdog reset)');
       }
     } else {
-      // Log quando recebe a mesma porcentagem (possível travamento)
       if (kDebugMode && progress == _lastProgressValue) {
-        debugPrint('⚠️ Same Progress: ${progressPercent}% (no advancement)');
+        debugPrint('⚠️ Same Progress: $progressPercent% (no advancement)');
       }
     }
   }
@@ -426,34 +438,19 @@ class _SpeedTestFsmManager {
     DiagnosticStage stage;
     String text;
 
-    // Log SEMPRE o valor exato do progresso para debug
     final progressPercent = (payload.progress * 100).toStringAsFixed(1);
-    debugPrint('📊 PROGRESS: ${payload.type} at ${progressPercent}% - Speed: ${payload.speed ?? 'N/A'}');
+    debugPrint('📊 PROGRESS: ${payload.type} at $progressPercent% - Speed: ${payload.speed ?? 'N/A'}');
 
-    // CRUCIAL: Detecta se download chegou a 100% mas não mudou para upload
-    if (payload.type == 'download' && payload.progress >= 1.0) {
-      debugPrint('🚨 DOWNLOAD COMPLETED 100% - Por que não mudou para UPLOAD?');
-      debugPrint('🚨 Aguardando transição automática para fase de upload...');
-      
-      // Marca o tempo que download foi completado
-      _downloadCompletedTime = DateTime.now();
-      
-      // Inicia watchdog para detectar se não transiciona para upload
-      _startPhaseTransitionWatchdog();
-    }
-
-    // Detecta mudanças de fase do teste
     if (_lastTestPhase != payload.type) {
       debugPrint('🔄 Test Phase Change: ${_lastTestPhase ?? 'start'} → ${payload.type}');
       _lastTestPhase = payload.type;
+      _phaseCompleted[payload.type] = false; 
       
-      // Cancela watchdog de transição quando mudança ocorre
       if (payload.type == 'upload') {
         _phaseTransitionWatchdog?.cancel();
         debugPrint('✅ Phase Transition Success! Upload iniciou normalmente');
       }
       
-      // Log especial para início de cada fase
       switch(payload.type) {
         case 'download':
           debugPrint('⬇️ Starting DOWNLOAD test phase');
@@ -467,10 +464,25 @@ class _SpeedTestFsmManager {
       }
     }
 
-    // CRUCIAL: Atualiza o watchdog de progresso para detectar travamentos
+    if (payload.progress >= 1.0 && _phaseCompleted[payload.type] == true) {
+      if (kDebugMode) {
+        debugPrint('🚫 Ignoring duplicate 100% progress for ${payload.type}');
+      }
+      return;
+    }
+
+    if (payload.progress >= 1.0) {
+      _phaseCompleted[payload.type] = true;
+      debugPrint('✅ Phase ${payload.type} reached 100%');
+      
+      if (payload.type == 'download') {
+        _downloadCompletedTime = DateTime.now();
+        _startPhaseTransitionWatchdog();
+      }
+    }
+
     _updateProgress(payload.progress);
 
-    // Log de progresso mais detalhado em debug
     if (kDebugMode && payload.progress > 0) {
       final progressPercent = (payload.progress * 100).toStringAsFixed(1);
       debugPrint('📊 Test Progress: ${payload.type} $progressPercent% - Speed: ${payload.speed ?? 'N/A'}');
@@ -514,7 +526,6 @@ class _SpeedTestFsmManager {
       return;
     }
     
-    // Reset phase tracking for next test
     _lastTestPhase = null;
     
     debugPrint('🎯 FSM: Transitioning to COMPLETED state');
@@ -574,8 +585,8 @@ class _SpeedTestFsmManager {
   void dispose() {
     debugPrint('♻️ FSM Dispose called. State: ${_currentState.name}');
     _globalTimeout?.cancel();
-    _progressWatchdog?.cancel(); // Cancela o watchdog de progresso
-    _phaseTransitionWatchdog?.cancel(); // Cancela o watchdog de transição de fase
+    _progressWatchdog?.cancel();
+    _phaseTransitionWatchdog?.cancel(); 
     if (_currentState != _SpeedTestState.completed && _currentState != _SpeedTestState.error) {
       if (!(_resultCompleter?.isCompleted ?? true)) {
          _resultCompleter?.completeError(const SpeedTestException("Test cancelled by user"), StackTrace.current);
