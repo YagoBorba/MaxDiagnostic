@@ -105,9 +105,13 @@
                     dlURL: "/backend/garbage.php", ulURL: "/backend/empty.php",
                     pingURL: "/backend/empty.php", getIpURL: "/backend/getIP.php"
                 });
-                state.speedtest.setParameter("test_order", "I_D_U_P");
+                state.speedtest.setParameter("test_order", "D_U_P");  // Removido "I" (IP check)
                 state.speedtest.setParameter("time_dl_max", "15");
                 state.speedtest.setParameter("time_ul_max", "15");
+                
+                // CRÍTICO: Força uso de XHR em vez de Web Workers (compatível com WebView Android)
+                state.speedtest.setParameter("xhr_dlMultistream", "6");  // 6 streams paralelas para Download
+                state.speedtest.setParameter("xhr_ulMultistream", "6");  // 6 streams paralelas para Upload
 
                 state.speedtest.onupdate = function(data) {
                     state.lastProgressData = data; 
