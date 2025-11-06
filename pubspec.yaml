@@ -14,7 +14,7 @@ dependencies:
 
   # Core & Utilities
   cupertino_icons: ^1.0.8
-  intl: any
+  intl: ^0.20.2
   get_it: ^7.7.0
   equatable: ^2.0.5
 
@@ -38,7 +38,7 @@ dependencies:
 
   # PDF & Sharing
   printing: ^5.12.0
-  share_plus: ^7.2.2
+  share_plus: ^12.0.1
   provider: ^6.1.2
 
   # Storage
@@ -50,6 +50,8 @@ dependencies:
 
   # Icons
   lucide_icons: ^0.257.0
+  flutter_html_to_pdf: ^0.7.0
+  path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:

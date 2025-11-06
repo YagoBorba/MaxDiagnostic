@@ -38,9 +38,11 @@ class ReportService {
 
       final XFile pdfFile = XFile(generatedPdf.path);
 
-      await Share.shareXFiles(
-        [pdfFile],
-        subject: 'Relatório de Diagnóstico Max Internet',
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [pdfFile],
+          subject: 'Relatório de Diagnóstico Max Internet',
+        ),
       );
 
       return true;
