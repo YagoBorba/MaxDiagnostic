@@ -64,6 +64,16 @@
 			"type": "shell",
 			"command": "flutter analyze --no-pub",
 			"group": "build"
+		},
+		{
+			"label": "Flutter Analyze Final",
+			"type": "shell",
+			"command": "flutter",
+			"args": [
+				"analyze",
+				"--no-pub"
+			],
+			"group": "build"
 		}
 	]
 }

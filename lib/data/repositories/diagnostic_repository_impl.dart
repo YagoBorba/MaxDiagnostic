@@ -55,7 +55,7 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
         timestamp: DateTime.now(),
       ));
 
-      final progressStream = speedTestRemoteDataSource.runSpeedTest();
+  final progressStream = speedTestRemoteDataSource.runSpeedTest();
 
       await for (final progress in progressStream) {
         yield Right(progress);
@@ -71,29 +71,20 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
           );
 
           yield Right(DiagnosticCompleted(finalResults));
-          
-          Future.delayed(const Duration(milliseconds: 100), () {
-            speedTestRemoteDataSource.dispose();
-          });
           return;
         }
       }
 
       yield const Left(SpeedTestFailure(message: 'Speed test stream ended unexpectedly.'));
-      speedTestRemoteDataSource.dispose();
 
     } on NetworkException catch (e) {
       yield Left(NetworkFailure(message: e.message));
-      speedTestRemoteDataSource.dispose();
     } on SpeedTestException catch (e) {
       yield Left(SpeedTestFailure(message: e.message));
-      speedTestRemoteDataSource.dispose();
     } on DeviceInfoException catch (e) {
       yield Left(DeviceInfoFailure(message: e.message));
-      speedTestRemoteDataSource.dispose();
     } catch (e) {
       yield Left(ServerFailure(message: 'Diagnostic test failed: ${e.toString()}'));
-      speedTestRemoteDataSource.dispose();
     }
   }
 
@@ -164,5 +155,10 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
     } catch (e) {
       return Left(ServerFailure(message: 'Failed to generate PDF: ${e.toString()}'));
     }
+  }
+
+  @override
+  void disposeResources() {
+    speedTestRemoteDataSource.dispose();
   }
 }

@@ -78,8 +78,12 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
       debugPrint('🔧 HeadlessInAppWebView initialized for speed test');
       debugPrint('🔧 Using URL: ${config.speedTestUrl}');
       
-      InAppWebViewController.setWebContentsDebuggingEnabled(true);
-      debugPrint('🔧 WebView debugging enabled - você pode inspecionar via chrome://inspect');
+      try {
+        InAppWebViewController.setWebContentsDebuggingEnabled(true);
+        debugPrint('🔧 WebView debugging enabled - você pode inspecionar via chrome://inspect');
+      } catch (e) {
+        debugPrint('⚠️ Não foi possível habilitar WebView debugging (ambiente de teste?): $e');
+      }
     }
   }
 
@@ -101,7 +105,8 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
     final cacheBuster = DateTime.now().millisecondsSinceEpoch;
     final url = "${config.speedTestUrl}?v=$cacheBuster";
     
-    _headlessWebView = HeadlessInAppWebView(
+    try {
+      _headlessWebView = HeadlessInAppWebView(
       initialUrlRequest: URLRequest(url: WebUri(url)),
       initialSettings: InAppWebViewSettings(
         javaScriptEnabled: true,
@@ -199,6 +204,11 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
         _fsmManager.onWebViewError('Error loading resource: ${error.description}');
       },
     );
+    } catch (e) {
+      debugPrint('⚠️ Falha ao criar HeadlessInAppWebView (ambiente não suportado). Usando simulação. Detalhes: $e');
+      _runSpeedTestSimulationFallback();
+      return;
+    }
 
     try {
       debugPrint('🌐 Starting Headless WebView with URL: $url');
@@ -278,6 +288,7 @@ enum _SpeedTestState { idle, initializing, running, completed, error }
 class _SpeedTestFsmManager {
   StreamController<DiagnosticProgressEntity>? _progressController;
   Completer<SpeedTestResultModel>? _resultCompleter;
+  bool _resultObserved = false; 
   Timer? _globalTimeout;
   Timer? _progressWatchdog;
   Timer? _phaseTransitionWatchdog;
@@ -295,6 +306,7 @@ class _SpeedTestFsmManager {
   void start(StreamController<DiagnosticProgressEntity> controller) {
     _progressController = controller;
     _resultCompleter = Completer<SpeedTestResultModel>();
+    _resultObserved = false;
     _actualTestStartTime = DateTime.now(); 
     _lastProgressTime = DateTime.now();
     _lastProgressValue = 0.0; 
@@ -374,7 +386,10 @@ class _SpeedTestFsmManager {
     }
   }
 
-  Future<SpeedTestResultModel> getResult() => _resultCompleter?.future ?? Future.error(const SpeedTestException('Test not started'));
+  Future<SpeedTestResultModel> getResult() {
+    _resultObserved = true;
+    return _resultCompleter?.future ?? Future.error(const SpeedTestException('Test not started'));
+  }
 
   void onWebViewLoaded() {
     if (kDebugMode) {
@@ -588,8 +603,9 @@ class _SpeedTestFsmManager {
     _progressWatchdog?.cancel();
     _phaseTransitionWatchdog?.cancel(); 
     if (_currentState != _SpeedTestState.completed && _currentState != _SpeedTestState.error) {
-      if (!(_resultCompleter?.isCompleted ?? true)) {
-         _resultCompleter?.completeError(const SpeedTestException("Test cancelled by user"), StackTrace.current);
+      if (_resultObserved && !(_resultCompleter?.isCompleted ?? true)) {
+        // Só propaga erro de cancelamento se alguém estiver aguardando o resultado
+        _resultCompleter?.completeError(const SpeedTestException("Test cancelled by user"), StackTrace.current);
       }
     }
     _progressController?.close();

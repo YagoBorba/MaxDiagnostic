@@ -9,6 +9,16 @@ class DeviceInfoModel extends DeviceInfoEntity {
     super.deviceId,
   });
 
+  factory DeviceInfoModel.fromEntity(DeviceInfoEntity entity) {
+    return DeviceInfoModel(
+      deviceModel: entity.deviceModel,
+      deviceBrand: entity.deviceBrand,
+      operatingSystem: entity.operatingSystem,
+      osVersion: entity.osVersion,
+      deviceId: entity.deviceId,
+    );
+  }
+
   factory DeviceInfoModel.fromJson(Map<String, dynamic> json) {
     return DeviceInfoModel(
       deviceModel: json['deviceModel'],
