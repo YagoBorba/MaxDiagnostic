@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'package:dartz/dartz.dart';
-
 import '../../core/error/exceptions.dart';
 import '../../core/error/failures.dart';
 import '../../core/network/network_info.dart';
 import '../../domain/entities/final_results_entity.dart';
+import '../../domain/entities/diagnostic_flow.dart';
 import '../../domain/repositories/diagnostic_repository.dart';
-// import '../datasources/device_info_local_datasource.dart';
 import '../datasources/network_info_local_datasource.dart';
+import '../datasources/device_info_local_datasource.dart';
 import '../datasources/speed_test_remote_datasource.dart';
 import '../models/final_results_model.dart';
 
@@ -15,135 +15,127 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
   final NetworkInfoLocalDataSource networkInfoLocalDataSource;
   final SpeedTestRemoteDataSource speedTestRemoteDataSource;
   final NetworkInfo networkInfo;
+  final DeviceInfoLocalDataSource deviceInfoLocalDataSource;
 
   DiagnosticRepositoryImpl({
     required this.networkInfoLocalDataSource,
     required this.speedTestRemoteDataSource,
     required this.networkInfo,
+    required this.deviceInfoLocalDataSource,
   });
 
   @override
-  Future<Either<Failure, NetworkInfoEntity>> getInitialNetworkInfo() async {
+  Stream<Either<Failure, DiagnosticFlowEvent>> runDiagnosticTest() async* {
     try {
-      final isConnected = await networkInfo.isConnected;
-      if (!isConnected) {
-        return const Left(NetworkFailure('No network connection available'));
-      }
-
-      final networkInfoModel =
-          await networkInfoLocalDataSource.getInitialNetworkInfo();
-      return Right(networkInfoModel);
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
-    } on PermissionException catch (e) {
-      return Left(PermissionFailure(e.message));
-    } catch (e) {
-      return Left(
-          NetworkFailure('Failed to get network info: ${e.toString()}'));
-    }
-  }
-
-  @override
-  Stream<Either<Failure, DiagnosticProgressEntity>> runDiagnosticTest() async* {
-    try {
-      final isConnected = await networkInfo.isConnected;
-      if (!isConnected) {
-        yield const Left(NetworkFailure('No network connection available'));
+      if (!await networkInfo.isConnected) {
+        yield const Left(NetworkFailure(message: 'No network connection available'));
         return;
       }
 
-      yield Right(DiagnosticProgressModel(
+      yield Right(DiagnosticProgressEntity(
         stage: DiagnosticStage.initializing,
         progress: 0.0,
         message: 'Iniciando diagnóstico...',
         timestamp: DateTime.now(),
       ));
-
-      yield Right(DiagnosticProgressModel(
+      
+      final deviceInfo = await deviceInfoLocalDataSource.getDeviceInfo();
+      yield Right(DiagnosticProgressEntity(
         stage: DiagnosticStage.collectingDeviceInfo,
-        progress: 0.1,
-        message: 'Coletando informações do dispositivo...',
+        progress: 1.0,
+        message: 'Informações do dispositivo coletadas',
         timestamp: DateTime.now(),
       ));
 
-      yield Right(DiagnosticProgressModel(
+      final initialNetworkInfo = await networkInfoLocalDataSource.getNetworkInfo();
+      yield Right(DiagnosticProgressEntity(
         stage: DiagnosticStage.collectingNetworkInfo,
-        progress: 0.2,
-        message: 'Coletando informações de rede...',
+        progress: 1.0,
+        message: 'Informações de rede coletadas',
         timestamp: DateTime.now(),
       ));
 
-      await for (final progressResult
-          in speedTestRemoteDataSource.runSpeedTest()) {
-        yield Right(progressResult);
+  final progressStream = speedTestRemoteDataSource.runSpeedTest();
+
+      await for (final progress in progressStream) {
+        yield Right(progress);
+
+        if (progress.stage == DiagnosticStage.completed && progress.speedTestResult != null) {
+          final finalNetworkInfo = await networkInfoLocalDataSource.getNetworkInfo();
+
+          final finalResults = FinalResultsModel(
+            timestamp: DateTime.now(),
+            deviceInfo: DeviceInfoModel.fromEntity(deviceInfo),
+            networkInfo: NetworkInfoModel.fromEntity(finalNetworkInfo.wifiName != null ? finalNetworkInfo : initialNetworkInfo),
+            speedTestResult: SpeedTestResultModel.fromEntity(progress.speedTestResult!),
+          );
+
+          yield Right(DiagnosticCompleted(finalResults));
+          return;
+        }
       }
+
+      yield const Left(SpeedTestFailure(message: 'Speed test stream ended unexpectedly.'));
+
     } on NetworkException catch (e) {
-      yield Left(NetworkFailure(e.message));
+      yield Left(NetworkFailure(message: e.message));
     } on SpeedTestException catch (e) {
-      yield Left(SpeedTestFailure(e.message));
+      yield Left(SpeedTestFailure(message: e.message));
+    } on DeviceInfoException catch (e) {
+      yield Left(DeviceInfoFailure(message: e.message));
     } catch (e) {
-      yield Left(ServerFailure('Diagnostic test failed: ${e.toString()}'));
+      yield Left(ServerFailure(message: 'Diagnostic test failed: ${e.toString()}'));
     }
+  }
+
+  Future<Either<Failure, T>> _executeDataSourceCall<T>(Future<T> Function() call) async {
+    try {
+      final result = await call();
+      return Right(result);
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(message: e.message));
+    } on PermissionException catch (e) {
+      return Left(PermissionFailure(message: e.message));
+    } on DeviceInfoException catch (e) {
+      return Left(DeviceInfoFailure(message: e.message));
+    } on SpeedTestException catch (e) {
+      return Left(SpeedTestFailure(message: e.message));
+    } catch (e) {
+      return Left(ServerFailure(message: 'An unexpected error occurred: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, NetworkInfoEntity>> getInitialNetworkInfo() async {
+    return _executeDataSourceCall(() async {
+      if (!await networkInfo.isConnected) {
+        throw const NetworkException('No network connection available');
+      }
+      return networkInfoLocalDataSource.getInitialNetworkInfo();
+    });
   }
 
   @override
   Future<Either<Failure, DeviceInfoEntity>> getDeviceInfo() async {
-    try {
-      // TODO: Re-enable when data sources are implemented
-      // final deviceInfoModel = await deviceInfoLocalDataSource.getDeviceInfo();
-      // return Right(deviceInfoModel);
-
-      const mockDeviceInfo = DeviceInfoEntity(
-        deviceModel: 'Loading...',
-        deviceBrand: 'Loading...',
-        operatingSystem: 'Loading...',
-        osVersion: 'Loading...',
-      );
-      return const Right(mockDeviceInfo);
-    } on DeviceInfoException catch (e) {
-      return Left(DeviceInfoFailure(e.message));
-    } catch (e) {
-      return Left(
-          DeviceInfoFailure('Failed to get device info: ${e.toString()}'));
-    }
+    return _executeDataSourceCall(deviceInfoLocalDataSource.getDeviceInfo);
   }
 
   @override
   Future<Either<Failure, NetworkInfoEntity>> getNetworkInfo() async {
-    try {
-      final networkInfoModel =
-          await networkInfoLocalDataSource.getNetworkInfo();
-      return Right(networkInfoModel);
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
-    } on PermissionException catch (e) {
-      return Left(PermissionFailure(e.message));
-    } catch (e) {
-      return Left(
-          NetworkFailure('Failed to get network info: ${e.toString()}'));
-    }
+    return _executeDataSourceCall(networkInfoLocalDataSource.getNetworkInfo);
   }
 
   @override
   Future<Either<Failure, SpeedTestResultEntity>> runSpeedTest() async {
-    try {
-      final speedTestResult =
-          await speedTestRemoteDataSource.getSpeedTestResult();
-      return Right(speedTestResult);
-    } on SpeedTestException catch (e) {
-      return Left(SpeedTestFailure(e.message));
-    } catch (e) {
-      return Left(SpeedTestFailure('Speed test failed: ${e.toString()}'));
-    }
+    return _executeDataSourceCall(speedTestRemoteDataSource.getSpeedTestResult);
   }
 
   @override
-  Future<Either<Failure, void>> saveDiagnosticResults(
-      FinalResultsEntity results) async {
+  Future<Either<Failure, void>> saveDiagnosticResults(FinalResultsEntity results) async {
     try {
       return const Right(null);
     } catch (e) {
-      return Left(CacheFailure('Failed to save results: ${e.toString()}'));
+      return Left(CacheFailure(message: 'Failed to save results: ${e.toString()}'));
     }
   }
 
@@ -152,17 +144,21 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
     try {
       return const Right([]);
     } catch (e) {
-      return Left(CacheFailure('Failed to get saved results: ${e.toString()}'));
+      return Left(CacheFailure(message: 'Failed to get saved results: ${e.toString()}'));
     }
   }
 
   @override
-  Future<Either<Failure, String>> generatePdfReport(
-      FinalResultsEntity results) async {
+  Future<Either<Failure, String>> generatePdfReport(FinalResultsEntity results) async {
     try {
       return const Right('/path/to/generated/report.pdf');
     } catch (e) {
-      return Left(ServerFailure('Failed to generate PDF: ${e.toString()}'));
+      return Left(ServerFailure(message: 'Failed to generate PDF: ${e.toString()}'));
     }
+  }
+
+  @override
+  void disposeResources() {
+    speedTestRemoteDataSource.dispose();
   }
 }

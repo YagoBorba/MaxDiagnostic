@@ -45,5 +45,8 @@ app.*.map.json
 # Environment files
 .env
 
+# Test coverage files
+coverage/
+
 # Docker override files (local development)
 docker-compose.override.yml

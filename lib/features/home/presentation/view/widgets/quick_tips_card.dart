@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:provider/provider.dart';
+import '../../../../../core/di/injection_container.dart' as di;
 import '../../../../../core/config/app_config.dart';
 
 class QuickTipsCard extends StatelessWidget {
@@ -8,7 +8,7 @@ class QuickTipsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tips = context.read<AppConfig>().quickTips;
+    final tips = di.sl<AppConfig>().quickTips;
 
     return Card(
       elevation: 2,
