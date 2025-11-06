@@ -25,7 +25,11 @@ final sl = GetIt.instance;
 Future<void> init({bool useMockDiagnostic = false}) async {
   try {
     await dotenv.load(fileName: '.env');
-  } catch (_) {}
+  } catch (_) {
+    try {
+      await dotenv.load(fileName: '.env.example');
+    } catch (_) {}
+  }
   
   sl.registerFactory(
       () => HomeCubit(getInitialNetworkInfo: sl(), config: sl()));
