@@ -4,11 +4,13 @@ import 'package:maxt_diagnostic/app/navigation/app_router.dart';
 import 'package:maxt_diagnostic/features/home/presentation/cubit/home_cubit.dart';
 import 'core/di/injection_container.dart' as di;
 import 'l10n/app_localizations.dart';
-import 'package:provider/provider.dart';
-import 'core/config/app_config.dart';
+import 'core/theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  debugPrint('🔧 Starting MaxDiagnostic in debug mode - WebView debugging enabled');
+  
   await di.init();
   runApp(const MyApp());
 }
@@ -18,21 +20,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final config = di.sl<AppConfig>();
-    return MultiProvider(
-      providers: [
-        Provider<AppConfig>.value(value: config),
-        BlocProvider(create: (_) => di.sl<HomeCubit>()),
-      ],
+    return BlocProvider(
+      create: (_) => di.sl<HomeCubit>(),
       child: MaterialApp.router(
         title: 'MaxT Diagnostic',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
-          useMaterial3: true,
-        ),
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.light,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        routerConfig: router, // Usando a configuração do GoRouter
+        routerConfig: router,
       ),
     );
   }

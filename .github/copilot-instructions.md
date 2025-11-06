@@ -36,7 +36,7 @@ BlocProvider(create: (context) => di.sl<YourCubit>())
 ### Functional Programming: Dartz Either
 - Use `Either<Failure, Success>` for error handling
 - Repository methods return `Future<Either<Failure, Result>>`
-- Failures are defined in `core/di/error/failures.dart`
+- Failures are defined in `core/error/failures.dart`
 
 ### Localization Setup
 - ARB files in `lib/l10n/` (template: `app_pt.arb`)

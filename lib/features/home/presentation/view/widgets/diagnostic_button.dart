@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../../../../l10n/app_localizations.dart';
 import '../../../../../core/config/app_config.dart';
+import '../../../../../core/di/injection_container.dart' as di;
 
 class DiagnosticButton extends StatelessWidget {
   final VoidCallback? onPressed;
@@ -36,7 +36,7 @@ class DiagnosticButton extends StatelessWidget {
           if (onBlockedTap != null) {
             onBlockedTap!();
           } else {
-            final msg = context.read<AppConfig>().disabledStartMessage;
+            final msg = di.sl<AppConfig>().disabledStartMessage;
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
               ..showSnackBar(SnackBar(content: Text(msg)));

@@ -1,4 +1,3 @@
-// lib/domain/entities/advice_entity.dart
 import 'package:equatable/equatable.dart';
 
 enum AdviceSeverity { info, good, warning, critical }
