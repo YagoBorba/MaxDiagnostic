@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:maxt_diagnostic/features/home/presentation/cubit/home_cubit.dart';
 import 'package:maxt_diagnostic/core/config/app_config.dart';
+import 'package:maxt_diagnostic/core/di/injection_container.dart' as di;
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/diagnostic_button.dart';
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/network_info_card.dart';
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/quick_tips_card.dart';
@@ -28,7 +29,7 @@ class HomeScreen extends StatelessWidget {
       }
     }
 
-    final config = context.read<AppConfig>();
+  final config = di.sl<AppConfig>();
     final quality = config.getSignalQuality(currentDbm);
     double progress;
     if (currentDbm == null) {
@@ -193,7 +194,7 @@ class HomeScreen extends StatelessWidget {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 context.read<HomeCubit>().startAutoRefresh();
               });
-              final config = context.read<AppConfig>();
+              final config = di.sl<AppConfig>();
               final noConnection =
                   state.networkInfo.connectionType.toLowerCase() == 'none';
               final canStart = !noConnection &&

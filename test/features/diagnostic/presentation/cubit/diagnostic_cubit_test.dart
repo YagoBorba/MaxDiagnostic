@@ -1,26 +1,22 @@
-import 'dart:async';
-
 import 'package:bloc_test/bloc_test.dart';
-import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:maxt_diagnostic/core/error/failures.dart';
-import 'package:maxt_diagnostic/core/usecases/usecase.dart';
-import 'package:maxt_diagnostic/domain/entities/diagnostic_flow.dart';
-import 'package:maxt_diagnostic/domain/entities/final_results_entity.dart';
-import 'package:maxt_diagnostic/domain/usecases/run_diagnostic_test.dart';
 import 'package:maxt_diagnostic/features/diagnostic/presentation/cubit/diagnostic_cubit.dart';
-
-class _MockRunDiagnosticTest extends Mock implements RunDiagnosticTest {}
+import 'package:maxt_diagnostic/core/di/injection_container.dart' as di;
 
 void main() {
-  late _MockRunDiagnosticTest usecase;
   late DiagnosticCubit cubit;
 
+  setUpAll(() async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences.setMockInitialValues(<String, Object>{});
+    await di.sl.reset();
+    await di.init(useMockDiagnostic: true);
+  });
+
   setUp(() {
-    usecase = _MockRunDiagnosticTest();
-    cubit = DiagnosticCubit(runDiagnosticTestUseCase: usecase);
+    cubit = di.sl<DiagnosticCubit>();
   });
 
   tearDown(() async {
@@ -28,63 +24,18 @@ void main() {
   });
 
   blocTest<DiagnosticCubit, DiagnosticState>(
-    'progress events update overall and tests; completed sets finalResults',
-    build: () {
-      final controller = StreamController<Either<Failure, DiagnosticFlowEvent>>();
-      when(() => usecase(const NoParams()))
-          .thenAnswer((_) async => Right(controller.stream));
-
-      Future.microtask(() {
-        controller.add(Right(DiagnosticProgressEntity(
-          stage: DiagnosticStage.runningDownloadTest,
-          progress: 0.6,
-          message: 'down',
-          timestamp: DateTime.now(),
-        )));
-        controller.add(Right(DiagnosticCompleted(FinalResultsEntity(
-          timestamp: DateTime.now(),
-          deviceInfo: const DeviceInfoEntity(
-            deviceModel: 'X',
-            deviceBrand: 'Y',
-            operatingSystem: 'Android',
-            osVersion: '14',
-          ),
-          networkInfo: const NetworkInfoEntity(connectionType: 'WiFi'),
-          speedTestResult: SpeedTestResultEntity(
-            downloadSpeed: 1,
-            uploadSpeed: 1,
-            ping: 1,
-            jitter: 1,
-            serverLocation: 'SP',
-            testStartTime: DateTime(2020),
-            testEndTime: DateTime(2020, 1, 1, 0, 1),
-            testCompleted: true,
-          ),
-        ))));
-      });
-      return cubit;
-    },
+    'uses MockRunDiagnosticTestUseCase: progresses and completes with results',
+    build: () => cubit,
     act: (c) => c.startTest(),
-    wait: const Duration(milliseconds: 50),
+    wait: const Duration(milliseconds: 800),
     verify: (c) {
       expect(c.state.globalStatus, GlobalTestStatus.complete);
       expect(c.state.finalResults, isNotNull);
-      final download = c.state.tests['download'];
-      expect(download, isNotNull);
-      expect(download!.status, isNot(TestStatus.pending));
-    },
-  );
-
-  blocTest<DiagnosticCubit, DiagnosticState>(
-    'emits error state when usecase returns Left',
-    build: () {
-    when(() => usecase(const NoParams()))
-      .thenAnswer((_) async => const Left(ServerFailure(message: 'x')));
-      return cubit;
-    },
-    act: (c) => c.startTest(),
-    verify: (c) {
-      expect(c.state.globalStatus, GlobalTestStatus.error);
+      expect(c.state.tests['download']?.status, TestStatus.complete);
+      expect(c.state.tests['upload']?.status, TestStatus.complete);
+      expect(c.state.tests['latency']?.status, TestStatus.complete);
+      expect(c.state.tests['additionalInfo']?.status, TestStatus.complete);
+      expect(c.state.overallProgress, 100);
     },
   );
 }

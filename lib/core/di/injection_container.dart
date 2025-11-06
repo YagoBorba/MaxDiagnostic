@@ -31,6 +31,7 @@ Future<void> init({bool useMockDiagnostic = false}) async {
       () => HomeCubit(getInitialNetworkInfo: sl(), config: sl()));
   sl.registerFactory(() => DiagnosticCubit(
         runDiagnosticTestUseCase: sl(),
+    diagnosticRepository: sl(),
         progressCalculator: sl<ProgressCalculator>(),
       ));
 

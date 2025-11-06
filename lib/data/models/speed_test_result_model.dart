@@ -13,6 +13,20 @@ class SpeedTestResultModel extends SpeedTestResultEntity {
     super.errorMessage,
   });
 
+  factory SpeedTestResultModel.fromEntity(SpeedTestResultEntity entity) {
+    return SpeedTestResultModel(
+      downloadSpeed: entity.downloadSpeed,
+      uploadSpeed: entity.uploadSpeed,
+      ping: entity.ping,
+      jitter: entity.jitter,
+      serverLocation: entity.serverLocation,
+      testStartTime: entity.testStartTime,
+      testEndTime: entity.testEndTime,
+      testCompleted: entity.testCompleted,
+      errorMessage: entity.errorMessage,
+    );
+  }
+
   factory SpeedTestResultModel.fromJson(Map<String, dynamic> json) {
     return SpeedTestResultModel(
       downloadSpeed: (json['downloadSpeed'] as num).toDouble(),

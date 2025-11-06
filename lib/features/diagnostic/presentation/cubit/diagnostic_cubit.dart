@@ -7,6 +7,7 @@ import 'package:maxt_diagnostic/domain/entities/diagnostic_flow.dart';
 import 'package:dartz/dartz.dart';
 import 'package:maxt_diagnostic/core/error/failures.dart';
 import 'package:maxt_diagnostic/domain/usecases/run_diagnostic_test.dart';
+import 'package:maxt_diagnostic/domain/repositories/diagnostic_repository.dart';
 import 'package:maxt_diagnostic/core/usecases/usecase.dart';
 import 'package:maxt_diagnostic/features/diagnostic/presentation/utils/progress_calculator.dart';
 
@@ -15,10 +16,12 @@ part 'diagnostic_state.dart';
 class DiagnosticCubit extends Cubit<DiagnosticState> {
   final RunDiagnosticTest runDiagnosticTestUseCase;
   final ProgressCalculator _progressCalculator;
+  final DiagnosticRepository diagnosticRepository;
   StreamSubscription? _sub;
 
   DiagnosticCubit({
     required this.runDiagnosticTestUseCase,
+    required this.diagnosticRepository,
     ProgressCalculator? progressCalculator,
   })  : _progressCalculator = progressCalculator ?? ProgressCalculator.defaultConfig(),
         super(DiagnosticState.initial());
@@ -48,8 +51,14 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
               (event) => _handleDiagnosticEvent(event),
             );
           },
-          onError: (error) => _handleFailure(ServerFailure(message: 'Erro inesperado no stream: $error')),
-          onDone: _handleStreamDone,
+          onError: (error) {
+            _handleFailure(ServerFailure(message: 'Erro inesperado no stream: $error'));
+            _disposeResourcesSafely();
+          },
+          onDone: () {
+            _handleStreamDone();
+            _disposeResourcesSafely();
+          },
         );
       },
     );
@@ -105,6 +114,14 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
     ));
   }
 
+  void _disposeResourcesSafely() {
+    try {
+      diagnosticRepository.disposeResources();
+    } catch (_) {
+      // errors
+    }
+  }
+
   void _applyProgress(DiagnosticProgressEntity p) {
     final overall = _progressCalculator.calculateOverallProgress(p.stage, p.progress);
     
@@ -140,6 +157,7 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
   @override
   Future<void> close() {
     _sub?.cancel();
+    _disposeResourcesSafely();
     return super.close();
   }
 }
