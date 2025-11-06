@@ -125,7 +125,9 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
         controller.addJavaScriptHandler(
           handlerName: _SpeedTestConstants.jsChannelName,
           callback: (args) {
-            if (_isDisposed || args.isEmpty) return;
+            if (_isDisposed || args.isEmpty) {
+              return;
+            }
             if (kDebugMode) {
               debugPrint('📨 JS -> Flutter: ${args[0]}');
             }
@@ -139,7 +141,9 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
         }
       },
       onLoadStop: (controller, url) async {
-        if (_isDisposed) return;
+        if (_isDisposed) {
+          return;
+        }
         debugPrint('✅ Headless WebView Page loaded: $url');
         debugPrint('🔧 Initializing test script...');
         try {
@@ -188,7 +192,9 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
         }
       },
       onReceivedError: (controller, request, error) {
-        if (_isDisposed) return;
+        if (_isDisposed) {
+          return;
+        }
         
         if (error.type == WebResourceErrorType.UNKNOWN && error.description.contains('ERR_FAILED')) {
           debugPrint('💡 Expected ERR_FAILED detected (cleanup operation) - URL: ${request.url}');
@@ -214,7 +220,9 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
       debugPrint('🌐 Starting Headless WebView with URL: $url');
       await _headlessWebView?.run();
     } catch (e) {
-      if (_isDisposed) return;
+      if (_isDisposed) {
+        return;
+      }
       _fsmManager.onWebViewError('Critical failure starting Headless WebView: ${e.toString()}');
     }
   }
@@ -226,7 +234,9 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
 
   @override
   void dispose() {
-    if (_isDisposed) return;
+    if (_isDisposed) {
+      return;
+    }
     _isDisposed = true;
     debugPrint('♻️ DataSource Dispose called.');
     
@@ -582,7 +592,9 @@ class _SpeedTestFsmManager {
   }
 
   void handleError(String message) {
-    if (_currentState == _SpeedTestState.completed || _currentState == _SpeedTestState.error) return;
+    if (_currentState == _SpeedTestState.completed || _currentState == _SpeedTestState.error) {
+      return;
+    }
     
     debugPrint('🚨 Speed Test Error | Current State: ${_currentState.name}');
     debugPrint('🚨 Error Message: $message');
@@ -604,7 +616,6 @@ class _SpeedTestFsmManager {
     _phaseTransitionWatchdog?.cancel(); 
     if (_currentState != _SpeedTestState.completed && _currentState != _SpeedTestState.error) {
       if (_resultObserved && !(_resultCompleter?.isCompleted ?? true)) {
-        // Só propaga erro de cancelamento se alguém estiver aguardando o resultado
         _resultCompleter?.completeError(const SpeedTestException("Test cancelled by user"), StackTrace.current);
       }
     }
@@ -612,7 +623,9 @@ class _SpeedTestFsmManager {
   }
 
   void transitionTo(_SpeedTestState newState) {
-    if (_currentState == newState) return;
+    if (_currentState == newState) {
+      return;
+    }
     debugPrint('[FSM] State transition: ${_currentState.name} -> ${newState.name}');
     _currentState = newState;
   }
