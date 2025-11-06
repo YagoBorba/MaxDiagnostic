@@ -62,7 +62,7 @@ flutter:
   uses-material-design: true
   generate: true
   assets:
-    - .env
+    - .env.example
 
 dependency_overrides:
   win32: ^5.14.0
