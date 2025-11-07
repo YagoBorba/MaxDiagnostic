@@ -78,6 +78,57 @@ This project uses **GitFlow** as the branching model. Understand the structure:
    flutter analyze
    ```
 
+## 🐳 Setting Up the Local Environment
+
+For a complete development experience, you can run a local LibreSpeed server using Docker Compose. This allows you to test the app's speed test functionality without depending on external servers.
+
+### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) installed on your system
+- [Docker Compose](https://docs.docker.com/compose/install/) (usually included with Docker Desktop)
+
+### Running the Local LibreSpeed Server
+
+1. **Navigate to the Docker directory:**
+   ```bash
+   cd docker/librespeed
+   ```
+
+2. **Start the LibreSpeed container:**
+   ```bash
+   docker-compose up -d
+   ```
+
+3. **Verify the server is running:**
+   - Open your browser and navigate to `http://localhost:7000`
+   - You should see the LibreSpeed interface
+
+4. **Configure the app:**
+   - Copy `.env.example` to `.env` if you haven't already:
+     ```bash
+     cp .env.example .env
+     ```
+   - The default configuration should work: `SPEED_TEST_URL=http://localhost:7000/librespeed_runner.html`
+
+### Important Notes
+
+- **For Android Emulators**: Due to network mapping, use `http://10.0.2.2:7000/librespeed_runner.html` instead of `localhost`
+- **For iOS Simulators**: Use `localhost` as normal
+- **Custom Configuration**: The LibreSpeed server uses a custom HTML runner (`librespeed_runner.html`) specifically designed for Flutter WebView integration
+
+### Stopping the Server
+
+```bash
+cd docker/librespeed
+docker-compose down
+```
+
+### Troubleshooting
+
+- **Port conflicts**: If port 7000 is already in use, modify the port mapping in `docker-compose.yml`
+- **Permission issues**: On Linux/Mac, you may need to adjust PUID/PGID in the docker-compose file
+- **Container not starting**: Check Docker logs with `docker-compose logs librespeed`
+
 ## 🏗️ Project Architecture
 
 ### Clean Architecture with BLoC

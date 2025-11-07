@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:maxt_diagnostic/domain/entities/final_results_entity.dart';
 import 'package:maxt_diagnostic/core/usecases/usecase.dart';
 import 'package:maxt_diagnostic/core/config/app_config.dart';
+import 'package:maxt_diagnostic/core/error/failures.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:maxt_diagnostic/domain/usecases/get_initial_network_info.dart';
 
@@ -28,14 +29,12 @@ class HomeCubit extends Cubit<HomeState> {
     final result = await getInitialNetworkInfo(const NoParams());
     result.fold(
       (failure) {
-        final msg = _mapFailure(failure);
-        if (msg.toLowerCase().contains('permissionfailure') ||
-            msg.toLowerCase().contains('permission')) {
+        if (failure is PermissionFailure) {
           emit(const HomePermissionDenied(
               message:
                   'Permissão de localização negada. Habilite para ler informações do Wi‑Fi.'));
         } else {
-          emit(HomeError(message: msg));
+          emit(HomeError(message: _mapFailure(failure)));
         }
       },
       (info) {
@@ -85,11 +84,21 @@ class HomeCubit extends Cubit<HomeState> {
     return super.close();
   }
 
-  String _mapFailure(Object failure) {
-    return failure
-        .toString()
-        .replaceAll('Instance of ', '')
-        .replaceAll('(', ': ')
-        .replaceAll(')', '');
+  String _mapFailure(Failure failure) {
+    if (failure is NetworkFailure) {
+      return 'Sem conexão de rede disponível.';
+    }
+    if (failure is DeviceInfoFailure) {
+      return 'Falha ao coletar informações do dispositivo.';
+    }
+    if (failure is CacheFailure) {
+      return 'Falha ao acessar o cache local.';
+    }
+    if (failure is ServerFailure) {
+      return failure.message.isNotEmpty
+          ? failure.message
+          : 'Erro inesperado no servidor.';
+    }
+    return failure.message.isNotEmpty ? failure.message : 'Ocorreu um erro inesperado.';
   }
 }
