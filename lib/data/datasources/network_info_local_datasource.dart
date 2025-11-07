@@ -125,7 +125,13 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
         }
         await _ensureLocationPermission();
       }
-      await wscan.WiFiScan.instance.startScan();
+      
+      try {
+        await wscan.WiFiScan.instance.startScan();
+      } catch (_) {
+        //
+      }
+      
       final list = await wscan.WiFiScan.instance.getScannedResults();
       return list
           .map((e) => _WifiEntry(
