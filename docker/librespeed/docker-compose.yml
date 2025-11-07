@@ -1,0 +1,30 @@
+# docker/librespeed/docker-compose.yml
+
+services:
+  librespeed:
+    # The official linuxserver.io image for LibreSpeed
+    image: lscr.io/linuxserver/librespeed:latest
+    container_name: librespeed-local
+    
+    # Environment variables to configure the container.
+    # Essential to avoid file permission issues on some systems.
+    environment:
+      - PUID=1000  # Your user ID (on Linux/Mac, run `id -u` in the terminal)
+      - PGID=1000  # Your group ID (on Linux/Mac, run `id -g` in the terminal)
+      - TZ=America/Sao_Paulo # Your timezone
+      
+    # Volume mapping. This is the most important part for customization.
+    volumes:
+      # The syntax is: <path-on-your-machine>:<path-inside-the-container>
+      # We are "mirroring" our local ./config folder into the /config folder inside the container.
+      # This is where LibreSpeed looks for custom files like our runner.
+      - ./config:/config
+      
+    # Port mapping.
+    ports:
+      # The syntax is: <port-on-your-machine>:<port-inside-the-container>
+      # We are connecting port 7000 on your machine to port 80 inside the container, where the web server runs.
+      - "7000:80"
+      
+    # Restart policy. Useful for ensuring the service stays up during development.
+    restart: unless-stopped

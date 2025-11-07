@@ -1,7 +1,5 @@
 import 'package:equatable/equatable.dart';
 
-/// Entity representing the final diagnostic results
-/// This is the core business object containing all diagnostic information
 class FinalResultsEntity extends Equatable {
   final DateTime timestamp;
   final DeviceInfoEntity deviceInfo;
@@ -24,7 +22,6 @@ class FinalResultsEntity extends Equatable {
       ];
 }
 
-/// Device information entity
 class DeviceInfoEntity extends Equatable {
   final String deviceModel;
   final String deviceBrand;
@@ -50,12 +47,11 @@ class DeviceInfoEntity extends Equatable {
       ];
 }
 
-/// Network information entity
 class NetworkInfoEntity extends Equatable {
   final String connectionType;
   final String? wifiName;
   final String? wifiFrequency;
-  final int? wifiSignalStrength; // RSSI
+  final int? wifiSignalStrength;
   final int? wifiLinkSpeed;
   final String? wifiBSSID;
   final String? externalIP;
@@ -85,12 +81,11 @@ class NetworkInfoEntity extends Equatable {
       ];
 }
 
-/// Speed test result entity
 class SpeedTestResultEntity extends Equatable {
-  final double downloadSpeed; // Mbps
-  final double uploadSpeed; // Mbps
-  final double ping; // ms
-  final double jitter; // ms
+  final double downloadSpeed;
+  final double uploadSpeed;
+  final double ping;
+  final double jitter;
   final String serverLocation;
   final DateTime testStartTime;
   final DateTime testEndTime;
@@ -121,60 +116,4 @@ class SpeedTestResultEntity extends Equatable {
         testCompleted,
         errorMessage,
       ];
-}
-
-/// Entity representing the progress of diagnostic test
-class DiagnosticProgressEntity extends Equatable {
-  final DiagnosticStage stage;
-  final double progress; // 0.0 to 1.0
-  final String message;
-  final DateTime timestamp;
-
-  const DiagnosticProgressEntity({
-    required this.stage,
-    required this.progress,
-    required this.message,
-    required this.timestamp,
-  });
-
-  @override
-  List<Object> get props => [stage, progress, message, timestamp];
-}
-
-/// Diagnostic stages enum
-enum DiagnosticStage {
-  initializing,
-  collectingDeviceInfo,
-  collectingNetworkInfo,
-  startingSpeedTest,
-  runningDownloadTest,
-  runningUploadTest,
-  runningPingTest,
-  completed,
-  error,
-}
-
-extension DiagnosticStageExtension on DiagnosticStage {
-  String get displayName {
-    switch (this) {
-      case DiagnosticStage.initializing:
-        return 'Inicializando...';
-      case DiagnosticStage.collectingDeviceInfo:
-        return 'Coletando informações do dispositivo...';
-      case DiagnosticStage.collectingNetworkInfo:
-        return 'Coletando informações de rede...';
-      case DiagnosticStage.startingSpeedTest:
-        return 'Iniciando teste de velocidade...';
-      case DiagnosticStage.runningDownloadTest:
-        return 'Testando velocidade de download...';
-      case DiagnosticStage.runningUploadTest:
-        return 'Testando velocidade de upload...';
-      case DiagnosticStage.runningPingTest:
-        return 'Testando latência...';
-      case DiagnosticStage.completed:
-        return 'Teste concluído!';
-      case DiagnosticStage.error:
-        return 'Erro durante o teste';
-    }
-  }
 }

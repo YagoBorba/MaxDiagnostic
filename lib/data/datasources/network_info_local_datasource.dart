@@ -5,6 +5,7 @@ import 'package:network_info_plus/network_info_plus.dart' as nip;
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:wifi_scan/wifi_scan.dart' as wscan;
+import 'package:flutter/foundation.dart';
 
 import '../../core/error/exceptions.dart';
 import '../../domain/entities/final_results_entity.dart';
@@ -28,6 +29,19 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
 
   @override
   Future<NetworkInfoEntity> getInitialNetworkInfo() async {
+    if (kIsWeb) {
+      return const NetworkInfoEntity(
+        connectionType: 'WiFi',
+        wifiName: 'MAX-5G-Demo',
+        wifiSignalStrength: -45, 
+        wifiFrequency: '5 GHz',
+        wifiLinkSpeed: 150,
+        wifiBSSID: '00:11:22:33:44:55',
+        internalIP: '192.168.1.100',
+        externalIP: '203.0.113.1',
+      );
+    }
+
     final granted = await _ensureLocationPermission();
     if (!granted) {
       throw const PermissionException('Location permission not granted');
@@ -51,8 +65,8 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
         (e) => _sanitizeSsid(e.ssid) == ssid.trim(),
         orElse: () => scanResults.first,
       );
-      rssi = match.level; // dBm
-      final freq = match.frequency; // MHz
+      rssi = match.level;
+      final freq = match.frequency;
       if (freq != null) {
         frequencyLabel = freq >= 5000 ? '5 GHz' : '2.4 GHz';
       }
@@ -79,6 +93,8 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
   }
 
   Future<bool> _ensureLocationPermission() async {
+    if (kIsWeb) return true;
+    
     if (Platform.isAndroid || Platform.isIOS) {
       final status = await Permission.locationWhenInUse.status;
       if (status.isGranted) return true;
@@ -89,10 +105,24 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
   }
 
   Future<List<_WifiEntry>> _scanWifi() async {
+    if (kIsWeb) {
+      return [
+        _WifiEntry(
+          ssid: 'MAX-5G-Demo',
+          bssid: '00:11:22:33:44:55',
+          level: -45, 
+          frequency: 5180, 
+        ),
+      ];
+    }
+
     try {
       final can =
           await wscan.WiFiScan.instance.canStartScan(askPermissions: false);
       if (can != wscan.CanStartScan.yes) {
+        if (can == wscan.CanStartScan.notSupported) {
+          throw const NetworkException('WiFi scan not supported');
+        }
         await _ensureLocationPermission();
       }
       
@@ -125,6 +155,8 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
   }
 
   Future<int?> _getLinkSpeed() async {
+    if (kIsWeb) return 150; 
+    
     if (!Platform.isAndroid) return null;
     try {
       final speed = await _wifiChannel.invokeMethod<int>('getLinkSpeed');
@@ -147,8 +179,8 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
 class _WifiEntry {
   final String? ssid;
   final String? bssid;
-  final int? level; // dBm
-  final int? frequency; // MHz
+  final int? level;
+  final int? frequency;
 
   _WifiEntry({this.ssid, this.bssid, this.level, this.frequency});
 }
