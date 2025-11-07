@@ -5,6 +5,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:maxt_diagnostic/domain/entities/final_results_entity.dart';
 import 'package:maxt_diagnostic/domain/services/advice_service.dart';
 import 'package:maxt_diagnostic/features/results/presentation/view/widgets/advice_card.dart';
+import 'package:maxt_diagnostic/services/report_service.dart';
 
 class ResultsScreen extends StatelessWidget {
   final FinalResultsEntity results;
@@ -92,7 +93,7 @@ class ResultsScreen extends StatelessWidget {
                 ],
               ),
             ),
-          _FooterActions(),
+          _FooterActions(results: results),
         ],
       ),
     );
@@ -172,6 +173,52 @@ class _ResultTile extends StatelessWidget {
 }
 
 class _FooterActions extends StatelessWidget {
+  final FinalResultsEntity results;
+  const _FooterActions({required this.results});
+
+  Future<void> _onShare(BuildContext context) async {
+    const snackBar = SnackBar(
+      content: Row(
+        children: [
+          CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          ),
+          SizedBox(width: 16),
+          Text('Gerando relatório...'),
+        ],
+      ),
+      duration: Duration(minutes: 1),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+
+    try {
+      final bool success = await ReportService.shareReportFile(results);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+        if (!success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Erro ao gerar relatório.'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erro: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -185,7 +232,7 @@ class _FooterActions extends StatelessWidget {
             child: ElevatedButton.icon(
               icon: const Icon(LucideIcons.share2),
               label: const Text('Exportar Relatório'),
-              onPressed: () {/* TODO */},
+              onPressed: () => _onShare(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF4F46E5),
                 foregroundColor: Colors.white,
