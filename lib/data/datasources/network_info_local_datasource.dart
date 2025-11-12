@@ -33,7 +33,7 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
       return const NetworkInfoEntity(
         connectionType: 'WiFi',
         wifiName: 'MAX-5G-Demo',
-        wifiSignalStrength: -45, 
+        wifiSignalStrength: -45,
         wifiFrequency: '5 GHz',
         wifiLinkSpeed: 150,
         wifiBSSID: '00:11:22:33:44:55',
@@ -54,17 +54,34 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
 
     final rawSsid = await _safeGet(() => networkInfo.getWifiName());
     final ssid = _sanitizeSsid(rawSsid);
+    final bssid = await _safeGet(() => networkInfo.getWifiBSSID());
+    final internalIP = await _safeGet(() => networkInfo.getWifiIP());
 
     final scanResults = await _scanWifi();
 
     int? rssi;
     String? frequencyLabel;
     int? linkSpeed;
-    if (ssid != null && scanResults.isNotEmpty) {
-      final match = scanResults.firstWhere(
+    _WifiEntry? match;
+
+    if (bssid != null && scanResults.isNotEmpty) {
+      match = scanResults.firstWhere(
+        (e) => e.bssid == bssid,
+        orElse: () => _WifiEntry(ssid: null, bssid: null, level: null, frequency: null), 
+      );
+    }
+    
+    if (match?.bssid == null && ssid != null && scanResults.isNotEmpty) {
+       match = scanResults.firstWhere(
         (e) => _sanitizeSsid(e.ssid) == ssid.trim(),
         orElse: () => scanResults.first,
       );
+    } else if (match?.bssid == null && scanResults.isNotEmpty) {
+      match = scanResults.first;
+    }
+
+
+    if (match != null) {
       rssi = match.level;
       final freq = match.frequency;
       if (freq != null) {
@@ -72,9 +89,6 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
       }
       linkSpeed = await _getLinkSpeed();
     }
-
-    final bssid = await _safeGet(() => networkInfo.getWifiBSSID());
-    final internalIP = await _safeGet(() => networkInfo.getWifiIP());
 
     return NetworkInfoEntity(
       connectionType: 'WiFi',
@@ -129,7 +143,6 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
       try {
         await wscan.WiFiScan.instance.startScan();
       } catch (_) {
-        //
       }
       
       final list = await wscan.WiFiScan.instance.getScannedResults();
