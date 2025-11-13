@@ -59,9 +59,11 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
 
     final scanResults = await _scanWifi();
 
-    int? rssi;
-    String? frequencyLabel;
-    int? linkSpeed;
+  int? rssi;
+  String? frequencyLabel;
+  int? linkSpeed;
+  int? channel;
+  String? standard;
     _WifiEntry? match;
 
     if (bssid != null && scanResults.isNotEmpty) {
@@ -88,6 +90,8 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
         frequencyLabel = freq >= 5000 ? '5 GHz' : '2.4 GHz';
       }
       linkSpeed = await _getLinkSpeed();
+      channel = match.channel ?? _freqToChannel(freq);
+      standard = match.standard;
     }
 
     return NetworkInfoEntity(
@@ -98,6 +102,8 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
       wifiLinkSpeed: linkSpeed,
       wifiBSSID: bssid,
       internalIP: internalIP,
+      wifiChannel: channel,
+      wifiStandard: standard,
     );
   }
 
@@ -126,6 +132,8 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
           bssid: '00:11:22:33:44:55',
           level: -45, 
           frequency: 5180, 
+          channel: _freqToChannel(5180),
+          standard: '802.11ac (WiFi 5)',
         ),
       ];
     }
@@ -146,14 +154,40 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
       }
       
       final list = await wscan.WiFiScan.instance.getScannedResults();
-      return list
-          .map((e) => _WifiEntry(
-                ssid: e.ssid,
-                bssid: e.bssid,
-                level: e.level,
-                frequency: e.frequency,
-              ))
-          .toList();
+      return list.map((e) {
+        String? standardLabel;
+        int? channel;
+        int? channelWidthIdx;
+        try {
+          final dynamic ap = e;
+          final dynamic std = ap.standard; 
+          if (std != null) {
+            final String s = std.toString();
+            if (s.contains('legacy')) standardLabel = '802.11a/b/g';
+            else if (s.endsWith('.n')) standardLabel = '802.11n';
+            else if (s.endsWith('.ac')) standardLabel = '802.11ac (WiFi 5)';
+            else if (s.endsWith('.ax')) standardLabel = '802.11ax (WiFi 6)';
+          }
+          final dynamic ch = ap.channel; 
+          if (ch is int) channel = ch;
+          final dynamic cw = ap.channelWidth;
+          if (cw != null && cw is Enum) {
+            channelWidthIdx = cw.index as int;
+          }
+        } catch (_) {}
+
+        channel ??= _freqToChannel(e.frequency);
+
+        return _WifiEntry(
+          ssid: e.ssid,
+          bssid: e.bssid,
+          level: e.level,
+          frequency: e.frequency,
+          channelWidth: channelWidthIdx,
+          standard: standardLabel,
+          channel: channel,
+        );
+      }).toList();
     } catch (_) {
       return [];
     }
@@ -194,6 +228,27 @@ class _WifiEntry {
   final String? bssid;
   final int? level;
   final int? frequency;
+  final int? channelWidth;
+  final String? standard;
+  final int? channel;
 
-  _WifiEntry({this.ssid, this.bssid, this.level, this.frequency});
+  _WifiEntry({this.ssid, this.bssid, this.level, this.frequency, this.channelWidth, this.standard, this.channel});
+}
+
+int? _freqToChannel(int? freq) {
+  if (freq == null) return null;
+  if (freq >= 2412 && freq <= 2484) {
+    if (freq == 2484) return 14;
+    final ch = ((freq - 2412) / 5).round() + 1;
+    if (ch >= 1 && ch <= 13) return ch;
+  }
+  if (freq >= 5005 && freq <= 5895) {
+    final ch = ((freq - 5000) / 5).round();
+    if (ch > 0) return ch;
+  }
+  if (freq >= 5955 && freq <= 7115) {
+    final ch = ((freq - 5955) / 5).round() + 1;
+    if (ch > 0) return ch;
+  }
+  return null;
 }
