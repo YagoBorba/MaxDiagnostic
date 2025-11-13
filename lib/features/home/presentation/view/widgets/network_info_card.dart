@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:maxt_diagnostic/core/config/app_config.dart';
+import 'package:maxt_diagnostic/core/di/injection_container.dart' as di;
 import 'package:maxt_diagnostic/domain/entities/final_results_entity.dart';
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/signal_strength_text.dart';
 
@@ -12,6 +14,7 @@ class NetworkInfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary;
+  final config = di.sl<AppConfig>();
 
     final isConnected = networkInfo.connectionType.toLowerCase() != 'none';
     final titleText = () {
@@ -23,6 +26,7 @@ class NetworkInfoCard extends StatelessWidget {
     }();
     final signalDbm = networkInfo.wifiSignalStrength;
     final frequency = networkInfo.wifiFrequency;
+  final quality = config.getSignalQuality(signalDbm);
 
     return Card(
       elevation: 2,
@@ -63,7 +67,7 @@ class NetworkInfoCard extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               SignalStrengthText(
-                strengthInDbm: signalDbm,
+                quality: quality,
               ),
             ] else ...[
               const Text(
