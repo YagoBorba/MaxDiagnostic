@@ -110,7 +110,9 @@ class _DiagnosticContent extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                PulsingWifiIcon(),
+                RepaintBoundary(
+                  child: PulsingWifiIcon(),
+                ),
               ],
             ),
           ),

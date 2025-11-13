@@ -68,7 +68,7 @@ abstract class SpeedTestRemoteDataSource {
 
 class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
   final AppConfig config;
-  final _fsmManager = _SpeedTestFsmManager();
+  _SpeedTestFsmManager _fsmManager = _SpeedTestFsmManager();
   HeadlessInAppWebView? _headlessWebView;
   InAppWebViewController? _controller;
   bool _isDisposed = false;
@@ -89,6 +89,10 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
 
   @override
   Stream<DiagnosticProgressEntity> runSpeedTest() {
+    _isDisposed = false;
+    _fsmManager.dispose();
+    _fsmManager = _SpeedTestFsmManager();
+
     final streamController = StreamController<DiagnosticProgressEntity>.broadcast();
     _fsmManager.start(streamController);
 
@@ -104,6 +108,20 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
   void _initializeAndRunHeadlessWebViewTest() async {
     final cacheBuster = DateTime.now().millisecondsSinceEpoch;
     final url = "${config.speedTestUrl}?v=$cacheBuster";
+    
+    if (config.speedTestUrl == 'about:blank' || config.speedTestUrl.isEmpty) {
+      debugPrint('🚨 Invalid speedTestUrl: "${config.speedTestUrl}"');
+      debugPrint('💡 Make sure .env file exists and contains SPEED_TEST_URL=http://your-server:7000/librespeed_runner.html');
+      debugPrint('💡 Also verify .env is listed in pubspec.yaml assets section');
+      _fsmManager.onWebViewError(
+        'Speed test server not configured. Please check your .env file and ensure SPEED_TEST_URL is set correctly.'
+      );
+      return;
+    }
+
+    await _headlessWebView?.dispose();
+    _headlessWebView = null;
+    _controller = null;
     
     try {
       _headlessWebView = HeadlessInAppWebView(
@@ -256,6 +274,8 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
     }
     
     _headlessWebView?.dispose();
+    _headlessWebView = null;
+    _controller = null;
     _fsmManager.dispose();
     
     if (kDebugMode) {
