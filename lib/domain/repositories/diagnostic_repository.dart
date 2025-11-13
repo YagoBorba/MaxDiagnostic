@@ -21,5 +21,7 @@ abstract class DiagnosticRepository {
 
   Future<Either<Failure, String>> generatePdfReport(FinalResultsEntity results);
 
+  Future<Either<Failure, bool>> checkServerReachability();
+
   void disposeResources();
 }

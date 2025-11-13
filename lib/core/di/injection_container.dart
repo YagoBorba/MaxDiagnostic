@@ -2,6 +2,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
+import 'package:http/http.dart' as http;
 import 'package:network_info_plus/network_info_plus.dart' as network_info_plus;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -14,6 +15,7 @@ import '../../data/repositories/diagnostic_repository_impl.dart';
 import '../../domain/repositories/diagnostic_repository.dart';
 import '../../domain/usecases/get_initial_network_info.dart';
 import '../../domain/usecases/run_diagnostic_test.dart';
+import '../../domain/usecases/check_server_reachability.dart';
 import '../../features/home/presentation/cubit/home_cubit.dart';
 import '../../features/diagnostic/presentation/cubit/diagnostic_cubit.dart';
 import '../../features/diagnostic/presentation/mock/mock_run_diagnostic_test_usecase.dart';
@@ -32,14 +34,20 @@ Future<void> init({bool useMockDiagnostic = false}) async {
   }
   
   sl.registerFactory(
-      () => HomeCubit(getInitialNetworkInfo: sl(), config: sl()));
+      () => HomeCubit(
+        getInitialNetworkInfo: sl(), 
+        config: sl(),
+        checkServerReachability: sl(),
+      ));
   sl.registerFactory(() => DiagnosticCubit(
         runDiagnosticTestUseCase: sl(),
     diagnosticRepository: sl(),
         progressCalculator: sl<ProgressCalculator>(),
       ));
 
+  sl.registerLazySingleton(() => http.Client());
   sl.registerLazySingleton(() => GetInitialNetworkInfo(sl()));
+  sl.registerLazySingleton(() => CheckServerReachability(sl()));
   
   if (useMockDiagnostic) {
     sl.registerLazySingleton<RunDiagnosticTest>(
@@ -57,6 +65,7 @@ Future<void> init({bool useMockDiagnostic = false}) async {
       networkInfo: sl(),
       networkInfoLocalDataSource: sl(),
       deviceInfoLocalDataSource: sl(),
+      appConfig: sl(),
     ),
   );
 

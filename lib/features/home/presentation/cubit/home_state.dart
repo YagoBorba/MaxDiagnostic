@@ -17,11 +17,15 @@ class HomeLoading extends HomeState {
 
 class HomeLoaded extends HomeState {
   final NetworkInfoEntity networkInfo;
+  final bool isSpeedTestServerReachable;
 
-  const HomeLoaded({required this.networkInfo});
+  const HomeLoaded({
+    required this.networkInfo,
+    required this.isSpeedTestServerReachable,
+  });
 
   @override
-  List<Object> get props => [networkInfo];
+  List<Object> get props => [networkInfo, isSpeedTestServerReachable];
 }
 
 class HomeError extends HomeState {
