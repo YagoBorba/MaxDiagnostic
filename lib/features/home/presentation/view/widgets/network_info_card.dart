@@ -10,6 +10,9 @@ class NetworkInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+
     final isConnected = networkInfo.connectionType.toLowerCase() != 'none';
     final titleText = () {
       if (!isConnected) return 'Sem conexão';
@@ -34,15 +37,15 @@ class NetworkInfoCard extends StatelessWidget {
               children: [
                 Icon(
                   LucideIcons.wifi,
-                  color: isConnected ? const Color(0xFF4D89FF) : Colors.grey,
+                  color: isConnected ? primaryColor : Colors.grey,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   titleText,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF1F2937),
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
               ],

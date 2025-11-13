@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class AppTheme {
   AppTheme._();
 
-  // Cores primárias (HSL: 214 100% 58%)
+  // ### Brand primary (fonte da verdade) ###
   static const Color primary = Color(0xFF3B82F6);
   static const Color primaryForeground = Color(0xFFFFFFFF);
 
