@@ -109,6 +109,16 @@ class SpeedTestRemoteDataSourceImpl implements SpeedTestRemoteDataSource {
     final cacheBuster = DateTime.now().millisecondsSinceEpoch;
     final url = "${config.speedTestUrl}?v=$cacheBuster";
     
+    if (config.speedTestUrl == 'about:blank' || config.speedTestUrl.isEmpty) {
+      debugPrint('🚨 Invalid speedTestUrl: "${config.speedTestUrl}"');
+      debugPrint('💡 Make sure .env file exists and contains SPEED_TEST_URL=http://your-server:7000/librespeed_runner.html');
+      debugPrint('💡 Also verify .env is listed in pubspec.yaml assets section');
+      _fsmManager.onWebViewError(
+        'Speed test server not configured. Please check your .env file and ensure SPEED_TEST_URL is set correctly.'
+      );
+      return;
+    }
+
     await _headlessWebView?.dispose();
     _headlessWebView = null;
     _controller = null;
