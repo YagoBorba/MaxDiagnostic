@@ -113,11 +113,15 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
   }
 
   Future<bool> _ensureLocationPermission() async {
-    if (kIsWeb) return true;
+    if (kIsWeb) {
+      return true;
+    }
     
     if (Platform.isAndroid || Platform.isIOS) {
       final status = await Permission.locationWhenInUse.status;
-      if (status.isGranted) return true;
+      if (status.isGranted) {
+        return true;
+      }
       final req = await Permission.locationWhenInUse.request();
       return req.isGranted;
     }
@@ -163,16 +167,23 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
           final dynamic std = ap.standard; 
           if (std != null) {
             final String s = std.toString();
-            if (s.contains('legacy')) standardLabel = '802.11a/b/g';
-            else if (s.endsWith('.n')) standardLabel = '802.11n';
-            else if (s.endsWith('.ac')) standardLabel = '802.11ac (WiFi 5)';
-            else if (s.endsWith('.ax')) standardLabel = '802.11ax (WiFi 6)';
+            if (s.contains('legacy')) {
+              standardLabel = '802.11a/b/g';
+            } else if (s.endsWith('.n')) {
+              standardLabel = '802.11n';
+            } else if (s.endsWith('.ac')) {
+              standardLabel = '802.11ac (WiFi 5)';
+            } else if (s.endsWith('.ax')) {
+              standardLabel = '802.11ax (WiFi 6)';
+            }
           }
           final dynamic ch = ap.channel; 
-          if (ch is int) channel = ch;
+          if (ch is int) {
+            channel = ch;
+          }
           final dynamic cw = ap.channelWidth;
           if (cw != null && cw is Enum) {
-            channelWidthIdx = cw.index as int;
+            channelWidthIdx = cw.index;
           }
         } catch (_) {}
 
@@ -202,9 +213,13 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
   }
 
   Future<int?> _getLinkSpeed() async {
-    if (kIsWeb) return 150; 
+    if (kIsWeb) {
+      return 150;
+    } 
     
-    if (!Platform.isAndroid) return null;
+    if (!Platform.isAndroid) {
+      return null;
+    }
     try {
       final speed = await _wifiChannel.invokeMethod<int>('getLinkSpeed');
       return speed;
@@ -214,7 +229,9 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
   }
 
   String? _sanitizeSsid(String? value) {
-    if (value == null) return null;
+    if (value == null) {
+      return null;
+    }
     final t = value.trim();
     if (t.length >= 2 && t.startsWith('"') && t.endsWith('"')) {
       return t.substring(1, t.length - 1);
@@ -236,19 +253,29 @@ class _WifiEntry {
 }
 
 int? _freqToChannel(int? freq) {
-  if (freq == null) return null;
+  if (freq == null) {
+    return null;
+  }
   if (freq >= 2412 && freq <= 2484) {
-    if (freq == 2484) return 14;
+    if (freq == 2484) {
+      return 14;
+    }
     final ch = ((freq - 2412) / 5).round() + 1;
-    if (ch >= 1 && ch <= 13) return ch;
+    if (ch >= 1 && ch <= 13) {
+      return ch;
+    }
   }
   if (freq >= 5005 && freq <= 5895) {
     final ch = ((freq - 5000) / 5).round();
-    if (ch > 0) return ch;
+    if (ch > 0) {
+      return ch;
+    }
   }
   if (freq >= 5955 && freq <= 7115) {
     final ch = ((freq - 5955) / 5).round() + 1;
-    if (ch > 0) return ch;
+    if (ch > 0) {
+      return ch;
+    }
   }
   return null;
 }

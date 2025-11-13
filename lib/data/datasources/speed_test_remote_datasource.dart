@@ -439,7 +439,9 @@ class _SpeedTestFsmManager {
   void onJsMessage(String jsonMessage) {
     if (kDebugMode) {
       debugPrint('🔧 FSM: Received JS message in state: ${_currentState.name}');
-      debugPrint('🔧 Raw JSON: $jsonMessage');
+      if (!jsonMessage.contains('"event":"progress"')) {
+        debugPrint('🔧 Raw JSON: $jsonMessage');
+      }
     }
     
     if (_currentState != _SpeedTestState.running) {
@@ -451,7 +453,9 @@ class _SpeedTestFsmManager {
 
     try {
       final message = _JsMessage.fromJson(json.decode(jsonMessage) as Map<String, dynamic>);
-      debugPrint('📨 JS Message | event: ${message.event}, type: ${message.payload.type}');
+      if (kDebugMode && message.event != 'progress') {
+        debugPrint('📨 JS Message | event: ${message.event}, type: ${message.payload.type}');
+      }
 
       switch (message.event) {
         case 'error':
@@ -482,9 +486,8 @@ class _SpeedTestFsmManager {
   void _handleProgressMessage(_JsPayload payload) {
     DiagnosticStage stage;
     String text;
-
-    final progressPercent = (payload.progress * 100).toStringAsFixed(1);
-    debugPrint('📊 PROGRESS: ${payload.type} at $progressPercent% - Speed: ${payload.speed ?? 'N/A'}');
+    
+    // debugPrint('📊 PROGRESS: ${payload.type} at $progressPercent% - Speed: ${payload.speed ?? 'N/A'}');
 
     if (_lastTestPhase != payload.type) {
       debugPrint('🔄 Test Phase Change: ${_lastTestPhase ?? 'start'} → ${payload.type}');
@@ -528,10 +531,10 @@ class _SpeedTestFsmManager {
 
     _updateProgress(payload.progress);
 
-    if (kDebugMode && payload.progress > 0) {
-      final progressPercent = (payload.progress * 100).toStringAsFixed(1);
-      debugPrint('📊 Test Progress: ${payload.type} $progressPercent% - Speed: ${payload.speed ?? 'N/A'}');
-    }
+    // if (kDebugMode && payload.progress > 0) {
+    //   final progressPercent = (payload.progress * 100).toStringAsFixed(1);
+    //   debugPrint('📊 Test Progress: ${payload.type} $progressPercent% - Speed: ${payload.speed ?? 'N/A'}');
+    // }
 
     switch(payload.type) {
       case 'download':
@@ -562,6 +565,16 @@ class _SpeedTestFsmManager {
       debugPrint('   Jitter: ${payload.jitter} ms');
       debugPrint('   Aborted: ${payload.aborted}');
       debugPrint('   ISP: ${payload.ipInfo['isp']}');
+    }
+
+    if (kDebugMode) {
+      try {
+        final ipInfoJson = json.encode(payload.ipInfo);
+        debugPrint('✅🔍 Final Payload (ipInfo): $ipInfoJson');
+        debugPrint('✅📊 Final Payload (Results): Download: ${payload.download}, Upload: ${payload.upload}, Ping: ${payload.ping}');
+      } catch (e) {
+        debugPrint('✅🔍 Final Payload (ipInfo) [Raw]: ${payload.ipInfo}');
+      }
     }
 
     if (_currentState == _SpeedTestState.completed || _currentState == _SpeedTestState.error) {
