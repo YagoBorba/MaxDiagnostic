@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:maxt_diagnostic/features/home/presentation/cubit/home_cubit.dart';
 import 'package:maxt_diagnostic/core/config/app_config.dart';
 import 'package:maxt_diagnostic/core/di/injection_container.dart' as di;
+import 'package:maxt_diagnostic/core/theme/brand_theme_colors.dart';
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/diagnostic_button.dart';
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/network_info_card.dart';
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/quick_tips_card.dart';
@@ -19,19 +20,23 @@ class HomeScreen extends StatelessWidget {
     required int? currentDbm,
     required int excellentThreshold,
   }) {
-    Color qualityColor(SignalQuality q) {
-      switch (q) {
-        case SignalQuality.excellent:
-          return const Color(0xFF16A34A);
-        case SignalQuality.normal:
-          return const Color(0xFFD97706);
-        case SignalQuality.poor:
-          return const Color(0xFFDC2626);
-      }
-    }
+    final theme = Theme.of(context);
+    final brandColors = theme.extension<BrandThemeColors>()!;
 
-  final config = di.sl<AppConfig>();
+    final config = di.sl<AppConfig>();
     final quality = config.getSignalQuality(currentDbm);
+    final Color signalColor;
+    switch (quality) {
+      case SignalQuality.excellent:
+        signalColor = brandColors.signalExcellent;
+        break;
+      case SignalQuality.normal:
+        signalColor = brandColors.signalNormal;
+        break;
+      case SignalQuality.poor:
+        signalColor = brandColors.signalPoor;
+        break;
+    }
     double progress;
     if (currentDbm == null) {
       progress = 0;
@@ -81,13 +86,13 @@ class HomeScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: qualityColor(quality).withValues(alpha: 0.12),
+                        color: signalColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
                         config.qualityLabel(quality),
                         style: TextStyle(
-                          color: qualityColor(quality),
+                          color: signalColor,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -102,7 +107,7 @@ class HomeScreen extends StatelessWidget {
                   value: progress,
                   minHeight: 8,
                   backgroundColor: Colors.grey.shade200,
-                  color: qualityColor(quality),
+                  color: signalColor,
                 ),
                 const SizedBox(height: 8),
                 Text(
