@@ -11,29 +11,49 @@ class _Rule {
 
 class AdviceService {
   List<AdviceEntity> getAdvice(FinalResultsEntity results) {
-    final triggeredAdvice = <AdviceEntity>[];
+    final allTriggeredRules = _rules
+        .where((rule) => rule.condition(results))
+        .map((rule) => rule.advice(results))
+        .toList();
 
-    for (final rule in _rules) {
-      if (rule.condition(results)) {
-        triggeredAdvice.add(rule.advice(results));
-      }
+    final problems = allTriggeredRules
+        .where((advice) =>
+            advice.severity == AdviceSeverity.critical ||
+            advice.severity == AdviceSeverity.warning)
+        .toList();
+
+    if (problems.isNotEmpty) {
+      problems.sort((a, b) => a.severity.index.compareTo(b.severity.index));
+      return problems;
     }
 
-    if (triggeredAdvice.isEmpty) {
-      triggeredAdvice.add(
-        const AdviceEntity(
-          id: 'no_issues_detected',
-          title: 'Nenhum Problema Específico Detectado',
-          description:
-              'Não encontramos nenhum gargalo ou problema óbvio em sua rede durante o teste. A conexão parece estar funcionando normalmente.',
-          severity: AdviceSeverity.good,
-        ),
-      );
+    final info = allTriggeredRules
+        .where((advice) => advice.severity == AdviceSeverity.info)
+        .toList();
+
+    if (info.isNotEmpty) {
+      info.sort((a, b) => a.severity.index.compareTo(b.severity.index));
+      return info;
     }
 
-    triggeredAdvice
-        .sort((a, b) => a.severity.index.compareTo(b.severity.index));
-    return triggeredAdvice;
+    final good = allTriggeredRules
+        .where((advice) => advice.severity == AdviceSeverity.good)
+        .toList();
+
+    if (good.isNotEmpty) {
+      good.sort((a, b) => a.severity.index.compareTo(b.severity.index));
+      return good;
+    }
+
+    return const [
+      AdviceEntity(
+        id: 'no_issues_detected',
+        title: 'Nenhum Problema Específico Detectado',
+        description:
+            'Não encontramos nenhum gargalo ou problema óbvio em sua rede durante o teste. A conexão parece estar funcionando normalmente.',
+        severity: AdviceSeverity.good,
+      ),
+    ];
   }
 
   static final List<_Rule> _rules = [
