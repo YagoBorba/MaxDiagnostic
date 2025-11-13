@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../../l10n/app_localizations.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:maxt_diagnostic/core/theme/brand_theme_colors.dart';
 
 class RotatingInfoCard extends StatefulWidget {
   const RotatingInfoCard({super.key});
@@ -66,28 +67,13 @@ class _RotatingInfoCardState extends State<RotatingInfoCard>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final primaryColor = theme.colorScheme.primary;
-    final tintedBackground = Color.alphaBlend(
-      primaryColor.withValues(alpha: 0.08),
-      theme.colorScheme.surface,
-    );
-    final borderColor = primaryColor.withValues(alpha: 0.2);
-    final headlineColor = Color.alphaBlend(
-      Colors.black.withValues(alpha: 0.2),
-      primaryColor,
-    );
-    final bodyColor = Color.alphaBlend(
-      Colors.white.withValues(alpha: 0.1),
-      primaryColor,
-    );
+    final brandColors = theme.extension<BrandThemeColors>()!;
 
     return Card(
-      elevation: 2,
-      color: tintedBackground,
-      shadowColor: Colors.black12,
+      color: brandColors.primaryTintedBackground,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: borderColor),
+        side: BorderSide(color: brandColors.primaryBorder),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -95,14 +81,14 @@ class _RotatingInfoCardState extends State<RotatingInfoCard>
           children: [
             Row(
               children: [
-                Icon(LucideIcons.info, color: primaryColor),
+                Icon(LucideIcons.info, color: theme.colorScheme.primary),
                 const SizedBox(width: 8),
                 Text(
                   AppLocalizations.of(context)!.stay_informed,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: headlineColor,
+                    color: brandColors.primaryHeadline,
                   ),
                 ),
               ],
@@ -117,7 +103,7 @@ class _RotatingInfoCardState extends State<RotatingInfoCard>
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16,
-                    color: bodyColor,
+                    color: brandColors.primaryBody,
                     height: 1.5,
                   ),
                 ),
