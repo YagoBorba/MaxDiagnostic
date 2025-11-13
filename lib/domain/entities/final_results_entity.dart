@@ -57,8 +57,9 @@ class NetworkInfoEntity extends Equatable {
   final int? wifiSignalStrength;
   final int? wifiLinkSpeed;
   final String? wifiBSSID;
-  final String? externalIP;
   final String? internalIP;
+  final String? externalIP;
+  final String? isp;
   final int? wifiChannel;
   final String? wifiStandard;
 
@@ -69,8 +70,9 @@ class NetworkInfoEntity extends Equatable {
     this.wifiSignalStrength,
     this.wifiLinkSpeed,
     this.wifiBSSID,
-    this.externalIP,
     this.internalIP,
+    this.externalIP,
+    this.isp,
     this.wifiChannel,
     this.wifiStandard,
   });
@@ -83,8 +85,9 @@ class NetworkInfoEntity extends Equatable {
         wifiSignalStrength,
         wifiLinkSpeed,
         wifiBSSID,
-        externalIP,
         internalIP,
+        externalIP,
+        isp,
         wifiChannel,
         wifiStandard,
       ];
@@ -95,8 +98,7 @@ class SpeedTestResultEntity extends Equatable {
   final double uploadSpeed;
   final double ping;
   final double jitter;
-  final String isp;
-  final String? externalIP;
+  final String serverLocation;
   final DateTime testStartTime;
   final DateTime testEndTime;
   final bool testCompleted;
@@ -107,8 +109,7 @@ class SpeedTestResultEntity extends Equatable {
     required this.uploadSpeed,
     required this.ping,
     required this.jitter,
-    required this.isp,
-    this.externalIP,
+    required this.serverLocation,
     required this.testStartTime,
     required this.testEndTime,
     required this.testCompleted,
@@ -121,8 +122,7 @@ class SpeedTestResultEntity extends Equatable {
         uploadSpeed,
         ping,
         jitter,
-        isp,
-        externalIP,
+        serverLocation,
         testStartTime,
         testEndTime,
         testCompleted,

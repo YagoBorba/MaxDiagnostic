@@ -24,8 +24,7 @@ class ReportService {
       final String fileName =
           'diagnostic_report_${DateTime.now().millisecondsSinceEpoch}';
 
-      final generatedPdf =
-          await FlutterHtmlToPdf.convertFromHtmlContent(
+      final generatedPdf = await FlutterHtmlToPdf.convertFromHtmlContent(
         html,
         tempDir.path,
         fileName,
@@ -145,8 +144,9 @@ class ReportService {
     <div class="section">
       <h2>Informações da Conexão</h2>
       <div class="details-grid">
-        <div class="detail-item"><span class="label">IP Externo</span><span class="value">${formatValue(speed.externalIP)}</span></div>
-        <div class="detail-item"><span class="label">Provedor (ISP)</span><span class="value">${formatValue(speed.isp)}</span></div>
+  <div class="detail-item"><span class="label">IP Externo</span><span class="value">${formatValue(net.externalIP)}</span></div>
+  <div class="detail-item"><span class="label">Provedor (ISP)</span><span class="value">${formatValue(net.isp)}</span></div>
+        <div class="detail-item"><span class="label">Servidor do Teste</span><span class="value">${formatValue(speed.serverLocation)}</span></div>
         <div class="detail-item"><span class="label">IP Interno</span><span class="value">${formatValue(net.internalIP)}</span></div>
       </div>
     </div>
@@ -158,13 +158,13 @@ class ReportService {
         <div class="detail-item"><span class="label">BSSID</span><span class="value">${formatValue(net.wifiBSSID)}</span></div>
         <div class="detail-item"><span class="label">Sinal (Início)</span><span class="value">${formatValue(initialNet.wifiSignalStrength?.toString(), ' dBm')}</span></div>
         <div class="detail-item"><span class="label">Sinal (Final)</span><span class="value">${formatValue(net.wifiSignalStrength?.toString(), ' dBm')}</span></div>
-  <div class="detail-item"><span class="label">Banda</span><span class="value">${formatValue(net.wifiFrequency)}</span></div>
-  <div class="detail-item"><span class="label">Canal</span><span class="value">${formatValue(net.wifiChannel?.toString())}</span></div>
-  <div class="detail-item"><span class="label">Padrão</span><span class="value">${formatValue(net.wifiStandard)}</span></div>
-  <div class="detail-item"><span class="label">Velocidade do Link</span><span class="value">${formatValue(net.wifiLinkSpeed?.toString(), ' Mbps')}</span></div>
+        <div class="detail-item"><span class="label">Banda</span><span class="value">${formatValue(net.wifiFrequency)}</span></div>
+        <div class="detail-item"><span class="label">Padrão</span><span class="value">${formatValue(net.wifiStandard)}</span></div>
+        <div class="detail-item"><span class="label">Canal</span><span class="value">${formatValue(net.wifiChannel?.toString())}</span></div>
+        <div class="detail-item"><span class="label">Velocidade do Link</span><span class="value">${formatValue(net.wifiLinkSpeed?.toString(), ' Mbps')}</span></div>
       </div>
     </div>
-    
+
     <div class="section">
       <h2>Informações do Dispositivo</h2>
       <div class="details-grid">
