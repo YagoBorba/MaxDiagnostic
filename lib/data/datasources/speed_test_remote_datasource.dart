@@ -581,7 +581,8 @@ class _SpeedTestFsmManager {
       uploadSpeed: payload.upload ?? 0.0,
       ping: payload.ping ?? 0.0,
       jitter: payload.jitter ?? 0.0,
-      serverLocation: payload.ipInfo['isp'] as String? ?? 'Servidor Interno',
+      isp: payload.ipInfo['isp'] as String? ?? 'Servidor Interno',
+      externalIP: payload.ipInfo['ip'] as String?,
       testStartTime: _actualTestStartTime ?? DateTime.now().subtract(const Duration(seconds: 30)), // Usa o tempo real com fallback
       testEndTime: DateTime.now(),
       testCompleted: !(payload.aborted ?? false),

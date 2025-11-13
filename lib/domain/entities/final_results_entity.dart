@@ -4,12 +4,14 @@ class FinalResultsEntity extends Equatable {
   final DateTime timestamp;
   final DeviceInfoEntity deviceInfo;
   final NetworkInfoEntity networkInfo;
+  final NetworkInfoEntity initialNetworkInfo;
   final SpeedTestResultEntity speedTestResult;
 
   const FinalResultsEntity({
     required this.timestamp,
     required this.deviceInfo,
     required this.networkInfo,
+    required this.initialNetworkInfo,
     required this.speedTestResult,
   });
 
@@ -18,6 +20,7 @@ class FinalResultsEntity extends Equatable {
         timestamp,
         deviceInfo,
         networkInfo,
+        initialNetworkInfo,
         speedTestResult,
       ];
 }
@@ -56,6 +59,8 @@ class NetworkInfoEntity extends Equatable {
   final String? wifiBSSID;
   final String? externalIP;
   final String? internalIP;
+  final int? wifiChannel;
+  final String? wifiStandard;
 
   const NetworkInfoEntity({
     required this.connectionType,
@@ -66,6 +71,8 @@ class NetworkInfoEntity extends Equatable {
     this.wifiBSSID,
     this.externalIP,
     this.internalIP,
+    this.wifiChannel,
+    this.wifiStandard,
   });
 
   @override
@@ -78,6 +85,8 @@ class NetworkInfoEntity extends Equatable {
         wifiBSSID,
         externalIP,
         internalIP,
+        wifiChannel,
+        wifiStandard,
       ];
 }
 
@@ -86,7 +95,8 @@ class SpeedTestResultEntity extends Equatable {
   final double uploadSpeed;
   final double ping;
   final double jitter;
-  final String serverLocation;
+  final String isp;
+  final String? externalIP;
   final DateTime testStartTime;
   final DateTime testEndTime;
   final bool testCompleted;
@@ -97,7 +107,8 @@ class SpeedTestResultEntity extends Equatable {
     required this.uploadSpeed,
     required this.ping,
     required this.jitter,
-    required this.serverLocation,
+    required this.isp,
+    this.externalIP,
     required this.testStartTime,
     required this.testEndTime,
     required this.testCompleted,
@@ -110,7 +121,8 @@ class SpeedTestResultEntity extends Equatable {
         uploadSpeed,
         ping,
         jitter,
-        serverLocation,
+        isp,
+        externalIP,
         testStartTime,
         testEndTime,
         testCompleted,
