@@ -84,9 +84,9 @@ class ReportService {
       'upload':
           'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXVwbG9hZCI+PHBhdGggZD0iTTIxIDE1djRhMiAyIDAgMCAxLTIgMmgtMTRhMiAyIDAgMCAxLTItMnYtNCIvPjxwb2x5bGluZSBwb2ludHM9IjE3IDEwIDEyIDUgNyAxMCIvPjxsaW5lIHgxPSIxMiIgeDI9IjEyIiB5MT0iNSIgeTI9IjE1Ii8+PC9zdmc+',
       'ping':
-          'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cmJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWdhdWdlLWNpcmNsZSI+PHBhdGggZD0iTTE1IDEyYzAtMi44LTIuMi01LTUtNXMtNSAyLjItNSA1YzAgMi4yIDEuMiA0LjEgMyA1Ii8+PHBhdGggZD0iTTEwIDljMC0xLjEuOS0yIDItMnMyIC45IDIgMi0uOSAyLTIgMmMtLjggMC0xLjUtLjQtMS44LS45Ii8+PHBhdGggZD0ibTE1LjEgMTIgMy40LTMuNGMuNC0uNC40LTEgMC0xLjRsLTEuNC0xLjRjLS40LS40LTEtLjQtMS40IDBMMyA5LjQiLz48cGF0aCBkPSJNMTEgMThjLjktLjcgMS43LTEuNSAyLjMtMi41Ii8+PHBhdGggZD0ibTIxLjcgMTIgMS4yLTMuNCIvPjxwYXRoIGQ9Im0zLjEgMTEuMiAxLjIgMy40Ii8+PHBhdGggZD0iTTYgMThjLS45LS43LTEuNy0xLjUtMi4zLTIuNSIvPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjEwIi8+PC9zdmc+',
+          'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjEwIi8+PHBvbHlsaW5lIHBvaW50cz0iMTIgNiAxMiAxMiAxNiAxNCIvPjwvc3ZnPg==',
       'jitter':
-          'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXdhdmVzIj48cGF0aCBkPSJNMCA4YzAgMCAxLjUgMS41IDMgMFM2IDggOSA4Ii8+PHBhdGggZD0iTTIgOGMwIDAgMS41IDEuNSAzIDBTOCA4IDExIDgiLz48cGF0aCBkPSJNMjIgOGMwIDAgLTEuNSAxLjUtMyAwcy0zLTEuNS0zLTEuNSIvPjxwYXRoIGQ9Ik0xNiA4YzAgMCAxLjUgMS41IDMgMFM1MjIgOCAyMiA4Ii8+PHBhdGggZD0iTTE0IDE4YzAgMCAxLjUtMS41IDMgMHMzLTEuNSAzLTEuNSIvPjxwYXRoIGQ9Ik0xOSAxOGMwIDAgMS41LTEuNSAzIDBTMTkgMTggMTkgOCIvPjxwYXRoIGQ9Im0xMyAxOGMtMiAwLTMtMS41LTMtMS41Ii8+PC9zdmc+',
+          'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXdhdmVzIj48cGF0aCBkPSJNMiA2YzAtMi41IDIuNS0yLjUgMi41LTIuNXMyLjUgMCAyLjUgMi41YzAgMi41LTIuNSAyLjUtMi41IDIuNVM0LjUgOC41IDIgNiIvPjxwYXRoIGQ9Ik0xMCA2YzAtMi41IDIuNS0yLjUgMi41LTIuNXMyLjUgMCAyLjUgMi41YzAgMi41LTIuNSAyLjUtMi41IDIuNVMxMi41IDguNSAxMCA2Ii8+PHBhdGggZD0iTTE4IDZjMC0yLjUgMi41LTIuNSAyLjUtMi41czIuNSAwIDIuNSAyLjVjMCAyLjUtMi41IDIuNS0yLjUgMi41UzIwLjUgOC41IDE4IDYiLz48cGF0aCBkPSJNMiAxOGMwLTIuNSAyLjUtMi41IDIuNS0yLjVzMi41IDAgMi41IDIuNWMwIDIuNS0yLjUgMi41LTIuNSAyLjVTNC41IDIwLjUgMiAxOCIvPjxwYXRoIGQ9Ik0xMCAxOGMwLTIuNSAyLjUtMi41IDIuNS0yLjVzMi41IDAgMi41IDIuNWMwIDIuNS0yLjUgMi41LTIuNSAyLjVTMTIuNSAyMC41IDEwIDE4Ii8+PHBhdGggZD0iTTE4IDE4YzAtMi41IDIuNS0yLjUgMi41LTIuNXMyLjUgMCAyLjUgMi41YzAgMi41LTIuNSAyLjUtMi41IDIuNVMyMC41IDIwLjUgMTggMTgiLz48L3N2Zz4=',
     };
 
     const String styles = '''
@@ -120,6 +120,7 @@ class ReportService {
 
     final speed = results.speedTestResult;
     final net = results.networkInfo;
+    final initialNet = results.initialNetworkInfo;
     final device = results.deviceInfo;
 
     final String body = '''
@@ -132,6 +133,7 @@ class ReportService {
     </div>
     
     <div class="section">
+      <h2>Resultados do Teste de Velocidade</h2>
       <div class="summary-grid">
         <div class="card"><img src="${icons['download']}" class="card-icon" /><div class="card-content"><p class="label">Download</p><p class="value">${formatValue(speed.downloadSpeed.toStringAsFixed(2), ' Mbps')}</p></div></div>
         <div class="card"><img src="${icons['upload']}" class="card-icon" /><div class="card-content"><p class="label">Upload</p><p class="value">${formatValue(speed.uploadSpeed.toStringAsFixed(2), ' Mbps')}</p></div></div>
@@ -141,24 +143,33 @@ class ReportService {
     </div>
     
     <div class="section">
-      <h2>Análise Wi-Fi</h2>
+      <h2>Informações da Conexão</h2>
       <div class="details-grid">
-        <div class="detail-item"><span class="label">Sinal (RSSI)</span><span class="value">${formatValue(net.wifiSignalStrength?.toString(), ' dBm')}</span></div>
-        <div class="detail-item"><span class="label">Banda</span><span class="value">${formatValue(net.wifiFrequency)}</span></div>
-        <div class="detail-item"><span class="label">Velocidade do Link</span><span class="value">${formatValue(net.wifiLinkSpeed?.toString(), ' Mbps')}</span></div>
-        <div class="detail-item"><span class="label">SSID (Nome da Rede)</span><span class="value">${formatValue(net.wifiName)}</span></div>
-        <div class="detail-item"><span class="label">BSSID</span><span class="value">${formatValue(net.wifiBSSID)}</span></div>
+        <div class="detail-item"><span class="label">IP Externo</span><span class="value">${formatValue(speed.externalIP)}</span></div>
+        <div class="detail-item"><span class="label">Provedor (ISP)</span><span class="value">${formatValue(speed.isp)}</span></div>
+        <div class="detail-item"><span class="label">IP Interno</span><span class="value">${formatValue(net.internalIP)}</span></div>
       </div>
     </div>
     
     <div class="section">
-      <h2>Detalhes Técnicos</h2>
+      <h2>Análise Wi-Fi</h2>
       <div class="details-grid">
-        <div class="detail-item"><span class="label">IP Externo</span><span class="value">${formatValue(net.externalIP)}</span></div>
-        <div class="detail-item"><span class="label">IP Interno</span><span class="value">${formatValue(net.internalIP)}</span></div>
+        <div class="detail-item"><span class="label">SSID (Nome da Rede)</span><span class="value">${formatValue(net.wifiName)}</span></div>
+        <div class="detail-item"><span class="label">BSSID</span><span class="value">${formatValue(net.wifiBSSID)}</span></div>
+        <div class="detail-item"><span class="label">Sinal (Início)</span><span class="value">${formatValue(initialNet.wifiSignalStrength?.toString(), ' dBm')}</span></div>
+        <div class="detail-item"><span class="label">Sinal (Final)</span><span class="value">${formatValue(net.wifiSignalStrength?.toString(), ' dBm')}</span></div>
+  <div class="detail-item"><span class="label">Banda</span><span class="value">${formatValue(net.wifiFrequency)}</span></div>
+  <div class="detail-item"><span class="label">Canal</span><span class="value">${formatValue(net.wifiChannel?.toString())}</span></div>
+  <div class="detail-item"><span class="label">Padrão</span><span class="value">${formatValue(net.wifiStandard)}</span></div>
+  <div class="detail-item"><span class="label">Velocidade do Link</span><span class="value">${formatValue(net.wifiLinkSpeed?.toString(), ' Mbps')}</span></div>
+      </div>
+    </div>
+    
+    <div class="section">
+      <h2>Informações do Dispositivo</h2>
+      <div class="details-grid">
         <div class="detail-item"><span class="label">Dispositivo</span><span class="value">${formatValue('${device.deviceBrand} ${device.deviceModel}')}</span></div>
         <div class="detail-item"><span class="label">Sistema Operacional</span><span class="value">${formatValue('${device.operatingSystem} ${device.osVersion}')}</span></div>
-        <div class="detail-item"><span class="label">Servidor do Teste</span><span class="value">${formatValue(speed.serverLocation)}</span></div>
       </div>
     </div>
 
