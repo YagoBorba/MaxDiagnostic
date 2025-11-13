@@ -218,15 +218,17 @@ class HomeScreen extends StatelessWidget {
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          NetworkInfoCard(networkInfo: state.networkInfo),
-                          const SizedBox(height: 16),
-                          const QuickTipsCard(),
-                          const SizedBox(height: 16),
-                          const RotatingInfoCard(),
-                        ],
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            NetworkInfoCard(networkInfo: state.networkInfo),
+                            const SizedBox(height: 16),
+                            const QuickTipsCard(),
+                            const SizedBox(height: 16),
+                            const RotatingInfoCard(),
+                          ],
+                        ),
                       ),
                     ),
                   ),
