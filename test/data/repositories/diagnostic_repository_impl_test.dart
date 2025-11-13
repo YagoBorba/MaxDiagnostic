@@ -81,17 +81,17 @@ void main() {
         wifiSignalStrength: -45,
         wifiLinkSpeed: 433,
       );
-      var callCount = 0;
-      when(() => networkInfoLocalDataSource.getNetworkInfo()).thenAnswer((_) async {
-        return (callCount++ == 0) ? netInitial : netFinal;
-      });
+      when(() => networkInfoLocalDataSource.getInitialNetworkInfo())
+          .thenAnswer((_) async => netInitial);
+      when(() => networkInfoLocalDataSource.getNetworkInfo())
+          .thenAnswer((_) async => netFinal);
 
       final speedResult = SpeedTestResultModel(
         downloadSpeed: 100.0,
         uploadSpeed: 50.0,
         ping: 12.0,
         jitter: 3.0,
-        isp: 'Sao Paulo',
+        serverLocation: 'São Paulo - BR',
         testStartTime: DateTime.now().subtract(const Duration(seconds: 30)),
         testEndTime: DateTime.now(),
         testCompleted: true,
@@ -163,8 +163,10 @@ void main() {
                 operatingSystem: 'Android',
                 osVersion: '14',
               ));
-      when(() => networkInfoLocalDataSource.getNetworkInfo())
-          .thenAnswer((_) async => const NetworkInfoEntity(connectionType: 'WiFi'));
+    when(() => networkInfoLocalDataSource.getInitialNetworkInfo())
+      .thenAnswer((_) async => const NetworkInfoEntity(connectionType: 'WiFi'));
+    when(() => networkInfoLocalDataSource.getNetworkInfo())
+      .thenAnswer((_) async => const NetworkInfoEntity(connectionType: 'WiFi'));
 
       final controller = StreamController<DiagnosticProgressEntity>();
       when(() => speedTestRemoteDataSource.runSpeedTest())
@@ -184,7 +186,7 @@ void main() {
             uploadSpeed: 50.0,
             ping: 12.0,
             jitter: 3.0,
-            isp: 'Test',
+            serverLocation: 'Servidor Interno',
             testStartTime: DateTime.now(),
             testEndTime: DateTime.now(),
             testCompleted: true,

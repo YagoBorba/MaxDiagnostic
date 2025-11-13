@@ -564,7 +564,6 @@ class _SpeedTestFsmManager {
       debugPrint('   Ping: ${payload.ping} ms');
       debugPrint('   Jitter: ${payload.jitter} ms');
       debugPrint('   Aborted: ${payload.aborted}');
-      debugPrint('   ISP: ${payload.ipInfo['isp']}');
     }
 
     if (kDebugMode) {
@@ -589,13 +588,18 @@ class _SpeedTestFsmManager {
     debugPrint('🎯 FSM: Transitioning to COMPLETED state');
     transitionTo(_SpeedTestState.completed);
 
+  final serverLocationRaw = payload.ipInfo['serverLocation'] as String?;
+  final serverLocationTrimmed = serverLocationRaw?.trim();
+  final serverLocation = (serverLocationTrimmed != null && serverLocationTrimmed.isNotEmpty)
+    ? serverLocationTrimmed
+    : 'Servidor Interno';
+
     final result = SpeedTestResultModel(
       downloadSpeed: payload.download ?? 0.0,
       uploadSpeed: payload.upload ?? 0.0,
       ping: payload.ping ?? 0.0,
       jitter: payload.jitter ?? 0.0,
-      isp: payload.ipInfo['isp'] as String? ?? 'Servidor Interno',
-      externalIP: payload.ipInfo['ip'] as String?,
+      serverLocation: serverLocation,
       testStartTime: _actualTestStartTime ?? DateTime.now().subtract(const Duration(seconds: 30)), // Usa o tempo real com fallback
       testEndTime: DateTime.now(),
       testCompleted: !(payload.aborted ?? false),

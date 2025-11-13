@@ -52,7 +52,7 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
         timestamp: DateTime.now(),
       ));
 
-      final initialNetworkInfo = await networkInfoLocalDataSource.getNetworkInfo();
+      final initialNetworkInfo = await networkInfoLocalDataSource.getInitialNetworkInfo();
       yield Right(DiagnosticProgressEntity(
         stage: DiagnosticStage.collectingNetworkInfo,
         progress: 1.0,
@@ -60,7 +60,7 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
         timestamp: DateTime.now(),
       ));
 
-  final progressStream = speedTestRemoteDataSource.runSpeedTest();
+      final progressStream = speedTestRemoteDataSource.runSpeedTest();
 
       await for (final progress in progressStream) {
         yield Right(progress);
@@ -71,7 +71,7 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
           final finalResults = FinalResultsModel(
             timestamp: DateTime.now(),
             deviceInfo: DeviceInfoModel.fromEntity(deviceInfo),
-            networkInfo: NetworkInfoModel.fromEntity(finalNetworkInfo.wifiName != null ? finalNetworkInfo : initialNetworkInfo),
+            networkInfo: NetworkInfoModel.fromEntity(finalNetworkInfo),
             initialNetworkInfo: NetworkInfoModel.fromEntity(initialNetworkInfo),
             speedTestResult: SpeedTestResultModel.fromEntity(progress.speedTestResult!),
           );

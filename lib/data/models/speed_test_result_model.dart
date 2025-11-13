@@ -6,8 +6,7 @@ class SpeedTestResultModel extends SpeedTestResultEntity {
     required super.uploadSpeed,
     required super.ping,
     required super.jitter,
-    required super.isp,
-    super.externalIP,
+    required super.serverLocation,
     required super.testStartTime,
     required super.testEndTime,
     required super.testCompleted,
@@ -20,8 +19,7 @@ class SpeedTestResultModel extends SpeedTestResultEntity {
       uploadSpeed: entity.uploadSpeed,
       ping: entity.ping,
       jitter: entity.jitter,
-      isp: entity.isp,
-      externalIP: entity.externalIP,
+      serverLocation: entity.serverLocation,
       testStartTime: entity.testStartTime,
       testEndTime: entity.testEndTime,
       testCompleted: entity.testCompleted,
@@ -30,13 +28,17 @@ class SpeedTestResultModel extends SpeedTestResultEntity {
   }
 
   factory SpeedTestResultModel.fromJson(Map<String, dynamic> json) {
+    final serverLocationRaw = json['serverLocation'] as String?;
+    final serverLocation = (serverLocationRaw == null || serverLocationRaw.trim().isEmpty)
+        ? 'Servidor Interno'
+        : serverLocationRaw.trim();
+
     return SpeedTestResultModel(
       downloadSpeed: (json['downloadSpeed'] as num).toDouble(),
       uploadSpeed: (json['uploadSpeed'] as num).toDouble(),
       ping: (json['ping'] as num).toDouble(),
       jitter: (json['jitter'] as num).toDouble(),
-      isp: (json['isp'] ?? json['serverLocation']) as String,
-      externalIP: json['externalIP'] as String?,
+      serverLocation: serverLocation,
       testStartTime: DateTime.parse(json['testStartTime']),
       testEndTime: DateTime.parse(json['testEndTime']),
       testCompleted: json['testCompleted'],
@@ -50,8 +52,7 @@ class SpeedTestResultModel extends SpeedTestResultEntity {
       'uploadSpeed': uploadSpeed,
       'ping': ping,
       'jitter': jitter,
-      'isp': isp,
-      'externalIP': externalIP,
+      'serverLocation': serverLocation,
       'testStartTime': testStartTime.toIso8601String(),
       'testEndTime': testEndTime.toIso8601String(),
       'testCompleted': testCompleted,
