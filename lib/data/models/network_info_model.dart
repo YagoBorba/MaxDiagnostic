@@ -8,8 +8,11 @@ class NetworkInfoModel extends NetworkInfoEntity {
     super.wifiSignalStrength,
     super.wifiLinkSpeed,
     super.wifiBSSID,
-    super.externalIP,
     super.internalIP,
+    super.externalIP,
+    super.isp,
+    super.wifiChannel,
+    super.wifiStandard,
   });
 
   factory NetworkInfoModel.fromEntity(NetworkInfoEntity entity) {
@@ -20,8 +23,11 @@ class NetworkInfoModel extends NetworkInfoEntity {
       wifiSignalStrength: entity.wifiSignalStrength,
       wifiLinkSpeed: entity.wifiLinkSpeed,
       wifiBSSID: entity.wifiBSSID,
-      externalIP: entity.externalIP,
       internalIP: entity.internalIP,
+      externalIP: entity.externalIP,
+      isp: entity.isp,
+      wifiChannel: entity.wifiChannel,
+      wifiStandard: entity.wifiStandard,
     );
   }
 
@@ -33,8 +39,11 @@ class NetworkInfoModel extends NetworkInfoEntity {
       wifiSignalStrength: json['wifiSignalStrength'] as int?,
       wifiLinkSpeed: json['wifiLinkSpeed'] as int?,
       wifiBSSID: json['wifiBSSID'] as String?,
-      externalIP: json['externalIP'] as String?,
       internalIP: json['internalIP'] as String?,
+      externalIP: json['externalIP'] as String?,
+      isp: json['isp'] as String?,
+      wifiChannel: json['wifiChannel'] as int?,
+      wifiStandard: json['wifiStandard'] as String?,
     );
   }
 
@@ -46,8 +55,11 @@ class NetworkInfoModel extends NetworkInfoEntity {
       'wifiSignalStrength': wifiSignalStrength,
       'wifiLinkSpeed': wifiLinkSpeed,
       'wifiBSSID': wifiBSSID,
-      'externalIP': externalIP,
       'internalIP': internalIP,
+      'externalIP': externalIP,
+      'isp': isp,
+      'wifiChannel': wifiChannel,
+      'wifiStandard': wifiStandard,
     };
   }
 }

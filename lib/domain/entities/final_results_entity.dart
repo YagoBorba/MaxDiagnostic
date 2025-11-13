@@ -4,12 +4,14 @@ class FinalResultsEntity extends Equatable {
   final DateTime timestamp;
   final DeviceInfoEntity deviceInfo;
   final NetworkInfoEntity networkInfo;
+  final NetworkInfoEntity initialNetworkInfo;
   final SpeedTestResultEntity speedTestResult;
 
   const FinalResultsEntity({
     required this.timestamp,
     required this.deviceInfo,
     required this.networkInfo,
+    required this.initialNetworkInfo,
     required this.speedTestResult,
   });
 
@@ -18,6 +20,7 @@ class FinalResultsEntity extends Equatable {
         timestamp,
         deviceInfo,
         networkInfo,
+        initialNetworkInfo,
         speedTestResult,
       ];
 }
@@ -54,8 +57,11 @@ class NetworkInfoEntity extends Equatable {
   final int? wifiSignalStrength;
   final int? wifiLinkSpeed;
   final String? wifiBSSID;
-  final String? externalIP;
   final String? internalIP;
+  final String? externalIP;
+  final String? isp;
+  final int? wifiChannel;
+  final String? wifiStandard;
 
   const NetworkInfoEntity({
     required this.connectionType,
@@ -64,8 +70,11 @@ class NetworkInfoEntity extends Equatable {
     this.wifiSignalStrength,
     this.wifiLinkSpeed,
     this.wifiBSSID,
-    this.externalIP,
     this.internalIP,
+    this.externalIP,
+    this.isp,
+    this.wifiChannel,
+    this.wifiStandard,
   });
 
   @override
@@ -76,8 +85,11 @@ class NetworkInfoEntity extends Equatable {
         wifiSignalStrength,
         wifiLinkSpeed,
         wifiBSSID,
-        externalIP,
         internalIP,
+        externalIP,
+        isp,
+        wifiChannel,
+        wifiStandard,
       ];
 }
 

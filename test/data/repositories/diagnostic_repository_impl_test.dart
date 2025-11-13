@@ -4,6 +4,7 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:maxt_diagnostic/core/config/app_config.dart';
 import 'package:maxt_diagnostic/core/error/exceptions.dart';
 import 'package:maxt_diagnostic/core/error/failures.dart';
 import 'package:maxt_diagnostic/core/network/network_info.dart';
@@ -23,6 +24,8 @@ class _MockSpeedTestRemoteDataSource extends Mock
 
 class _MockNetworkInfo extends Mock implements NetworkInfo {}
 
+class _MockAppConfig extends Mock implements AppConfig {}
+
 class _MockDeviceInfoLocalDataSource extends Mock
     implements DeviceInfoLocalDataSource {}
 
@@ -31,6 +34,7 @@ void main() {
   late _MockSpeedTestRemoteDataSource speedTestRemoteDataSource;
   late _MockNetworkInfo networkInfo;
   late _MockDeviceInfoLocalDataSource deviceInfoLocalDataSource;
+  late _MockAppConfig appConfig;
   late DiagnosticRepositoryImpl repository;
 
   setUp(() {
@@ -38,12 +42,14 @@ void main() {
     speedTestRemoteDataSource = _MockSpeedTestRemoteDataSource();
     networkInfo = _MockNetworkInfo();
     deviceInfoLocalDataSource = _MockDeviceInfoLocalDataSource();
+    appConfig = _MockAppConfig();
 
     repository = DiagnosticRepositoryImpl(
       networkInfoLocalDataSource: networkInfoLocalDataSource,
       speedTestRemoteDataSource: speedTestRemoteDataSource,
       networkInfo: networkInfo,
       deviceInfoLocalDataSource: deviceInfoLocalDataSource,
+      appConfig: appConfig,
     );
   });
 
@@ -75,17 +81,17 @@ void main() {
         wifiSignalStrength: -45,
         wifiLinkSpeed: 433,
       );
-      var callCount = 0;
-      when(() => networkInfoLocalDataSource.getNetworkInfo()).thenAnswer((_) async {
-        return (callCount++ == 0) ? netInitial : netFinal;
-      });
+      when(() => networkInfoLocalDataSource.getInitialNetworkInfo())
+          .thenAnswer((_) async => netInitial);
+      when(() => networkInfoLocalDataSource.getNetworkInfo())
+          .thenAnswer((_) async => netFinal);
 
       final speedResult = SpeedTestResultModel(
         downloadSpeed: 100.0,
         uploadSpeed: 50.0,
         ping: 12.0,
         jitter: 3.0,
-        serverLocation: 'Sao Paulo',
+        serverLocation: 'São Paulo - BR',
         testStartTime: DateTime.now().subtract(const Duration(seconds: 30)),
         testEndTime: DateTime.now(),
         testCompleted: true,
@@ -157,8 +163,10 @@ void main() {
                 operatingSystem: 'Android',
                 osVersion: '14',
               ));
-      when(() => networkInfoLocalDataSource.getNetworkInfo())
-          .thenAnswer((_) async => const NetworkInfoEntity(connectionType: 'WiFi'));
+    when(() => networkInfoLocalDataSource.getInitialNetworkInfo())
+      .thenAnswer((_) async => const NetworkInfoEntity(connectionType: 'WiFi'));
+    when(() => networkInfoLocalDataSource.getNetworkInfo())
+      .thenAnswer((_) async => const NetworkInfoEntity(connectionType: 'WiFi'));
 
       final controller = StreamController<DiagnosticProgressEntity>();
       when(() => speedTestRemoteDataSource.runSpeedTest())
@@ -178,7 +186,7 @@ void main() {
             uploadSpeed: 50.0,
             ping: 12.0,
             jitter: 3.0,
-            serverLocation: 'Test',
+            serverLocation: 'Servidor Interno',
             testStartTime: DateTime.now(),
             testEndTime: DateTime.now(),
             testCompleted: true,

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
+import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:maxt_diagnostic/domain/entities/final_results_entity.dart';
 import 'package:maxt_diagnostic/core/usecases/usecase.dart';
@@ -7,17 +8,22 @@ import 'package:maxt_diagnostic/core/config/app_config.dart';
 import 'package:maxt_diagnostic/core/error/failures.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:maxt_diagnostic/domain/usecases/get_initial_network_info.dart';
+import 'package:maxt_diagnostic/domain/usecases/check_server_reachability.dart';
 
 part 'home_state.dart';
 
 class HomeCubit extends Cubit<HomeState> {
   final GetInitialNetworkInfo getInitialNetworkInfo;
+  final CheckServerReachability checkServerReachability;
   final AppConfig config;
   Timer? _refreshTimer;
   bool _isFetching = false;
 
-  HomeCubit({required this.getInitialNetworkInfo, required this.config})
-      : super(const HomeInitial());
+  HomeCubit({
+    required this.getInitialNetworkInfo, 
+    required this.config,
+    required this.checkServerReachability,
+  }) : super(const HomeInitial());
 
   Future<void> fetchInitialInfo() async {
     if (_isFetching) return;
@@ -26,8 +32,18 @@ class HomeCubit extends Cubit<HomeState> {
         state is HomeError ||
         state is HomePermissionDenied;
     if (isFirstLoad) emit(const HomeLoading());
-    final result = await getInitialNetworkInfo(const NoParams());
-    result.fold(
+    
+    final reachabilityFuture = checkServerReachability(const NoParams());
+    final networkInfoFuture = getInitialNetworkInfo(const NoParams());
+
+    final results = await Future.wait([networkInfoFuture, reachabilityFuture]);
+
+    final networkResult = results[0] as Either<Failure, NetworkInfoEntity>;
+    final reachabilityResult = results[1] as Either<Failure, bool>;
+
+    final isReachable = reachabilityResult.fold((l) => false, (r) => r);
+
+    networkResult.fold(
       (failure) {
         if (failure is PermissionFailure) {
           emit(const HomePermissionDenied(
@@ -38,7 +54,10 @@ class HomeCubit extends Cubit<HomeState> {
         }
       },
       (info) {
-        emit(HomeLoaded(networkInfo: info));
+        emit(HomeLoaded(
+          networkInfo: info,
+          isSpeedTestServerReachable: isReachable,
+        ));
       },
     );
     _isFetching = false;

@@ -1,11 +1,13 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:network_info_plus/network_info_plus.dart' as nip;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'package:network_info_plus/network_info_plus.dart' as nip;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:wifi_scan/wifi_scan.dart' as wscan;
-import 'package:flutter/foundation.dart';
 
 import '../../core/error/exceptions.dart';
 import '../../domain/entities/final_results_entity.dart';
@@ -39,6 +41,7 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
         wifiBSSID: '00:11:22:33:44:55',
         internalIP: '192.168.1.100',
         externalIP: '203.0.113.1',
+        isp: 'Simulated ISP',
       );
     }
 
@@ -47,9 +50,24 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
       throw const PermissionException('Location permission not granted');
     }
 
+    return _collectNetworkSnapshot();
+  }
+
+  @override
+  Future<NetworkInfoEntity> getNetworkInfo() async {
+    return _collectNetworkSnapshot();
+  }
+
+  Future<NetworkInfoEntity> _collectNetworkSnapshot() async {
+    final publicInfo = await _getPublicIpDetails();
+
     final conn = await connectivity.checkConnectivity();
     if (!conn.contains(ConnectivityResult.wifi)) {
-      return const NetworkInfoEntity(connectionType: 'none');
+      return NetworkInfoEntity(
+        connectionType: 'none',
+        externalIP: publicInfo.externalIP,
+        isp: publicInfo.isp,
+      );
     }
 
     final rawSsid = await _safeGet(() => networkInfo.getWifiName());
@@ -62,24 +80,14 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
     int? rssi;
     String? frequencyLabel;
     int? linkSpeed;
-    _WifiEntry? match;
+    int? channel;
+    String? standard;
 
-    if (bssid != null && scanResults.isNotEmpty) {
-      match = scanResults.firstWhere(
-        (e) => e.bssid == bssid,
-        orElse: () => _WifiEntry(ssid: null, bssid: null, level: null, frequency: null), 
-      );
-    }
-    
-    if (match?.bssid == null && ssid != null && scanResults.isNotEmpty) {
-       match = scanResults.firstWhere(
-        (e) => _sanitizeSsid(e.ssid) == ssid.trim(),
-        orElse: () => scanResults.first,
-      );
-    } else if (match?.bssid == null && scanResults.isNotEmpty) {
-      match = scanResults.first;
-    }
-
+    final _WifiEntry? match = _findBestWifiMatch(
+      targetSsid: ssid,
+      targetBssid: bssid,
+      scanResults: scanResults,
+    );
 
     if (match != null) {
       rssi = match.level;
@@ -88,6 +96,8 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
         frequencyLabel = freq >= 5000 ? '5 GHz' : '2.4 GHz';
       }
       linkSpeed = await _getLinkSpeed();
+      channel = match.channel ?? _freqToChannel(freq);
+      standard = match.standard;
     }
 
     return NetworkInfoEntity(
@@ -98,22 +108,77 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
       wifiLinkSpeed: linkSpeed,
       wifiBSSID: bssid,
       internalIP: internalIP,
+      externalIP: publicInfo.externalIP,
+      isp: publicInfo.isp,
+      wifiChannel: channel,
+      wifiStandard: standard,
     );
   }
 
-  @override
-  Future<NetworkInfoEntity> getNetworkInfo() async {
-    return getInitialNetworkInfo();
+  _WifiEntry? _findBestWifiMatch({
+    required String? targetSsid,
+    required String? targetBssid,
+    required List<_WifiEntry> scanResults,
+  }) {
+    if (scanResults.isEmpty) {
+      return null;
+    }
+
+    if (targetBssid != null) {
+      final byBssid = scanResults.firstWhere(
+        (entry) => entry.bssid == targetBssid,
+        orElse: () => _WifiEntry.empty(),
+      );
+      if (byBssid.bssid != null) {
+        return byBssid;
+      }
+    }
+
+    if (targetSsid != null) {
+      final bySsid = scanResults.firstWhere(
+        (entry) => _sanitizeSsid(entry.ssid) == targetSsid.trim(),
+        orElse: () => _WifiEntry.empty(),
+      );
+      if (bySsid.bssid != null || bySsid.ssid != null) {
+        return bySsid;
+      }
+    }
+
+    return scanResults.first;
+  }
+
+  Future<({String? externalIP, String? isp})> _getPublicIpDetails() async {
+    if (kIsWeb) {
+      return (externalIP: '203.0.113.1', isp: 'Simulated ISP');
+    }
+
+    try {
+      final uri = Uri.parse('http://ip-api.com/json/?fields=query,isp');
+      final response = await http.get(uri).timeout(const Duration(seconds: 3));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body) as Map<String, dynamic>;
+        final ip = data['query'] as String?;
+        final isp = data['isp'] as String?;
+        return (externalIP: ip, isp: isp);
+      }
+      return (externalIP: null, isp: null);
+    } catch (_) {
+      return (externalIP: null, isp: null);
+    }
   }
 
   Future<bool> _ensureLocationPermission() async {
-    if (kIsWeb) return true;
-    
+    if (kIsWeb) {
+      return true;
+    }
+
     if (Platform.isAndroid || Platform.isIOS) {
       final status = await Permission.locationWhenInUse.status;
-      if (status.isGranted) return true;
-      final req = await Permission.locationWhenInUse.request();
-      return req.isGranted;
+      if (status.isGranted) {
+        return true;
+      }
+      final requested = await Permission.locationWhenInUse.request();
+      return requested.isGranted;
     }
     return true;
   }
@@ -124,53 +189,99 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
         _WifiEntry(
           ssid: 'MAX-5G-Demo',
           bssid: '00:11:22:33:44:55',
-          level: -45, 
-          frequency: 5180, 
+          level: -45,
+          frequency: 5180,
+          channel: _freqToChannel(5180),
+          standard: '802.11ac (WiFi 5)',
         ),
       ];
     }
 
     try {
-      final can =
+      final canStart =
           await wscan.WiFiScan.instance.canStartScan(askPermissions: false);
-      if (can != wscan.CanStartScan.yes) {
-        if (can == wscan.CanStartScan.notSupported) {
+      if (canStart != wscan.CanStartScan.yes) {
+        if (canStart == wscan.CanStartScan.notSupported) {
           throw const NetworkException('WiFi scan not supported');
         }
         await _ensureLocationPermission();
       }
-      
+
       try {
         await wscan.WiFiScan.instance.startScan();
       } catch (_) {
+        // ignore: avoid_catches_without_on_clauses
       }
-      
+
       final list = await wscan.WiFiScan.instance.getScannedResults();
-      return list
-          .map((e) => _WifiEntry(
-                ssid: e.ssid,
-                bssid: e.bssid,
-                level: e.level,
-                frequency: e.frequency,
-              ))
-          .toList();
+      return list.map((entry) {
+        String? standardLabel;
+        int? channel;
+        int? channelWidthIdx;
+
+        try {
+          final dynamic ap = entry;
+          final dynamic std = ap.standard;
+          if (std != null) {
+            final label = std.toString();
+            if (label.contains('legacy')) {
+              standardLabel = '802.11a/b/g';
+            } else if (label.endsWith('.n')) {
+              standardLabel = '802.11n';
+            } else if (label.endsWith('.ac')) {
+              standardLabel = '802.11ac (WiFi 5)';
+            } else if (label.endsWith('.ax')) {
+              standardLabel = '802.11ax (WiFi 6)';
+            }
+          }
+
+          final dynamic ch = ap.channel;
+          if (ch is int) {
+            channel = ch;
+          }
+
+          final dynamic cw = ap.channelWidth;
+          if (cw is Enum) {
+            channelWidthIdx = cw.index;
+          }
+        } catch (_) {
+          // ignore reflection failures
+        }
+
+        channel ??= _freqToChannel(entry.frequency);
+
+        return _WifiEntry(
+          ssid: entry.ssid,
+          bssid: entry.bssid,
+          level: entry.level,
+          frequency: entry.frequency,
+          channelWidth: channelWidthIdx,
+          standard: standardLabel,
+          channel: channel,
+        );
+      }).toList();
     } catch (_) {
       return [];
     }
   }
 
-  Future<T?> _safeGet<T>(Future<T?> Function() fn) async {
+  Future<T?> _safeGet<T>(Future<T?> Function() action) async {
     try {
-      return await fn();
+      return await action();
     } catch (_) {
       return null;
     }
   }
 
   Future<int?> _getLinkSpeed() async {
-    if (kIsWeb) return 150; 
-    
-    if (!Platform.isAndroid) return null;
+    if (kIsWeb) {
+      return 150;
+    }
+
+    if (!Platform.isAndroid) {
+      return null;
+    }
+
     try {
       final speed = await _wifiChannel.invokeMethod<int>('getLinkSpeed');
       return speed;
@@ -180,12 +291,16 @@ class NetworkInfoLocalDataSourceImpl implements NetworkInfoLocalDataSource {
   }
 
   String? _sanitizeSsid(String? value) {
-    if (value == null) return null;
-    final t = value.trim();
-    if (t.length >= 2 && t.startsWith('"') && t.endsWith('"')) {
-      return t.substring(1, t.length - 1);
+    if (value == null) {
+      return null;
     }
-    return t;
+    final trimmed = value.trim();
+    if (trimmed.length >= 2 &&
+        trimmed.startsWith('"') &&
+        trimmed.endsWith('"')) {
+      return trimmed.substring(1, trimmed.length - 1);
+    }
+    return trimmed;
   }
 }
 
@@ -194,6 +309,47 @@ class _WifiEntry {
   final String? bssid;
   final int? level;
   final int? frequency;
+  final int? channelWidth;
+  final String? standard;
+  final int? channel;
 
-  _WifiEntry({this.ssid, this.bssid, this.level, this.frequency});
+  const _WifiEntry({
+    this.ssid,
+    this.bssid,
+    this.level,
+    this.frequency,
+    this.channelWidth,
+    this.standard,
+    this.channel,
+  });
+
+  factory _WifiEntry.empty() => const _WifiEntry();
+}
+
+int? _freqToChannel(int? freq) {
+  if (freq == null) {
+    return null;
+  }
+  if (freq >= 2412 && freq <= 2484) {
+    if (freq == 2484) {
+      return 14;
+    }
+    final ch = ((freq - 2412) / 5).round() + 1;
+    if (ch >= 1 && ch <= 13) {
+      return ch;
+    }
+  }
+  if (freq >= 5005 && freq <= 5895) {
+    final ch = ((freq - 5000) / 5).round();
+    if (ch > 0) {
+      return ch;
+    }
+  }
+  if (freq >= 5955 && freq <= 7115) {
+    final ch = ((freq - 5955) / 5).round() + 1;
+    if (ch > 0) {
+      return ch;
+    }
+  }
+  return null;
 }

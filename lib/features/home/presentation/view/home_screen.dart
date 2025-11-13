@@ -15,6 +15,7 @@ class HomeScreen extends StatelessWidget {
   void _showBlockedStartSheet(
     BuildContext context, {
     required bool noConnection,
+    required bool isServerUnreachable,
     required int? currentDbm,
     required int excellentThreshold,
   }) {
@@ -68,6 +69,11 @@ class HomeScreen extends StatelessWidget {
               if (noConnection) ...[
                 const Text(
                     'Conecte-se a uma rede Wi‑Fi para iniciar o diagnóstico.'),
+              ] else if (isServerUnreachable) ...[
+                const Text(
+                  'Não foi possível conectar ao servidor de diagnóstico. Por favor, verifique se está conectado à rede apropriada e tente novamente.',
+                  textAlign: TextAlign.center,
+                ),
               ] else ...[
                 Row(
                   children: [
@@ -106,11 +112,13 @@ class HomeScreen extends StatelessWidget {
                 ],
               ],
               const SizedBox(height: 12),
-              const Text(
-                'Para melhorar o sinal, siga as Dicas rápidas exibidas na tela.',
-                style: TextStyle(fontStyle: FontStyle.italic),
-              ),
-              const SizedBox(height: 8),
+              if (!isServerUnreachable) ...[
+                const Text(
+                  'Para melhorar o sinal, siga as Dicas rápidas exibidas na tela.',
+                  style: TextStyle(fontStyle: FontStyle.italic),
+                ),
+                const SizedBox(height: 8),
+              ],
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
@@ -197,7 +205,11 @@ class HomeScreen extends StatelessWidget {
               final config = di.sl<AppConfig>();
               final noConnection =
                   state.networkInfo.connectionType.toLowerCase() == 'none';
+              
+              final isServerReachable = state.isSpeedTestServerReachable;
+
               final canStart = !noConnection &&
+                  isServerReachable && 
                   config
                       .isSignalExcellent(state.networkInfo.wifiSignalStrength);
               return Column(
@@ -218,15 +230,17 @@ class HomeScreen extends StatelessWidget {
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          NetworkInfoCard(networkInfo: state.networkInfo),
-                          const SizedBox(height: 16),
-                          const QuickTipsCard(),
-                          const SizedBox(height: 16),
-                          const RotatingInfoCard(),
-                        ],
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            NetworkInfoCard(networkInfo: state.networkInfo),
+                            const SizedBox(height: 16),
+                            const QuickTipsCard(),
+                            const SizedBox(height: 16),
+                            const RotatingInfoCard(),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -244,6 +258,7 @@ class HomeScreen extends StatelessWidget {
                           _showBlockedStartSheet(
                             context,
                             noConnection: noConnection,
+                            isServerUnreachable: !isServerReachable,
                             currentDbm: state.networkInfo.wifiSignalStrength,
                             excellentThreshold:
                                 config.signalExcellentThresholdDbm,
