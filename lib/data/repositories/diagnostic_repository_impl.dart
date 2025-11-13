@@ -72,6 +72,7 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
             timestamp: DateTime.now(),
             deviceInfo: DeviceInfoModel.fromEntity(deviceInfo),
             networkInfo: NetworkInfoModel.fromEntity(finalNetworkInfo.wifiName != null ? finalNetworkInfo : initialNetworkInfo),
+            initialNetworkInfo: NetworkInfoModel.fromEntity(initialNetworkInfo),
             speedTestResult: SpeedTestResultModel.fromEntity(progress.speedTestResult!),
           );
 
