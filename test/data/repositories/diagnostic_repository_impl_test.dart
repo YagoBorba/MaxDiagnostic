@@ -4,6 +4,7 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:maxt_diagnostic/core/config/app_config.dart';
 import 'package:maxt_diagnostic/core/error/exceptions.dart';
 import 'package:maxt_diagnostic/core/error/failures.dart';
 import 'package:maxt_diagnostic/core/network/network_info.dart';
@@ -23,6 +24,8 @@ class _MockSpeedTestRemoteDataSource extends Mock
 
 class _MockNetworkInfo extends Mock implements NetworkInfo {}
 
+class _MockAppConfig extends Mock implements AppConfig {}
+
 class _MockDeviceInfoLocalDataSource extends Mock
     implements DeviceInfoLocalDataSource {}
 
@@ -31,6 +34,7 @@ void main() {
   late _MockSpeedTestRemoteDataSource speedTestRemoteDataSource;
   late _MockNetworkInfo networkInfo;
   late _MockDeviceInfoLocalDataSource deviceInfoLocalDataSource;
+  late _MockAppConfig appConfig;
   late DiagnosticRepositoryImpl repository;
 
   setUp(() {
@@ -38,12 +42,14 @@ void main() {
     speedTestRemoteDataSource = _MockSpeedTestRemoteDataSource();
     networkInfo = _MockNetworkInfo();
     deviceInfoLocalDataSource = _MockDeviceInfoLocalDataSource();
+    appConfig = _MockAppConfig();
 
     repository = DiagnosticRepositoryImpl(
       networkInfoLocalDataSource: networkInfoLocalDataSource,
       speedTestRemoteDataSource: speedTestRemoteDataSource,
       networkInfo: networkInfo,
       deviceInfoLocalDataSource: deviceInfoLocalDataSource,
+      appConfig: appConfig,
     );
   });
 
@@ -85,7 +91,7 @@ void main() {
         uploadSpeed: 50.0,
         ping: 12.0,
         jitter: 3.0,
-        serverLocation: 'Sao Paulo',
+        isp: 'Sao Paulo',
         testStartTime: DateTime.now().subtract(const Duration(seconds: 30)),
         testEndTime: DateTime.now(),
         testCompleted: true,
@@ -178,7 +184,7 @@ void main() {
             uploadSpeed: 50.0,
             ping: 12.0,
             jitter: 3.0,
-            serverLocation: 'Test',
+            isp: 'Test',
             testStartTime: DateTime.now(),
             testEndTime: DateTime.now(),
             testCompleted: true,
