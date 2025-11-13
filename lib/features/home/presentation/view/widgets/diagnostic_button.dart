@@ -17,17 +17,22 @@ class DiagnosticButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         backgroundColor:
-            isEnabled ? const Color(0xFF4D89FF) : Colors.grey.shade300,
-        foregroundColor: isEnabled ? Colors.white : Colors.grey.shade600,
+            isEnabled ? colorScheme.primary : Colors.grey.shade300,
+        foregroundColor:
+            isEnabled ? colorScheme.onPrimary : Colors.grey.shade600,
         padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
         elevation: isEnabled ? 4 : 0,
-        shadowColor: const Color(0xFF4D89FF).withAlpha(77),
+        shadowColor:
+            isEnabled ? colorScheme.primary.withAlpha(77) : Colors.transparent,
       ),
       onPressed: () {
         if (isEnabled) {

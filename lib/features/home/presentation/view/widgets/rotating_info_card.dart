@@ -65,13 +65,29 @@ class _RotatingInfoCardState extends State<RotatingInfoCard>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+    final tintedBackground = Color.alphaBlend(
+      primaryColor.withValues(alpha: 0.08),
+      theme.colorScheme.surface,
+    );
+    final borderColor = primaryColor.withValues(alpha: 0.2);
+    final headlineColor = Color.alphaBlend(
+      Colors.black.withValues(alpha: 0.2),
+      primaryColor,
+    );
+    final bodyColor = Color.alphaBlend(
+      Colors.white.withValues(alpha: 0.1),
+      primaryColor,
+    );
+
     return Card(
       elevation: 2,
-      color: const Color(0xFFEFF6FF),
+      color: tintedBackground,
       shadowColor: Colors.black12,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: Color(0xFFDBEAFE)),
+        side: BorderSide(color: borderColor),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -79,14 +95,14 @@ class _RotatingInfoCardState extends State<RotatingInfoCard>
           children: [
             Row(
               children: [
-                const Icon(LucideIcons.info, color: Color(0xFF3B82F6)),
+                Icon(LucideIcons.info, color: primaryColor),
                 const SizedBox(width: 8),
                 Text(
                   AppLocalizations.of(context)!.stay_informed,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF1E40AF),
+                    color: headlineColor,
                   ),
                 ),
               ],
@@ -99,9 +115,9 @@ class _RotatingInfoCardState extends State<RotatingInfoCard>
                 child: Text(
                   _infoItems[_currentIndex],
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
-                    color: Color(0xFF1D4ED8),
+                    color: bodyColor,
                     height: 1.5,
                   ),
                 ),
