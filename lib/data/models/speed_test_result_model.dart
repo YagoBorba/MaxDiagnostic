@@ -28,12 +28,17 @@ class SpeedTestResultModel extends SpeedTestResultEntity {
   }
 
   factory SpeedTestResultModel.fromJson(Map<String, dynamic> json) {
+    final serverLocationRaw = json['serverLocation'] as String?;
+    final serverLocation = (serverLocationRaw == null || serverLocationRaw.trim().isEmpty)
+        ? 'Servidor Interno'
+        : serverLocationRaw.trim();
+
     return SpeedTestResultModel(
       downloadSpeed: (json['downloadSpeed'] as num).toDouble(),
       uploadSpeed: (json['uploadSpeed'] as num).toDouble(),
       ping: (json['ping'] as num).toDouble(),
       jitter: (json['jitter'] as num).toDouble(),
-      serverLocation: json['serverLocation'],
+      serverLocation: serverLocation,
       testStartTime: DateTime.parse(json['testStartTime']),
       testEndTime: DateTime.parse(json['testEndTime']),
       testCompleted: json['testCompleted'],

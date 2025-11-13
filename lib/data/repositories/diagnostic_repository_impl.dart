@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:dartz/dartz.dart';
+import 'package:http/http.dart' as http;
+import '../../core/config/app_config.dart';
 import '../../core/error/exceptions.dart';
 import '../../core/error/failures.dart';
 import '../../core/network/network_info.dart';
@@ -16,12 +19,14 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
   final SpeedTestRemoteDataSource speedTestRemoteDataSource;
   final NetworkInfo networkInfo;
   final DeviceInfoLocalDataSource deviceInfoLocalDataSource;
+  final AppConfig appConfig;
 
   DiagnosticRepositoryImpl({
     required this.networkInfoLocalDataSource,
     required this.speedTestRemoteDataSource,
     required this.networkInfo,
     required this.deviceInfoLocalDataSource,
+    required this.appConfig,
   });
 
   @override
@@ -47,7 +52,7 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
         timestamp: DateTime.now(),
       ));
 
-      final initialNetworkInfo = await networkInfoLocalDataSource.getNetworkInfo();
+      final initialNetworkInfo = await networkInfoLocalDataSource.getInitialNetworkInfo();
       yield Right(DiagnosticProgressEntity(
         stage: DiagnosticStage.collectingNetworkInfo,
         progress: 1.0,
@@ -55,7 +60,7 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
         timestamp: DateTime.now(),
       ));
 
-  final progressStream = speedTestRemoteDataSource.runSpeedTest();
+      final progressStream = speedTestRemoteDataSource.runSpeedTest();
 
       await for (final progress in progressStream) {
         yield Right(progress);
@@ -66,7 +71,8 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
           final finalResults = FinalResultsModel(
             timestamp: DateTime.now(),
             deviceInfo: DeviceInfoModel.fromEntity(deviceInfo),
-            networkInfo: NetworkInfoModel.fromEntity(finalNetworkInfo.wifiName != null ? finalNetworkInfo : initialNetworkInfo),
+            networkInfo: NetworkInfoModel.fromEntity(finalNetworkInfo),
+            initialNetworkInfo: NetworkInfoModel.fromEntity(initialNetworkInfo),
             speedTestResult: SpeedTestResultModel.fromEntity(progress.speedTestResult!),
           );
 
@@ -154,6 +160,30 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
       return const Right('/path/to/generated/report.pdf');
     } catch (e) {
       return Left(ServerFailure(message: 'Failed to generate PDF: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> checkServerReachability() async {
+    try {
+      final urlString = appConfig.speedTestUrl;
+      final uri = Uri.parse(urlString);
+      final serverOrigin = '${uri.scheme}://${uri.host}:${uri.port}';
+
+      final response = await http.head(Uri.parse(serverOrigin))
+          .timeout(const Duration(seconds: 3));
+
+      if (response.statusCode > 0) { 
+        return const Right(true);
+      } else {
+        return const Right(false);
+      }
+    } on TimeoutException {
+      return const Right(false);
+    } on SocketException {
+      return const Right(false);
+    } catch (e) {
+      return const Right(false);
     }
   }
 

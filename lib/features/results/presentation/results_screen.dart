@@ -176,25 +176,43 @@ class _FooterActions extends StatelessWidget {
   final FinalResultsEntity results;
   const _FooterActions({required this.results});
 
-  Future<void> _onShare(BuildContext context) async {
-    const snackBar = SnackBar(
-      content: Row(
-        children: [
-          CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+  void _showLoadingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
           ),
-          SizedBox(width: 16),
-          Text('Gerando relatório...'),
-        ],
-      ),
-      duration: Duration(minutes: 1),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(width: 24),
+                Text(
+                  'Gerando relatório...',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  Future<void> _onShare(BuildContext context) async {
+    _showLoadingDialog(context);
 
     try {
       final bool success = await ReportService.shareReportFile(results);
 
       if (context.mounted) {
+        Navigator.of(context).pop();
+
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         if (!success) {
@@ -208,6 +226,8 @@ class _FooterActions extends StatelessWidget {
       }
     } catch (e) {
       if (context.mounted) {
+        Navigator.of(context).pop();
+
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
