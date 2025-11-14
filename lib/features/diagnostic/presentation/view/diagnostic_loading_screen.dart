@@ -1,4 +1,4 @@
-import 'dart:async'; 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -69,8 +69,10 @@ class _DiagnosticContent extends StatefulWidget {
 
 class _DiagnosticContentState extends State<_DiagnosticContent> {
   Timer? _timer;
+  Timer? _uiReadyTimer;
   int _messageIndex = 0;
   bool _hasTestStarted = false;
+  bool _isUiReady = false;
 
   static const List<String> _statusMessages = [
     'Inicializando diagnóstico...',
@@ -86,7 +88,17 @@ class _DiagnosticContentState extends State<_DiagnosticContent> {
   @override
   void initState() {
     super.initState();
-    _startMessageTimer();
+    _uiReadyTimer = Timer(const Duration(milliseconds: 300), () {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isUiReady = true;
+      });
+
+      _startMessageTimer();
+    });
   }
 
   void _startMessageTimer() {
@@ -116,6 +128,7 @@ class _DiagnosticContentState extends State<_DiagnosticContent> {
   @override
   void dispose() {
     _timer?.cancel();
+    _uiReadyTimer?.cancel();
     super.dispose();
   }
 
@@ -140,105 +153,133 @@ class _DiagnosticContentState extends State<_DiagnosticContent> {
   Widget build(BuildContext context) {
     final state = context.watch<DiagnosticCubit>().state;
     final progress = state.overallProgress;
-    final isRunning = state.globalStatus == GlobalTestStatus.running;
     
     final statusMessage = _getDisplayMessage(state);
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 40, bottom: 24),
-          child: Column(
-            children: [
-              const Text(
-                'Diagnóstico de Rede',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF334155),
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                transitionBuilder: (child, animation) => FadeTransition(
-                  opacity: animation,
-                  child: child,
-                ),
-                child: Text(
-                  statusMessage,
-                  key: ValueKey<String>(statusMessage),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Color(0xFF64748B),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        const Expanded(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 400),
+      child: !_isUiReady
+          ? const Center(
+              key: ValueKey('loading'),
+              child: CircularProgressIndicator(),
+            )
+          : Column(
+              key: const ValueKey('mainUI'),
               children: [
-                RepaintBoundary(
-                  child: PulsingWifiIcon(),
+                Padding(
+                  padding: const EdgeInsets.only(top: 40, bottom: 24),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Diagnóstico de Rede',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF334155),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        transitionBuilder: (child, animation) => FadeTransition(
+                          opacity: animation,
+                          child: child,
+                        ),
+                        child: Text(
+                          statusMessage,
+                          key: ValueKey<String>(statusMessage),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Color(0xFF64748B),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+                const Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        RepaintBoundary(
+                          child: PulsingWifiIcon(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Progresso do diagnóstico',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF64748B),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildProgressBar(state, progress),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                AnimatedOpacity(
+                  duration: const Duration(milliseconds: 300),
+                  opacity: state.globalStatus != GlobalTestStatus.error ? 1.0 : 0.0,
+                  child: const _BottomAlert(),
+                ),
+                const SizedBox(height: 24),
               ],
             ),
-          ),
-        ),
+    );
+  }
 
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            children: [
-              const Text(
-                'Progresso do diagnóstico',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF64748B),
-                ),
-              ),
-              const SizedBox(height: 8),
-              
-              ClipRRect(
-                borderRadius: BorderRadius.circular(999),
-                child: SizedBox(
-                  height: 8,
-                  child: TweenAnimationBuilder<double>(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOutCubic,
-                    tween: Tween<double>(
-                      begin: 0,
-                      end: progress / 100,
-                    ),
-                    builder: (context, value, child) {
-                      return LinearProgressIndicator(
-                        value: value,
-                        backgroundColor: const Color(0xFFE2E8F0), 
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(0xFF3B82F6),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+  Widget _buildProgressBar(DiagnosticState state, double progress) {
+    final progressColor = Theme.of(context).colorScheme.primary;
+    final trackColor = Colors.grey.shade200;
 
-        const SizedBox(height: 16),
-        if (isRunning) const _BottomAlert(),
-        const SizedBox(height: 24),
-      ],
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(999),
+      child: SizedBox(
+        height: 8,
+        child: switch (state.globalStatus) {
+          GlobalTestStatus.pending => LinearProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+              backgroundColor: trackColor,
+            ),
+          GlobalTestStatus.running => TweenAnimationBuilder<double>(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutCubic,
+              tween: Tween<double>(
+                begin: 0,
+                end: progress / 100,
+              ),
+              builder: (context, value, child) {
+                return LinearProgressIndicator(
+                  value: value,
+                  backgroundColor: trackColor,
+                  valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                );
+              },
+            ),
+          GlobalTestStatus.complete => LinearProgressIndicator(
+              value: 1.0,
+              backgroundColor: trackColor,
+              valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+            ),
+          GlobalTestStatus.error => LinearProgressIndicator(
+              value: progress / 100,
+              backgroundColor: trackColor,
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.red),
+            ),
+        },
+      ),
     );
   }
 }
