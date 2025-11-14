@@ -38,6 +38,7 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
     await _sub?.cancel();
     emit(DiagnosticState.initial().copyWith(
       globalStatus: GlobalTestStatus.running,
+      currentStage: DiagnosticStage.initializing,
     ));
 
     final eitherStream = await runDiagnosticTestUseCase(const NoParams());
@@ -76,6 +77,7 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
       globalStatus: GlobalTestStatus.error,
       errorMessage: failure.message,
       tests: updatedTests,
+      currentStage: DiagnosticStage.error,
     ));
   }
 
@@ -111,6 +113,7 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
       tests: finalTests,
       finalResults: event.results,
       clearError: true, 
+      currentStage: DiagnosticStage.completed,
     ));
   }
 
@@ -127,31 +130,44 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
     
     final testId = _stageToTestIdMap[p.stage];
     if (testId == null) {
-      emit(state.copyWith(overallProgress: overall));
+      emit(state.copyWith(
+        overallProgress: overall,
+        currentStage: p.stage,
+      ));
       return;
     }
     
-    final updatedTests = _updateTest(testId, TestStatus.running, p.message, p.progress);
+    final updatedTests = Map.of(state.tests);
+    final isCurrentComplete = p.progress >= 1.0;
+
+    updatedTests.updateAll((key, test) {
+      if (key == testId) {
+        return test;
+      }
+
+      if (test.status == TestStatus.running) {
+        final finished = test.progress >= 1.0;
+        return test.copyWith(status: finished ? TestStatus.complete : TestStatus.collecting);
+      }
+
+      return test;
+    });
+
+    final current = updatedTests[testId];
+    if (current != null) {
+      updatedTests[testId] = current.copyWith(
+        status: isCurrentComplete ? TestStatus.complete : TestStatus.running,
+        resultText: p.message,
+        progress: p.progress,
+      );
+    }
 
     emit(state.copyWith(
       overallProgress: overall,
       tests: updatedTests,
       clearError: true, 
+      currentStage: p.stage,
     ));
-  }
-
-  Map<String, TestUIState> _updateTest(String id, TestStatus status, String text, [double? progress]) {
-    final newTests = Map.of(state.tests);
-    final currentTest = newTests[id];
-    
-    if (currentTest != null) {
-      newTests[id] = currentTest.copyWith(
-        status: status,
-        resultText: text,
-        progress: progress,
-      );
-    }
-    return newTests;
   }
 
   @override

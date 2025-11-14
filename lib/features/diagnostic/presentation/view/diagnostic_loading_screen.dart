@@ -1,3 +1,4 @@
+import 'dart:async'; 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -5,7 +6,6 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:maxt_diagnostic/core/di/injection_container.dart';
 import 'package:maxt_diagnostic/features/diagnostic/presentation/cubit/diagnostic_cubit.dart';
 import 'package:maxt_diagnostic/features/diagnostic/presentation/view/widgets/pulsing_wifi_icon.dart';
-import 'package:maxt_diagnostic/features/diagnostic/presentation/view/widgets/animated_time_remaining.dart';
 
 class DiagnosticLoadingScreen extends StatelessWidget {
   const DiagnosticLoadingScreen({super.key});
@@ -28,7 +28,12 @@ class _DiagnosticLoadingView extends StatelessWidget {
       listener: (context, state) {
         if (state.finalResults != null &&
             state.globalStatus == GlobalTestStatus.complete) {
-          context.go('/results', extra: state.finalResults);
+          
+          Future.delayed(const Duration(milliseconds: 1500), () {
+            if (context.mounted) {
+              context.go('/results', extra: state.finalResults);
+            }
+          });
         }
         
         if (state.globalStatus == GlobalTestStatus.error) {
@@ -51,8 +56,69 @@ class _DiagnosticLoadingView extends StatelessWidget {
   }
 }
 
-class _DiagnosticContent extends StatelessWidget {
+class _DiagnosticContent extends StatefulWidget {
   const _DiagnosticContent();
+
+  @override
+  State<_DiagnosticContent> createState() => _DiagnosticContentState();
+}
+
+class _DiagnosticContentState extends State<_DiagnosticContent> {
+  Timer? _timer;
+  int _messageIndex = 0;
+
+  static const _statusMessages = [
+    'Inicializando diagnóstico...',
+    'Analisando sua conexão...',
+    'Verificando informações do dispositivo...',
+    'Inspecionando a rede local...',
+    'Conectando ao servidor de teste...',
+    'Executando teste de velocidade...',
+    'Analisando estabilidade da conexão...',
+    'Compilando resultados...',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _startMessageTimer();
+  }
+
+  void _startMessageTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(milliseconds: 3500), (timer) {
+      final currentState = context.read<DiagnosticCubit>().state;
+      if (currentState.globalStatus != GlobalTestStatus.running) {
+        timer.cancel();
+        return;
+      }
+
+      if (mounted) {
+        setState(() {
+          _messageIndex = (_messageIndex + 1) % _statusMessages.length;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  String _getDisplayMessage(DiagnosticState state) {
+    if (state.globalStatus == GlobalTestStatus.error) {
+      _timer?.cancel();
+      return state.errorMessage ?? 'Ocorreu um erro';
+    }
+    if (state.globalStatus == GlobalTestStatus.complete) {
+      _timer?.cancel();
+      return 'Diagnóstico concluído!';
+    }
+    
+    return _statusMessages[_messageIndex];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,9 +126,7 @@ class _DiagnosticContent extends StatelessWidget {
     final progress = state.overallProgress;
     final isRunning = state.globalStatus == GlobalTestStatus.running;
     
-    const totalTime = 30;
-    final timeRemainingExact = (totalTime * (100 - progress)) / 100;
-    final timeRemaining = timeRemainingExact.floor().clamp(0, totalTime);
+    final statusMessage = _getDisplayMessage(state);
 
     return Column(
       children: [
@@ -77,12 +141,11 @@ class _DiagnosticContent extends StatelessWidget {
             ),
           ),
         ),
-        
-        const Padding(
-          padding: EdgeInsets.only(bottom: 24),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 24),
           child: Column(
             children: [
-              Text(
+              const Text(
                 'Diagnóstico de Rede',
                 style: TextStyle(
                   fontSize: 28,
@@ -91,14 +154,23 @@ class _DiagnosticContent extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 8),
-              Text(
-                'Analisando sua conexão',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Color(0xFF64748B),
+              const SizedBox(height: 8),
+              
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: animation,
+                  child: child,
                 ),
-                textAlign: TextAlign.center,
+                child: Text(
+                  statusMessage,
+                  key: ValueKey<String>(statusMessage),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFF64748B),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
             ],
           ),
@@ -122,21 +194,15 @@ class _DiagnosticContent extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Progresso do diagnóstico',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF64748B),
-                    ),
-                  ),
-                  if (isRunning)
-                    AnimatedTimeRemaining(seconds: timeRemaining),
-                ],
+              const Text(
+                'Progresso do diagnóstico',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF64748B),
+                ),
               ),
               const SizedBox(height: 8),
+              
               ClipRRect(
                 borderRadius: BorderRadius.circular(999),
                 child: SizedBox(
@@ -165,9 +231,7 @@ class _DiagnosticContent extends StatelessWidget {
         ),
 
         const SizedBox(height: 16),
-
         if (isRunning) const _BottomAlert(),
-        
         const SizedBox(height: 24),
       ],
     );
