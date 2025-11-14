@@ -181,27 +181,24 @@ class AppTheme {
       scaffoldBackgroundColor: background,
 
       // AppBar
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: card,
         foregroundColor: foreground,
         elevation: 1,
-        shadowColor: Colors.black12,
+        shadowColor: const Color(0x0D1E293B),
         centerTitle: true,
-        titleTextStyle: TextStyle(
-          color: foreground,
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
-        iconTheme: IconThemeData(color: foreground),
+        titleTextStyle: textTheme.headlineMedium,
+        iconTheme: const IconThemeData(color: foreground),
       ),
 
       // Card
       cardTheme: CardThemeData(
         color: card,
-        elevation: 0,
+        elevation: 4,
+        shadowColor: const Color(0x141E293B),
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: border, width: 1),
         ),
       ),
 

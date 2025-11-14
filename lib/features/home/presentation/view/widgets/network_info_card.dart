@@ -14,7 +14,7 @@ class NetworkInfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary;
-  final config = di.sl<AppConfig>();
+    final config = di.sl<AppConfig>();
 
     final isConnected = networkInfo.connectionType.toLowerCase() != 'none';
     final titleText = () {
@@ -26,12 +26,9 @@ class NetworkInfoCard extends StatelessWidget {
     }();
     final signalDbm = networkInfo.wifiSignalStrength;
     final frequency = networkInfo.wifiFrequency;
-  final quality = config.getSignalQuality(signalDbm);
+    final quality = config.getSignalQuality(signalDbm);
 
     return Card(
-      elevation: 2,
-      shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

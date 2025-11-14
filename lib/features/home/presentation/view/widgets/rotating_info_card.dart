@@ -71,10 +71,6 @@ class _RotatingInfoCardState extends State<RotatingInfoCard>
 
     return Card(
       color: brandColors.primaryTintedBackground,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: brandColors.primaryBorder),
-      ),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
