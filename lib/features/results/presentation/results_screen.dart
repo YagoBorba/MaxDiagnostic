@@ -27,8 +27,7 @@ class ResultsScreen extends StatelessWidget {
           icon: const Icon(LucideIcons.arrowLeft),
           onPressed: () => context.go('/'),
         ),
-        title: const Text('MAX INTERNET',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('MAX DIAGNÓSTICO'),
         centerTitle: true,
       ),
       body: Column(

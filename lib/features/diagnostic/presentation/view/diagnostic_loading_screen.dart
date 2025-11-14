@@ -46,8 +46,13 @@ class _DiagnosticLoadingView extends StatelessWidget {
           );
         }
       },
-      child: const Scaffold(
-        body: SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('MAX DIAGNÓSTICO'),
+          automaticallyImplyLeading: false,
+        ),
+        body: const SafeArea(
+          top: false,
           child: _DiagnosticContent(),
         ),
       ),
@@ -67,7 +72,7 @@ class _DiagnosticContentState extends State<_DiagnosticContent> {
   int _messageIndex = 0;
   bool _hasTestStarted = false;
 
-  static const _statusMessages = [
+  static const List<String> _statusMessages = [
     'Inicializando diagnóstico...',
     'Analisando sua conexão...',
     'Verificando informações do dispositivo...',
@@ -141,19 +146,8 @@ class _DiagnosticContentState extends State<_DiagnosticContent> {
 
     return Column(
       children: [
-        const Padding(
-          padding: EdgeInsets.only(top: 40, bottom: 24),
-          child: Text(
-            'MAX INTERNET',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF334155),
-            ),
-          ),
-        ),
         Padding(
-          padding: const EdgeInsets.only(bottom: 24),
+          padding: const EdgeInsets.only(top: 40, bottom: 24),
           child: Column(
             children: [
               const Text(
