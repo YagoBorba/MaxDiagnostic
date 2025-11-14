@@ -77,13 +77,14 @@ class DiagnosticState extends Equatable {
     FinalResultsEntity? finalResults,
     String? errorMessage,
     bool clearError = false, 
+    bool clearFinalResults = false,
     DiagnosticStage? currentStage,
   }) {
     return DiagnosticState(
       tests: tests ?? this.tests,
       overallProgress: overallProgress ?? this.overallProgress,
       globalStatus: globalStatus ?? this.globalStatus,
-      finalResults: finalResults ?? this.finalResults,
+      finalResults: clearFinalResults ? null : finalResults ?? this.finalResults,
       errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
       currentStage: currentStage ?? this.currentStage,
     );

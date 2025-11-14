@@ -13,7 +13,7 @@ class DiagnosticLoadingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => sl<DiagnosticCubit>()..startTest(),
+      create: (_) => sl<DiagnosticCubit>(),
       child: const _DiagnosticLoadingView(),
     );
   }
@@ -47,7 +47,6 @@ class _DiagnosticLoadingView extends StatelessWidget {
         }
       },
       child: const Scaffold(
-        backgroundColor: Color(0xFFFAFAFA), 
         body: SafeArea(
           child: _DiagnosticContent(),
         ),
@@ -66,6 +65,7 @@ class _DiagnosticContent extends StatefulWidget {
 class _DiagnosticContentState extends State<_DiagnosticContent> {
   Timer? _timer;
   int _messageIndex = 0;
+  bool _hasTestStarted = false;
 
   static const _statusMessages = [
     'Inicializando diagnóstico...',
@@ -87,7 +87,14 @@ class _DiagnosticContentState extends State<_DiagnosticContent> {
   void _startMessageTimer() {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(milliseconds: 3500), (timer) {
-      final currentState = context.read<DiagnosticCubit>().state;
+      var currentState = context.read<DiagnosticCubit>().state;
+
+      if (!_hasTestStarted && mounted) {
+        _hasTestStarted = true;
+        context.read<DiagnosticCubit>().startTest();
+        currentState = context.read<DiagnosticCubit>().state;
+      }
+
       if (currentState.globalStatus != GlobalTestStatus.running) {
         timer.cancel();
         return;
@@ -115,6 +122,10 @@ class _DiagnosticContentState extends State<_DiagnosticContent> {
     if (state.globalStatus == GlobalTestStatus.complete) {
       _timer?.cancel();
       return 'Diagnóstico concluído!';
+    }
+
+    if (!_hasTestStarted || state.globalStatus == GlobalTestStatus.pending) {
+      return 'Inicializando diagnóstico...';
     }
     
     return _statusMessages[_messageIndex];

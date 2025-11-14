@@ -36,9 +36,15 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
 
   Future<void> startTest() async {
     await _sub?.cancel();
-    emit(DiagnosticState.initial().copyWith(
+    emit(state.copyWith(
       globalStatus: GlobalTestStatus.running,
       currentStage: DiagnosticStage.initializing,
+      finalResults: null,
+      errorMessage: null,
+      clearError: true,
+      clearFinalResults: true,
+      tests: DiagnosticState.initial().tests,
+      overallProgress: 0.0,
     ));
 
     final eitherStream = await runDiagnosticTestUseCase(const NoParams());
