@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:maxt_diagnostic/features/diagnostic/presentation/cubit/diagnostic_cubit.dart';
+import 'package:maxt_diagnostic/core/theme/brand_theme_colors.dart';
 
 class TestItemCard extends StatefulWidget {
   final TestUIState test;
@@ -32,14 +33,16 @@ class _TestItemCardState extends State<TestItemCard>
 
   @override
   Widget build(BuildContext context) {
-    final theme = _getTheme(widget.test.status);
+    final brandColors =
+        Theme.of(context).extension<BrandThemeColors>()!;
+    final testColors = _colorsForStatus(brandColors, widget.test.status);
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.backgroundColor,
+        color: testColors.background,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.borderColor),
+        border: Border.all(color: testColors.border),
       ),
       child: Row(
         children: [
@@ -47,10 +50,10 @@ class _TestItemCardState extends State<TestItemCard>
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: theme.iconContainerColor,
+              color: testColors.iconContainer,
               shape: BoxShape.circle,
             ),
-            child: _getIcon(widget.test.status, theme.iconColor),
+            child: _getIcon(widget.test.status, testColors.icon),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -62,25 +65,21 @@ class _TestItemCardState extends State<TestItemCard>
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: theme.textColor,
+                    color: testColors.text,
                   ),
                 ),
-                if (widget.test.status != TestStatus.pending)
-                  Text(
-                    widget.test.resultText ?? 'Aguardando...',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: theme.resultColor,
-                    ),
-                  )
-                else
-                  const Text(
-                    'Aguardando...',
-                    style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                        fontStyle: FontStyle.italic),
+                Text(
+                  widget.test.status != TestStatus.pending
+                      ? widget.test.resultText ?? 'Aguardando...'
+                      : 'Aguardando...',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: testColors.result,
+                    fontStyle: widget.test.status == TestStatus.pending
+                        ? FontStyle.italic
+                        : FontStyle.normal,
                   ),
+                ),
               ],
             ),
           ),
@@ -120,63 +119,20 @@ class _TestItemCardState extends State<TestItemCard>
     return Icon(iconData, color: color);
   }
 
-  _TestTheme _getTheme(TestStatus status) {
+  TestItemColors _colorsForStatus(
+    BrandThemeColors colors,
+    TestStatus status,
+  ) {
     switch (status) {
       case TestStatus.running:
       case TestStatus.collecting:
-        return _TestTheme(
-          backgroundColor: const Color(0xFFEFF6FF),
-          borderColor: const Color(0xFF4D89FF),
-          iconContainerColor: const Color(0xFFDBEAFE),
-          iconColor: const Color(0xFF4D89FF),
-          textColor: const Color(0xFF2563EB),
-          resultColor: const Color(0xFF2563EB),
-        );
+        return colors.testRunning;
       case TestStatus.complete:
-        return _TestTheme(
-          backgroundColor: const Color(0xFFF0FDF4),
-          borderColor: const Color(0xFF10B981),
-          iconContainerColor: const Color(0xFFD1FAE5),
-          iconColor: const Color(0xFF10B981),
-          textColor: const Color(0xFF059669),
-          resultColor: const Color(0xFF047857),
-        );
+        return colors.testComplete;
       case TestStatus.error:
-        return _TestTheme(
-          backgroundColor: const Color(0xFFFEF2F2),
-          borderColor: const Color(0xFFEF4444),
-          iconContainerColor: const Color(0xFFFEE2E2),
-          iconColor: const Color(0xFFEF4444),
-          textColor: const Color(0xFFDC2626),
-          resultColor: const Color(0xFFB91C1C),
-        );
+        return colors.testError;
       case TestStatus.pending:
-        return _TestTheme(
-          backgroundColor: Colors.white,
-          borderColor: const Color(0xFFE5E7EB),
-          iconContainerColor: const Color(0xFFF1F5F9),
-          iconColor: const Color(0xFF94A3B8),
-          textColor: const Color(0xFF64748B),
-          resultColor: Colors.grey,
-        );
+        return colors.testPending;
     }
   }
-}
-
-class _TestTheme {
-  final Color backgroundColor;
-  final Color borderColor;
-  final Color iconContainerColor;
-  final Color iconColor;
-  final Color textColor;
-  final Color resultColor;
-
-  _TestTheme({
-    required this.backgroundColor,
-    required this.borderColor,
-    required this.iconContainerColor,
-    required this.iconColor,
-    required this.textColor,
-    required this.resultColor,
-  });
 }

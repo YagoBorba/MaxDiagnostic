@@ -27,8 +27,7 @@ class ResultsScreen extends StatelessWidget {
           icon: const Icon(LucideIcons.arrowLeft),
           onPressed: () => context.go('/'),
         ),
-        title: const Text('MAX INTERNET',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('MAX DIAGNÓSTICO'),
         centerTitle: true,
       ),
       body: Column(
@@ -108,9 +107,6 @@ class _ResultSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 2,
-      shadowColor: Colors.black.withAlpha(13),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
         child: Column(
@@ -241,11 +237,19 @@ class _FooterActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border(top: BorderSide(color: Colors.grey.shade200))),
+        color: theme.cardColor,
+        border: Border(
+          top: BorderSide(
+            color: theme.dividerTheme.color ?? Colors.grey.shade200,
+          ),
+        ),
+      ),
       child: Row(
         children: [
           Expanded(
@@ -254,8 +258,8 @@ class _FooterActions extends StatelessWidget {
               label: const Text('Exportar Relatório'),
               onPressed: () => _onShare(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4F46E5),
-                foregroundColor: Colors.white,
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
@@ -269,8 +273,8 @@ class _FooterActions extends StatelessWidget {
               label: const Text('Novo Teste'),
               onPressed: () => context.go('/diagnostic'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE0E7FF),
-                foregroundColor: const Color(0xFF4338CA),
+                backgroundColor: colorScheme.secondary,
+                foregroundColor: colorScheme.onSecondary,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),

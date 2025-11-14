@@ -11,9 +11,6 @@ class QuickTipsCard extends StatelessWidget {
     final tips = di.sl<AppConfig>().quickTips;
 
     return Card(
-      elevation: 2,
-      shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(

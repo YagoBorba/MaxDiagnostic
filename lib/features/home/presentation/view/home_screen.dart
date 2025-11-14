@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:maxt_diagnostic/features/home/presentation/cubit/home_cubit.dart';
 import 'package:maxt_diagnostic/core/config/app_config.dart';
 import 'package:maxt_diagnostic/core/di/injection_container.dart' as di;
+import 'package:maxt_diagnostic/core/theme/brand_theme_colors.dart';
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/diagnostic_button.dart';
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/network_info_card.dart';
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/quick_tips_card.dart';
@@ -19,19 +20,23 @@ class HomeScreen extends StatelessWidget {
     required int? currentDbm,
     required int excellentThreshold,
   }) {
-    Color qualityColor(SignalQuality q) {
-      switch (q) {
-        case SignalQuality.excellent:
-          return const Color(0xFF16A34A);
-        case SignalQuality.normal:
-          return const Color(0xFFD97706);
-        case SignalQuality.poor:
-          return const Color(0xFFDC2626);
-      }
-    }
+    final theme = Theme.of(context);
+    final brandColors = theme.extension<BrandThemeColors>()!;
 
-  final config = di.sl<AppConfig>();
+    final config = di.sl<AppConfig>();
     final quality = config.getSignalQuality(currentDbm);
+    final Color signalColor;
+    switch (quality) {
+      case SignalQuality.excellent:
+        signalColor = brandColors.signalExcellent;
+        break;
+      case SignalQuality.normal:
+        signalColor = brandColors.signalNormal;
+        break;
+      case SignalQuality.poor:
+        signalColor = brandColors.signalPoor;
+        break;
+    }
     double progress;
     if (currentDbm == null) {
       progress = 0;
@@ -81,13 +86,13 @@ class HomeScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: qualityColor(quality).withValues(alpha: 0.12),
+                        color: signalColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
                         config.qualityLabel(quality),
                         style: TextStyle(
-                          color: qualityColor(quality),
+                          color: signalColor,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -102,7 +107,7 @@ class HomeScreen extends StatelessWidget {
                   value: progress,
                   minHeight: 8,
                   backgroundColor: Colors.grey.shade200,
-                  color: qualityColor(quality),
+                  color: signalColor,
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -135,143 +140,142 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('MAX DIAGNÓSTICO'),
+        centerTitle: true,
+      ),
       backgroundColor: const Color(0xFFF9FAFB),
-      body: SafeArea(
-        child: BlocBuilder<HomeCubit, HomeState>(
-          builder: (context, state) {
-            if (state is HomeInitial) {
-              context.read<HomeCubit>().fetchInitialInfo();
-              return const Center(child: CircularProgressIndicator());
-            }
+      body: BlocBuilder<HomeCubit, HomeState>(
+        builder: (context, state) {
+          if (state is HomeInitial) {
+            context.read<HomeCubit>().fetchInitialInfo();
+            return const Center(child: CircularProgressIndicator());
+          }
 
-            if (state is HomeLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
+          if (state is HomeLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-            if (state is HomeError) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Erro ao carregar: ${state.message}',
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: () =>
-                            context.read<HomeCubit>().fetchInitialInfo(),
-                        child: const Text('Tentar Novamente'),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
-
-            if (state is HomePermissionDenied) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        state.message,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 12),
-                      ElevatedButton(
-                        onPressed: () async {
-                          await context
-                              .read<HomeCubit>()
-                              .requestLocationPermission();
-                        },
-                        child: const Text('Conceder permissões'),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
-
-            if (state is HomeLoaded) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                context.read<HomeCubit>().startAutoRefresh();
-              });
-              final config = di.sl<AppConfig>();
-              final noConnection =
-                  state.networkInfo.connectionType.toLowerCase() == 'none';
-              
-              final isServerReachable = state.isSpeedTestServerReachable;
-
-              final canStart = !noConnection &&
-                  isServerReachable && 
-                  config
-                      .isSignalExcellent(state.networkInfo.wifiSignalStrength);
-              return Column(
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.only(top: 40, bottom: 24),
-                    child: Column(
-                      children: [
-                        Text('MAX INTERNET',
-                            style: TextStyle(
-                                fontSize: 24, fontWeight: FontWeight.bold)),
-                        SizedBox(height: 8),
-                        Text('Status da Rede',
-                            style: TextStyle(fontSize: 16, color: Color(0xFF64748B))),
-                      ],
+          if (state is HomeError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Erro ao carregar: ${state.message}',
+                      textAlign: TextAlign.center,
                     ),
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            NetworkInfoCard(networkInfo: state.networkInfo),
-                            const SizedBox(height: 16),
-                            const QuickTipsCard(),
-                            const SizedBox(height: 16),
-                            const RotatingInfoCard(),
-                          ],
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () =>
+                          context.read<HomeCubit>().fetchInitialInfo(),
+                      child: const Text('Tentar Novamente'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          if (state is HomePermissionDenied) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      state.message,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: () async {
+                        await context
+                            .read<HomeCubit>()
+                            .requestLocationPermission();
+                      },
+                      child: const Text('Conceder permissões'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          if (state is HomeLoaded) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              context.read<HomeCubit>().startAutoRefresh();
+            });
+
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0, bottom: 12.0),
+                  child: Center(
+                    child: Text(
+                      'Status da Rede',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.9,
                         ),
                       ),
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: DiagnosticButton(
-                        isEnabled: canStart,
-                        onPressed: () {
-                          context.go('/diagnostic');
-                        },
-                        onBlockedTap: () {
-                          _showBlockedStartSheet(
-                            context,
-                            noConnection: noConnection,
-                            isServerUnreachable: !isServerReachable,
-                            currentDbm: state.networkInfo.wifiSignalStrength,
-                            excellentThreshold:
-                                config.signalExcellentThresholdDbm,
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ],
+                ),
+                NetworkInfoCard(networkInfo: state.networkInfo),
+                const SizedBox(height: 24),
+                const QuickTipsCard(),
+                const SizedBox(height: 24),
+                const RotatingInfoCard(),
+                const SizedBox(height: 32),
+              ],
+            );
+          }
+
+          return const Center(child: Text('Estado não reconhecido.'));
+        },
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+        child: BlocBuilder<HomeCubit, HomeState>(
+          builder: (context, state) {
+            if (state is! HomeLoaded) {
+              return DiagnosticButton(
+                isEnabled: false,
+                onPressed: () => context.go('/diagnostic'),
               );
             }
 
-            return const Center(child: Text('Estado não reconhecido.'));
+            final config = di.sl<AppConfig>();
+            final noConnection =
+                state.networkInfo.connectionType.toLowerCase() == 'none';
+            final isServerReachable = state.isSpeedTestServerReachable;
+            final canStart = !noConnection &&
+                isServerReachable &&
+                config.isSignalExcellent(state.networkInfo.wifiSignalStrength);
+
+            return DiagnosticButton(
+              isEnabled: canStart,
+              onPressed: () => context.go('/diagnostic'),
+              onBlockedTap: () {
+                _showBlockedStartSheet(
+                  context,
+                  noConnection: noConnection,
+                  isServerUnreachable: !isServerReachable,
+                  currentDbm: state.networkInfo.wifiSignalStrength,
+                  excellentThreshold: config.signalExcellentThresholdDbm,
+                );
+              },
+            );
           },
         ),
       ),
