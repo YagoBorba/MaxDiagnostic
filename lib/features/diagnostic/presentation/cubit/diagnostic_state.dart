@@ -43,12 +43,14 @@ class DiagnosticState extends Equatable {
   final GlobalTestStatus globalStatus;
   final FinalResultsEntity? finalResults;
   final String? errorMessage;
+  final DiagnosticStage currentStage;
 
 
   const DiagnosticState({
     required this.tests,
     required this.overallProgress,
     required this.globalStatus,
+    required this.currentStage,
     this.finalResults,
     this.errorMessage,
   });
@@ -64,6 +66,7 @@ class DiagnosticState extends Equatable {
       },
       overallProgress: 0.0,
       globalStatus: GlobalTestStatus.pending,
+      currentStage: DiagnosticStage.initializing,
     );
   }
 
@@ -74,13 +77,16 @@ class DiagnosticState extends Equatable {
     FinalResultsEntity? finalResults,
     String? errorMessage,
     bool clearError = false, 
+    bool clearFinalResults = false,
+    DiagnosticStage? currentStage,
   }) {
     return DiagnosticState(
       tests: tests ?? this.tests,
       overallProgress: overallProgress ?? this.overallProgress,
       globalStatus: globalStatus ?? this.globalStatus,
-      finalResults: finalResults ?? this.finalResults,
+      finalResults: clearFinalResults ? null : finalResults ?? this.finalResults,
       errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
+      currentStage: currentStage ?? this.currentStage,
     );
   }
 
@@ -91,5 +97,6 @@ class DiagnosticState extends Equatable {
         globalStatus,
         finalResults,
         errorMessage,
+        currentStage,
       ];
 }

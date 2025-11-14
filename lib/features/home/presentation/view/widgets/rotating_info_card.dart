@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../../l10n/app_localizations.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:maxt_diagnostic/core/theme/brand_theme_colors.dart';
 
 class RotatingInfoCard extends StatefulWidget {
   const RotatingInfoCard({super.key});
@@ -65,28 +66,25 @@ class _RotatingInfoCardState extends State<RotatingInfoCard>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final brandColors = theme.extension<BrandThemeColors>()!;
+
     return Card(
-      elevation: 2,
-      color: const Color(0xFFEFF6FF),
-      shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: Color(0xFFDBEAFE)),
-      ),
+      color: brandColors.primaryTintedBackground,
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
             Row(
               children: [
-                const Icon(LucideIcons.info, color: Color(0xFF3B82F6)),
+                Icon(LucideIcons.info, color: theme.colorScheme.primary),
                 const SizedBox(width: 8),
                 Text(
                   AppLocalizations.of(context)!.stay_informed,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF1E40AF),
+                    color: brandColors.primaryHeadline,
                   ),
                 ),
               ],
@@ -99,9 +97,9 @@ class _RotatingInfoCardState extends State<RotatingInfoCard>
                 child: Text(
                   _infoItems[_currentIndex],
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
-                    color: Color(0xFF1D4ED8),
+                    color: brandColors.primaryBody,
                     height: 1.5,
                   ),
                 ),

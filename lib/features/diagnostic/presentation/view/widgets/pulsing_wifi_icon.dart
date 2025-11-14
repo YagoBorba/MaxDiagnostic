@@ -43,6 +43,12 @@ class _PulsingWifiIconState extends State<PulsingWifiIcon>
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    final darkerPrimary = Color.alphaBlend(
+      Colors.black.withValues(alpha: 0.2),
+      primaryColor,
+    );
+
     return FadeTransition(
       opacity: _fadeController,
       child: SizedBox(
@@ -53,7 +59,7 @@ class _PulsingWifiIconState extends State<PulsingWifiIcon>
           children: [
             _PulsingRing(
               size: 256,
-              color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
+              color: primaryColor.withValues(alpha: 0.1),
               duration: const Duration(milliseconds: 1500),
             ),
 
@@ -65,7 +71,7 @@ class _PulsingWifiIconState extends State<PulsingWifiIcon>
                   height: 224,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFF3B82F6).withValues(
+                    color: primaryColor.withValues(
                       alpha: 0.2 * (1 - _pulseController.value * 0.5),
                     ),
                   ),
@@ -75,7 +81,7 @@ class _PulsingWifiIconState extends State<PulsingWifiIcon>
 
             _PulsingRing(
               size: 192,
-              color: const Color(0xFF3B82F6).withValues(alpha: 0.3),
+              color: primaryColor.withValues(alpha: 0.3),
               duration: const Duration(milliseconds: 1500),
               delay: const Duration(milliseconds: 500),
             ),
@@ -84,17 +90,17 @@ class _PulsingWifiIconState extends State<PulsingWifiIcon>
               height: 144,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Color(0xFF3B82F6),
-                    Color(0xFF2563EB), 
+                    primaryColor,
+                    darkerPrimary,
                   ],
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF3B82F6).withValues(alpha: 0.15),
+                    color: primaryColor.withValues(alpha: 0.15),
                     blurRadius: 24,
                     spreadRadius: 4,
                   ),
@@ -223,6 +229,8 @@ class _RotatingDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
     return AnimatedBuilder(
       animation: controller,
       builder: (context, child) {
@@ -241,10 +249,11 @@ class _RotatingDot extends StatelessWidget {
             height: size,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: const Color(0xFF3B82F6).withValues(alpha: opacity),
+              color: primaryColor.withValues(alpha: opacity),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF3B82F6).withValues(alpha: 0.8 * opacity),
+                  color:
+                      primaryColor.withValues(alpha: 0.8 * opacity),
                   blurRadius: 10,
                   spreadRadius: 2,
                 ),
