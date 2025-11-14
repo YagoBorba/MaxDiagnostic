@@ -141,8 +141,13 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('MAX DIAGNÓSTICO'),
+        centerTitle: false,
+      ),
       backgroundColor: const Color(0xFFF9FAFB),
       body: SafeArea(
+        top: false,
         child: BlocBuilder<HomeCubit, HomeState>(
           builder: (context, state) {
             if (state is HomeInitial) {
@@ -223,12 +228,13 @@ class HomeScreen extends StatelessWidget {
                     padding: EdgeInsets.only(top: 40, bottom: 24),
                     child: Column(
                       children: [
-                        Text('MAX INTERNET',
+                        Text('MAX DIAGNÓSTICO',
                             style: TextStyle(
                                 fontSize: 24, fontWeight: FontWeight.bold)),
                         SizedBox(height: 8),
                         Text('Status da Rede',
-                            style: TextStyle(fontSize: 16, color: Color(0xFF64748B))),
+                            style:
+                                TextStyle(fontSize: 16, color: Color(0xFF64748B))),
                       ],
                     ),
                   ),
