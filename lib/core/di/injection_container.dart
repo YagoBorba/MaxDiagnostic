@@ -1,12 +1,17 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:network_info_plus/network_info_plus.dart' as network_info_plus;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+import '../../app/navigation/app_router.dart';
+import '../../data/repositories/auth_repository_impl.dart';
+import '../../domain/repositories/auth_repository.dart';
 import '../network/network_info.dart';
 import '../../data/datasources/speed_test_remote_datasource.dart';
 import '../../data/datasources/network_info_local_datasource.dart';
@@ -20,9 +25,11 @@ import '../../features/home/presentation/cubit/home_cubit.dart';
 import '../../features/diagnostic/presentation/cubit/diagnostic_cubit.dart';
 import '../../features/diagnostic/presentation/mock/mock_run_diagnostic_test_usecase.dart';
 import '../../features/diagnostic/presentation/utils/progress_calculator.dart';
+import '../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../config/app_config.dart';
 
 final sl = GetIt.instance;
+bool _googleSignInInitialized = false;
 
 Future<void> init({bool useMockDiagnostic = false}) async {
   try {
@@ -32,6 +39,31 @@ Future<void> init({bool useMockDiagnostic = false}) async {
       await dotenv.load(fileName: '.env.example');
     } catch (_) {}
   }
+
+  sl.registerFactory(
+    () => AuthCubit(authRepository: sl()),
+  );
+
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(
+      firebaseAuth: sl(),
+      googleSignIn: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton(() => FirebaseAuth.instance);
+
+  if (!_googleSignInInitialized) {
+    await GoogleSignIn.instance.initialize(
+      serverClientId:
+          '36053652354-nv1tn7q1u2o8em087di4kpjf063oblc8.apps.googleusercontent.com',
+    );
+    _googleSignInInitialized = true;
+  }
+
+  sl.registerLazySingleton(() => GoogleSignIn.instance);
+
+  sl.registerLazySingleton<AppRouter>(() => AppRouter(authCubit: sl()));
   
   sl.registerFactory(
       () => HomeCubit(

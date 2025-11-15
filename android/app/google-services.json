@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "36053652354",
+    "project_id": "maxdiagnostico-b67c1",
+    "storage_bucket": "maxdiagnostico-b67c1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:36053652354:android:d0b029113bf1f43aa4359b",
+        "android_client_info": {
+          "package_name": "br.com.yagoborba.max_diagnostic"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "36053652354-fe7j1rnv1q0fu3uoiv1fmq6k2ifi1vej.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "br.com.yagoborba.max_diagnostic",
+            "certificate_hash": "e384c6ed7027896ffc8875b699a99e7dd317ceaf"
+          }
+        },
+        {
+          "client_id": "36053652354-nv1tn7q1u2o8em087di4kpjf063oblc8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAiZHSeN6eLkiG7FufohBhXWC83OofKNEU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "36053652354-nv1tn7q1u2o8em087di4kpjf063oblc8.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "36053652354-528b5imr2qnseqk90kkvbu2hinr5qufp.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.maxtDiagnostic"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
