@@ -3,23 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:maxt_diagnostic/features/auth/presentation/cubit/auth_cubit.dart';
-import 'package:maxt_diagnostic/features/home/presentation/cubit/home_cubit.dart';
 import 'package:maxt_diagnostic/core/config/app_config.dart';
 import 'package:maxt_diagnostic/core/di/injection_container.dart' as di;
 import 'package:maxt_diagnostic/core/theme/brand_theme_colors.dart';
+import 'package:maxt_diagnostic/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:maxt_diagnostic/features/home/presentation/cubit/home_cubit.dart';
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/diagnostic_button.dart';
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/network_info_card.dart';
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/quick_tips_card.dart';
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/rotating_info_card.dart';
-// Importações necessárias para os diálogos
 import 'package:maxt_diagnostic/features/known_networks/domain/entities/known_network.dart';
 import 'package:maxt_diagnostic/features/known_networks/presentation/cubit/known_network_cubit.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  // ... (A função _showBlockedStartSheet continua a mesma) ...
   void _showBlockedStartSheet(
     BuildContext context, {
     required bool noConnection,
@@ -44,7 +42,8 @@ class HomeScreen extends StatelessWidget {
         signalColor = brandColors.signalPoor;
         break;
     }
-    double progress;
+
+    final double progress;
     if (currentDbm == null) {
       progress = 0;
     } else {
@@ -54,6 +53,7 @@ class HomeScreen extends StatelessWidget {
     }
     final deficit =
         currentDbm == null ? null : (excellentThreshold - currentDbm);
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: false,
@@ -80,7 +80,7 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 12),
               if (noConnection) ...[
                 const Text(
-                    'Conecte-se a uma rede Wi‑Fi para iniciar o diagnóstico.'),
+                    'Conecte-se a uma rede Wi-Fi para iniciar o diagnóstico.'),
               ] else if (isServerUnreachable) ...[
                 const Text(
                   'Não foi possível conectar ao servidor de diagnóstico. Por favor, verifique se está conectado à rede apropriada e tente novamente.',
@@ -106,7 +106,8 @@ class HomeScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                        'Sinal atual: ${currentDbm != null ? '$currentDbm dBm' : 'indisponível'}'),
+                      'Sinal atual: ${currentDbm != null ? '$currentDbm dBm' : 'indisponível'}',
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -118,7 +119,8 @@ class HomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                    'Necessário: ≥ $excellentThreshold dBm (Excelente, mais próximo de 0).'),
+                  'Necessário: ≥ $excellentThreshold dBm (Excelente, mais próximo de 0).',
+                ),
                 if (deficit != null && deficit > 0) ...[
                   Text('Faltam ${deficit.abs()} dB para atingir Excelente.'),
                 ],
@@ -153,7 +155,6 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('MAX DIAGNÓSTICO'),
         centerTitle: true,
-        // CORREÇÃO PONTO 1: Mudar "actions" para "leading"
         leading: _buildPopupMenu(context),
       ),
       backgroundColor: const Color(0xFFF9FAFB),
@@ -171,7 +172,7 @@ class HomeScreen extends StatelessWidget {
           if (state is HomeError) {
             return Center(
               child: Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.all(24),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -194,7 +195,7 @@ class HomeScreen extends StatelessWidget {
           if (state is HomePermissionDenied) {
             return Center(
               child: Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.all(24),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -226,16 +227,15 @@ class HomeScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(top: 8.0, bottom: 12.0),
+                  padding: const EdgeInsets.only(top: 8, bottom: 12),
                   child: Center(
                     child: Text(
                       'Status da Rede',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.9,
-                        ),
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
@@ -291,10 +291,9 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // CORREÇÃO PONTO 1: Mudar ícone para "menu"
   PopupMenuButton<_HomeMenu> _buildPopupMenu(BuildContext context) {
     return PopupMenuButton<_HomeMenu>(
-      icon: const Icon(LucideIcons.menu), // Ícone de Menu
+      icon: const Icon(LucideIcons.menu),
       onSelected: (item) {
         switch (item) {
           case _HomeMenu.networks:
@@ -330,6 +329,7 @@ class HomeScreen extends StatelessWidget {
     await showDialog<void>(
       context: context,
       builder: (dialogContext) {
+        final listDialogContext = dialogContext;
         return BlocProvider(
           create: (_) => di.sl<KnownNetworkCubit>()..watchNetworks(),
           child: BlocConsumer<KnownNetworkCubit, KnownNetworkState>(
@@ -345,11 +345,10 @@ class HomeScreen extends StatelessWidget {
             builder: (listContext, listState) {
               return AlertDialog(
                 title: const Text('Minhas Redes Wi-Fi'),
-                // CORREÇÃO PONTO 3: Animação "Seca"
                 content: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
                   child: SizedBox(
-                    key: ValueKey(listState.status), // Chave para animar a troca
+                    key: ValueKey(listState.status),
                     width: double.maxFinite,
                     child: _buildNetworkListContent(
                       context,
@@ -360,7 +359,7 @@ class HomeScreen extends StatelessWidget {
                 ),
                 actions: [
                   TextButton(
-                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    onPressed: () => Navigator.of(listDialogContext).pop(),
                     child: const Text('Fechar'),
                   ),
                   ElevatedButton.icon(
@@ -368,7 +367,8 @@ class HomeScreen extends StatelessWidget {
                     label: const Text('Adicionar Atual'),
                     onPressed: () => _showAddNetworkDialog(
                       rootContext: context,
-                      cubitContext: listContext, // Passa o contexto do Cubit da lista
+                      cubitContext: listContext,
+                      listDialogContext: listDialogContext,
                       homeCubit: homeCubit,
                     ),
                   ),
@@ -404,7 +404,6 @@ class HomeScreen extends StatelessWidget {
       return const _EmptyNetworksView();
     }
 
-    // CORREÇÃO PONTO 2: Habilitar "Excluir"
     return ListView.separated(
       shrinkWrap: true,
       physics: const ClampingScrollPhysics(),
@@ -427,22 +426,19 @@ class HomeScreen extends StatelessWidget {
                   ? null
                   : () async {
                       final cubit = cubitContext.read<KnownNetworkCubit>();
-                      // Confirma a exclusão
                       final shouldDelete =
                           await _confirmNetworkDeletion(cubitContext, network);
                       if (shouldDelete != true) {
                         return;
                       }
-                      
-                      // Garante que os contextos ainda são válidos
+
                       if (!cubitContext.mounted) return;
                       await cubit.delete(network.remoteId!);
-                      
+
                       if (!rootContext.mounted) return;
                       ScaffoldMessenger.of(rootContext).showSnackBar(
                         SnackBar(
-                          content:
-                              Text('Rede "${network.name}" removida.'),
+                          content: Text('Rede "${network.name}" removida.'),
                         ),
                       );
                     },
@@ -453,15 +449,14 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // CORREÇÃO PONTO 2: Diálogo "Adicionar" inteligente e que fecha
   Future<void> _showAddNetworkDialog({
-    required BuildContext rootContext, // Contexto da Home (para Snackbar)
-    required BuildContext cubitContext, // Contexto do Cubit da Lista
+    required BuildContext rootContext,
+    required BuildContext cubitContext,
+    required BuildContext listDialogContext,
     required HomeCubit homeCubit,
   }) async {
     if (!rootContext.mounted) return;
 
-    // 1. LÊ a rede atual do HomeCubit (Inteligente)
     final homeState = homeCubit.state;
     if (homeState is! HomeLoaded) {
       ScaffoldMessenger.of(rootContext).showSnackBar(
@@ -485,10 +480,9 @@ class HomeScreen extends StatelessWidget {
     final formKey = GlobalKey<FormState>();
     final nameController = TextEditingController();
 
-    // 2. MOSTRA o dialog de Adicionar
     await showDialog<void>(
-      context: rootContext, // Usa o contexto raiz para mostrar o dialog
-      builder: (dialogContext) { // Este é o contexto do dialog "Adicionar"
+      context: rootContext,
+      builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Adicionar Rede Atual'),
           content: Form(
@@ -497,11 +491,9 @@ class HomeScreen extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Mostra a rede atual, não pede
                 Text('Rede (SSID): ${networkInfo.wifiName}'),
                 Text('BSSID: ${networkInfo.wifiBSSID}'),
                 const SizedBox(height: 16),
-                // Apenas pede o Apelido
                 TextFormField(
                   controller: nameController,
                   autofocus: true,
@@ -543,9 +535,8 @@ class HomeScreen extends StatelessWidget {
                   return;
                 }
 
-                // Pega o cubit da lista (que já existe)
                 final cubit = cubitContext.read<KnownNetworkCubit>();
-                
+
                 final network = KnownNetwork(
                   ownerUid: user.uid,
                   name: nameController.text.trim(),
@@ -556,7 +547,6 @@ class HomeScreen extends StatelessWidget {
 
                 await cubit.save(network);
 
-                // CORREÇÃO PONTO 2: Fechar o dialog "Adicionar"
                 if (dialogContext.mounted) {
                   Navigator.of(dialogContext).pop();
                 }
@@ -565,6 +555,10 @@ class HomeScreen extends StatelessWidget {
                   ScaffoldMessenger.of(rootContext).showSnackBar(
                     const SnackBar(content: Text('Rede salva com sucesso.')),
                   );
+                }
+
+                if (listDialogContext.mounted) {
+                  Navigator.of(listDialogContext).pop();
                 }
               },
               child: const Text('Salvar'),
@@ -575,7 +569,6 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // Helper para confirmar exclusão
   Future<bool?> _confirmNetworkDeletion(
     BuildContext context,
     KnownNetwork network,
@@ -602,10 +595,8 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-// Enum para o PopupMenu
 enum _HomeMenu { networks, logout }
 
-// Widget de "Lista Vazia"
 class _EmptyNetworksView extends StatelessWidget {
   const _EmptyNetworksView();
 
