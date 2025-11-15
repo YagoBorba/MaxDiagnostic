@@ -1,6 +1,9 @@
+// lib/features/home/presentation/view/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import 'package:maxt_diagnostic/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:maxt_diagnostic/features/home/presentation/cubit/home_cubit.dart';
 import 'package:maxt_diagnostic/core/config/app_config.dart';
 import 'package:maxt_diagnostic/core/di/injection_container.dart' as di;
@@ -9,10 +12,14 @@ import 'package:maxt_diagnostic/features/home/presentation/view/widgets/diagnost
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/network_info_card.dart';
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/quick_tips_card.dart';
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/rotating_info_card.dart';
+// Importações necessárias para os diálogos
+import 'package:maxt_diagnostic/features/known_networks/domain/entities/known_network.dart';
+import 'package:maxt_diagnostic/features/known_networks/presentation/cubit/known_network_cubit.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
+  // ... (A função _showBlockedStartSheet continua a mesma) ...
   void _showBlockedStartSheet(
     BuildContext context, {
     required bool noConnection,
@@ -146,6 +153,8 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('MAX DIAGNÓSTICO'),
         centerTitle: true,
+        // CORREÇÃO PONTO 1: Mudar "actions" para "leading"
+        leading: _buildPopupMenu(context),
       ),
       backgroundColor: const Color(0xFFF9FAFB),
       body: BlocBuilder<HomeCubit, HomeState>(
@@ -277,6 +286,344 @@ class HomeScreen extends StatelessWidget {
               },
             );
           },
+        ),
+      ),
+    );
+  }
+
+  // CORREÇÃO PONTO 1: Mudar ícone para "menu"
+  PopupMenuButton<_HomeMenu> _buildPopupMenu(BuildContext context) {
+    return PopupMenuButton<_HomeMenu>(
+      icon: const Icon(LucideIcons.menu), // Ícone de Menu
+      onSelected: (item) {
+        switch (item) {
+          case _HomeMenu.networks:
+            _showNetworkListDialog(context);
+            break;
+          case _HomeMenu.logout:
+            context.read<AuthCubit>().signOut();
+            break;
+        }
+      },
+      itemBuilder: (menuContext) => const <PopupMenuEntry<_HomeMenu>>[
+        PopupMenuItem<_HomeMenu>(
+          value: _HomeMenu.networks,
+          child: ListTile(
+            leading: Icon(LucideIcons.wifi),
+            title: Text('Minhas Redes'),
+          ),
+        ),
+        PopupMenuItem<_HomeMenu>(
+          value: _HomeMenu.logout,
+          child: ListTile(
+            leading: Icon(LucideIcons.logOut),
+            title: Text('Sair'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showNetworkListDialog(BuildContext context) async {
+    final homeCubit = context.read<HomeCubit>();
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return BlocProvider(
+          create: (_) => di.sl<KnownNetworkCubit>()..watchNetworks(),
+          child: BlocConsumer<KnownNetworkCubit, KnownNetworkState>(
+            listener: (listContext, listState) {
+              if (listState.status == NetworkStatus.error &&
+                  listState.error != null &&
+                  context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(listState.error!)),
+                );
+              }
+            },
+            builder: (listContext, listState) {
+              return AlertDialog(
+                title: const Text('Minhas Redes Wi-Fi'),
+                // CORREÇÃO PONTO 3: Animação "Seca"
+                content: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: SizedBox(
+                    key: ValueKey(listState.status), // Chave para animar a troca
+                    width: double.maxFinite,
+                    child: _buildNetworkListContent(
+                      context,
+                      listContext,
+                      listState,
+                    ),
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    child: const Text('Fechar'),
+                  ),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.add),
+                    label: const Text('Adicionar Atual'),
+                    onPressed: () => _showAddNetworkDialog(
+                      rootContext: context,
+                      cubitContext: listContext, // Passa o contexto do Cubit da lista
+                      homeCubit: homeCubit,
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildNetworkListContent(
+    BuildContext rootContext,
+    BuildContext cubitContext,
+    KnownNetworkState state,
+  ) {
+    if (state.status == NetworkStatus.initial ||
+        state.status == NetworkStatus.loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (state.status == NetworkStatus.error && state.networks.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(state.error ?? 'Erro ao carregar redes.'),
+        ),
+      );
+    }
+
+    if (state.networks.isEmpty) {
+      return const _EmptyNetworksView();
+    }
+
+    // CORREÇÃO PONTO 2: Habilitar "Excluir"
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const ClampingScrollPhysics(),
+      itemCount: state.networks.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (itemContext, index) {
+        final network = state.networks[index];
+        return Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: ListTile(
+            title: Text(network.name),
+            subtitle: Text('SSID: ${network.ssid}\nBSSID: ${network.bssid}'),
+            isThreeLine: true,
+            trailing: IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+              tooltip: 'Remover rede',
+              onPressed: network.remoteId == null
+                  ? null
+                  : () async {
+                      final cubit = cubitContext.read<KnownNetworkCubit>();
+                      // Confirma a exclusão
+                      final shouldDelete =
+                          await _confirmNetworkDeletion(cubitContext, network);
+                      if (shouldDelete != true) {
+                        return;
+                      }
+                      
+                      // Garante que os contextos ainda são válidos
+                      if (!cubitContext.mounted) return;
+                      await cubit.delete(network.remoteId!);
+                      
+                      if (!rootContext.mounted) return;
+                      ScaffoldMessenger.of(rootContext).showSnackBar(
+                        SnackBar(
+                          content:
+                              Text('Rede "${network.name}" removida.'),
+                        ),
+                      );
+                    },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // CORREÇÃO PONTO 2: Diálogo "Adicionar" inteligente e que fecha
+  Future<void> _showAddNetworkDialog({
+    required BuildContext rootContext, // Contexto da Home (para Snackbar)
+    required BuildContext cubitContext, // Contexto do Cubit da Lista
+    required HomeCubit homeCubit,
+  }) async {
+    if (!rootContext.mounted) return;
+
+    // 1. LÊ a rede atual do HomeCubit (Inteligente)
+    final homeState = homeCubit.state;
+    if (homeState is! HomeLoaded) {
+      ScaffoldMessenger.of(rootContext).showSnackBar(
+        const SnackBar(
+          content: Text('Informações da rede atual não disponíveis.'),
+        ),
+      );
+      return;
+    }
+
+    final networkInfo = homeState.networkInfo;
+    if (networkInfo.wifiBSSID == null || networkInfo.wifiName == null) {
+      ScaffoldMessenger.of(rootContext).showSnackBar(
+        const SnackBar(
+          content: Text('Não conectado a uma rede Wi-Fi válida.'),
+        ),
+      );
+      return;
+    }
+
+    final formKey = GlobalKey<FormState>();
+    final nameController = TextEditingController();
+
+    // 2. MOSTRA o dialog de Adicionar
+    await showDialog<void>(
+      context: rootContext, // Usa o contexto raiz para mostrar o dialog
+      builder: (dialogContext) { // Este é o contexto do dialog "Adicionar"
+        return AlertDialog(
+          title: const Text('Adicionar Rede Atual'),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Mostra a rede atual, não pede
+                Text('Rede (SSID): ${networkInfo.wifiName}'),
+                Text('BSSID: ${networkInfo.wifiBSSID}'),
+                const SizedBox(height: 16),
+                // Apenas pede o Apelido
+                TextFormField(
+                  controller: nameController,
+                  autofocus: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Apelido (ex: Casa) *',
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Obrigatório';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) {
+                  return;
+                }
+
+                final authState = rootContext.read<AuthCubit>().state;
+                final user = authState.user;
+                if (user == null) {
+                  ScaffoldMessenger.of(rootContext).showSnackBar(
+                    const SnackBar(
+                      content: Text('Faça login para salvar redes.'),
+                    ),
+                  );
+                  if (dialogContext.mounted) {
+                    Navigator.of(dialogContext).pop();
+                  }
+                  return;
+                }
+
+                // Pega o cubit da lista (que já existe)
+                final cubit = cubitContext.read<KnownNetworkCubit>();
+                
+                final network = KnownNetwork(
+                  ownerUid: user.uid,
+                  name: nameController.text.trim(),
+                  ssid: networkInfo.wifiName!,
+                  bssid: networkInfo.wifiBSSID!,
+                  updatedAt: DateTime.now(),
+                );
+
+                await cubit.save(network);
+
+                // CORREÇÃO PONTO 2: Fechar o dialog "Adicionar"
+                if (dialogContext.mounted) {
+                  Navigator.of(dialogContext).pop();
+                }
+
+                if (rootContext.mounted) {
+                  ScaffoldMessenger.of(rootContext).showSnackBar(
+                    const SnackBar(content: Text('Rede salva com sucesso.')),
+                  );
+                }
+              },
+              child: const Text('Salvar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Helper para confirmar exclusão
+  Future<bool?> _confirmNetworkDeletion(
+    BuildContext context,
+    KnownNetwork network,
+  ) {
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Remover rede'),
+          content: Text('Deseja remover "${network.name}"?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Remover', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+// Enum para o PopupMenu
+enum _HomeMenu { networks, logout }
+
+// Widget de "Lista Vazia"
+class _EmptyNetworksView extends StatelessWidget {
+  const _EmptyNetworksView();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.wifi_off, size: 48, color: Colors.grey),
+            SizedBox(height: 16),
+            Text(
+              'Nenhuma rede salva por enquanto. Adicione uma para receber alertas personalizados.',
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
     );

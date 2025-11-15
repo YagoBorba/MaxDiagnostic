@@ -1,6 +1,7 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -26,6 +27,8 @@ import '../../features/diagnostic/presentation/cubit/diagnostic_cubit.dart';
 import '../../features/diagnostic/presentation/mock/mock_run_diagnostic_test_usecase.dart';
 import '../../features/diagnostic/presentation/utils/progress_calculator.dart';
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
+import '../../features/known_networks/data/known_network_repository.dart';
+import '../../features/known_networks/presentation/cubit/known_network_cubit.dart';
 import '../config/app_config.dart';
 
 final sl = GetIt.instance;
@@ -44,6 +47,10 @@ Future<void> init({bool useMockDiagnostic = false}) async {
     () => AuthCubit(authRepository: sl()),
   );
 
+  sl.registerFactory(
+    () => KnownNetworkCubit(sl()),
+  );
+
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
       firebaseAuth: sl(),
@@ -52,6 +59,8 @@ Future<void> init({bool useMockDiagnostic = false}) async {
   );
 
   sl.registerLazySingleton(() => FirebaseAuth.instance);
+  sl.registerLazySingleton(() => FirebaseFirestore.instance);
+  sl.registerLazySingleton(() => KnownNetworkRepository(firestore: sl(), auth: sl()));
 
   if (!_googleSignInInitialized) {
     await GoogleSignIn.instance.initialize(
