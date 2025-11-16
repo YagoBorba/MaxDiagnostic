@@ -20,4 +20,8 @@ abstract class AuthRepository {
   });
 
   Future<void> signOut();
+
+  Future<Either<Failure, void>> sendPasswordResetEmail({
+    required String email,
+  });
 }

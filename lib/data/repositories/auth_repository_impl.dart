@@ -126,6 +126,23 @@ class AuthRepositoryImpl implements AuthRepository {
     await _firebaseAuth.signOut();
   }
 
+  @override
+  Future<Either<Failure, void>> sendPasswordResetEmail({
+    required String email,
+  }) async {
+    try {
+      await _firebaseAuth.sendPasswordResetEmail(email: email);
+      return const Right(null);
+    } on FirebaseAuthException catch (error) {
+      if (kDebugMode) {
+        debugPrint('Erro no sendPasswordResetEmail: $error');
+      }
+      return Left(ServerFailure(message: _mapFirebaseError(error.code)));
+    } catch (error) {
+      return Left(ServerFailure(message: error.toString()));
+    }
+  }
+
   String _mapFirebaseError(String code) {
     switch (code) {
       case 'weak-password':
@@ -140,6 +157,8 @@ class AuthRepositoryImpl implements AuthRepository {
         return 'Senha incorreta.';
       case 'user-disabled':
         return 'Este usuário foi desabilitado.';
+      case 'invalid-credential':
+        return 'As credenciais fornecidas são inválidas.';
       default:
         return 'Ocorreu um erro desconhecido. Tente novamente.';
     }

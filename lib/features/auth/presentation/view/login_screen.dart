@@ -15,6 +15,97 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  Future<void> _showPasswordResetDialog(BuildContext context) async {
+    final authCubit = context.read<AuthCubit>();
+    final TextEditingController dialogEmailController =
+        TextEditingController(text: _emailController.text);
+    final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+    final ValueNotifier<bool> isLoadingNotifier = ValueNotifier<bool>(false);
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Redefinir Senha'),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Digite seu e-mail para enviarmos um link de redefinição de senha.',
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: dialogEmailController,
+                  autofocus: true,
+                  decoration: const InputDecoration(labelText: 'E-mail'),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value == null || value.isEmpty || !value.contains('@')) {
+                      return 'Por favor, insira um e-mail válido.';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            ValueListenableBuilder<bool>(
+              valueListenable: isLoadingNotifier,
+              builder: (context, isLoading, child) {
+                return TextButton(
+                  onPressed:
+                      isLoading ? null : () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Cancelar'),
+                );
+              },
+            ),
+            ValueListenableBuilder<bool>(
+              valueListenable: isLoadingNotifier,
+              builder: (context, isLoading, child) {
+                return ElevatedButton(
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                          if (formKey.currentState?.validate() ?? false) {
+                            isLoadingNotifier.value = true;
+                            try {
+                              await authCubit.sendPasswordResetEmail(
+                                dialogEmailController.text.trim(),
+                              );
+                            } catch (error) {
+                              debugPrint('Erro inesperado no diálogo: $error');
+                            } finally {
+                              if (dialogContext.mounted) {
+                                Navigator.of(dialogContext).pop();
+                              }
+                            }
+                          }
+                        },
+                  child: isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Enviar'),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    ).whenComplete(() {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        dialogEmailController.dispose();
+        isLoadingNotifier.dispose();
+      });
+    });
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -33,19 +124,36 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       body: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
-          if (state.status == AuthStatus.unauthenticated && state.error != null) {
-            ScaffoldMessenger.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(
-                SnackBar(
-                  content: Text(state.error!),
-                  backgroundColor: theme.colorScheme.error,
-                ),
-              );
+          if (state.status == AuthStatus.unauthenticated) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) {
+                return;
+              }
+
+              final ScaffoldMessengerState scaffoldMessenger =
+                  ScaffoldMessenger.of(context);
+              scaffoldMessenger.hideCurrentSnackBar();
+
+              if (state.error != null) {
+                scaffoldMessenger.showSnackBar(
+                  SnackBar(
+                    content: Text(state.error!),
+                    backgroundColor: theme.colorScheme.error,
+                  ),
+                );
+              } else if (state.successMessage != null) {
+                scaffoldMessenger.showSnackBar(
+                  SnackBar(
+                    content: Text(state.successMessage!),
+                    backgroundColor: Colors.green.shade600,
+                  ),
+                );
+              }
+            });
           }
         },
         child: Center(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.all(32.0),
             child: Form(
               key: _formKey,
@@ -91,7 +199,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     validator: (value) =>
                         (value == null || value.isEmpty) ? 'Campo obrigatório' : null,
                   ),
-                  const SizedBox(height: 32),
+                  Center(
+                    child: TextButton(
+                      onPressed: () => _showPasswordResetDialog(context),
+                      child: const Text('Esqueceu a senha?'),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   BlocBuilder<AuthCubit, AuthState>(
                     builder: (context, state) {
                       if (state.status == AuthStatus.loading) {

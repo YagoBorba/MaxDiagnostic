@@ -62,6 +62,19 @@ class AuthCubit extends Cubit<AuthState> {
     );
   }
 
+  Future<void> sendPasswordResetEmail(String email) async {
+    final result = await _authRepository.sendPasswordResetEmail(email: email);
+    result.fold(
+      (failure) => emit(AuthState.unauthenticated(error: failure.message)),
+      (_) => emit(
+        const AuthState.unauthenticated(
+          successMessage:
+              'E-mail de redefinição enviado. Verifique sua caixa de entrada.',
+        ),
+      ),
+    );
+  }
+
   Future<void> signOut() async {
     await _authRepository.signOut();
     emit(const AuthState.unauthenticated());
