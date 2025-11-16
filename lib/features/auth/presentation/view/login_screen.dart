@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:maxt_diagnostic/features/auth/presentation/cubit/auth_cubit.dart';
 
@@ -163,7 +164,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    LucideIcons.shieldCheck,
+                    LucideIcons.wifi,
                     size: 80,
                     color: theme.colorScheme.primary,
                   ),
@@ -177,7 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Faça login com sua conta ou registre-se para salvar seus relatórios.',
+                    'Faça login com sua conta ou registre-se para salvar suas redes.',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: theme.textTheme.bodySmall?.color,
@@ -246,7 +247,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           const Text('Ou', textAlign: TextAlign.center),
                           const SizedBox(height: 24),
                           ElevatedButton.icon(
-                            icon: const Icon(LucideIcons.logIn),
+                            icon: const FaIcon(
+                              FontAwesomeIcons.google,
+                              color: Colors.white,
+                            ),
                             label: const Text('Entrar com Google'),
                             onPressed: () {
                               context.read<AuthCubit>().signInWithGoogle();
