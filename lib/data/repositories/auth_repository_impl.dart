@@ -77,8 +77,71 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, UserCredential>> registerWithEmailAndPassword({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final UserCredential userCredential =
+          await _firebaseAuth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      return Right(userCredential);
+    } on FirebaseAuthException catch (error) {
+      if (kDebugMode) {
+        debugPrint('Erro no registerWithEmail: $error');
+      }
+      return Left(ServerFailure(message: _mapFirebaseError(error.code)));
+    } catch (error) {
+      return Left(ServerFailure(message: error.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserCredential>> signInWithEmailAndPassword({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final UserCredential userCredential =
+          await _firebaseAuth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      return Right(userCredential);
+    } on FirebaseAuthException catch (error) {
+      if (kDebugMode) {
+        debugPrint('Erro no signInWithEmail: $error');
+      }
+      return Left(ServerFailure(message: _mapFirebaseError(error.code)));
+    } catch (error) {
+      return Left(ServerFailure(message: error.toString()));
+    }
+  }
+
+  @override
   Future<void> signOut() async {
     await _googleSignIn.signOut();
     await _firebaseAuth.signOut();
+  }
+
+  String _mapFirebaseError(String code) {
+    switch (code) {
+      case 'weak-password':
+        return 'A senha fornecida é muito fraca.';
+      case 'email-already-in-use':
+        return 'Este e-mail já está em uso.';
+      case 'invalid-email':
+        return 'O formato do e-mail é inválido.';
+      case 'user-not-found':
+        return 'Nenhum usuário encontrado para este e-mail.';
+      case 'wrong-password':
+        return 'Senha incorreta.';
+      case 'user-disabled':
+        return 'Este usuário foi desabilitado.';
+      default:
+        return 'Ocorreu um erro desconhecido. Tente novamente.';
+    }
   }
 }
