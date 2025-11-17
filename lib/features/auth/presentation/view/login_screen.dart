@@ -16,8 +16,11 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  /// Exibe o diálogo para envio do e-mail de redefinição de senha.
+  /// Gerencia estado local de loading para este fluxo específico.
   Future<void> _showPasswordResetDialog(BuildContext context) async {
     final authCubit = context.read<AuthCubit>();
+    // Pré-preenche com o e-mail que o usuário já digitou na tela principal
     final TextEditingController dialogEmailController =
         TextEditingController(text: _emailController.text);
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
@@ -100,6 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       },
     ).whenComplete(() {
+      // Garante limpeza de recursos ao fechar o diálogo
       WidgetsBinding.instance.addPostFrameCallback((_) {
         dialogEmailController.dispose();
         isLoadingNotifier.dispose();
@@ -126,6 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
       body: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
           if (state.status == AuthStatus.unauthenticated) {
+            // Exibe mensagens de erro ou sucesso (ex: reset de senha) via SnackBar
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) {
                 return;

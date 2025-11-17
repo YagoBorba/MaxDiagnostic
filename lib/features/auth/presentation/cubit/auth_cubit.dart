@@ -7,16 +7,20 @@ import 'package:maxt_diagnostic/domain/repositories/auth_repository.dart';
 
 part 'auth_state.dart';
 
+/// Gerencia o estado global de autenticação do aplicativo.
+/// Escuta mudanças na stream do Firebase Auth para atualizar a UI.
 class AuthCubit extends Cubit<AuthState> {
   AuthCubit({required AuthRepository authRepository})
       : _authRepository = authRepository,
         super(const AuthState.unknown()) {
+    // Inicia a escuta ativa do estado de autenticação assim que o Cubit é criado
     _userSubscription = _authRepository.user.listen(_onAuthUserChanged);
   }
 
   final AuthRepository _authRepository;
   StreamSubscription<User?>? _userSubscription;
 
+  /// Reage a mudanças na stream do usuário (Login/Logout).
   void _onAuthUserChanged(User? user) {
     if (user == null) {
       emit(const AuthState.unauthenticated());
@@ -25,6 +29,7 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  /// Força uma verificação manual do estado atual.
   void checkAuthStatus() {
     _onAuthUserChanged(_authRepository.currentUser);
   }
@@ -34,7 +39,7 @@ class AuthCubit extends Cubit<AuthState> {
     final result = await _authRepository.signInWithGoogle();
     result.fold(
       (failure) => emit(AuthState.unauthenticated(error: failure.message)),
-      (_) => null,
+      (_) => null, // O listener _onAuthUserChanged lidará com o sucesso
     );
   }
 

@@ -5,6 +5,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:maxt_diagnostic/core/error/failures.dart';
 import 'package:maxt_diagnostic/domain/repositories/auth_repository.dart';
 
+/// Implementação concreta do repositório usando Firebase Auth e Google Sign In.
 class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({
     required FirebaseAuth firebaseAuth,
@@ -24,8 +25,10 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, UserCredential>> signInWithGoogle() async {
     try {
+      // Dispara o fluxo nativo de autenticação (popup ou redirecionamento)
       final GoogleSignInAccount account = await _googleSignIn.authenticate();
 
+      // Obtém os detalhes de autenticação da requisição
       final GoogleSignInAuthentication googleAuth = account.authentication;
       final String? idToken = googleAuth.idToken;
 
@@ -35,6 +38,8 @@ class AuthRepositoryImpl implements AuthRepository {
         );
       }
 
+      // Tenta obter o accessToken. Necessário em algumas configurações de escopo,
+      // mas nem sempre obrigatório dependendo do provedor.
       String? accessToken;
       try {
         const scopes = <String>['email', 'profile'];
@@ -46,22 +51,24 @@ class AuthRepositoryImpl implements AuthRepository {
         accessToken = tokens.accessToken;
       } catch (error) {
         if (kDebugMode) {
-          debugPrint('Falha ao obter accessToken do Google: $error');
+          debugPrint('Falha ao obter accessToken do Google (aviso não crítico): $error');
         }
       }
 
+      // Cria a credencial do Firebase com os tokens obtidos do Google
       final OAuthCredential credential = GoogleAuthProvider.credential(
         idToken: idToken,
         accessToken: accessToken,
       );
 
+      // Finalmente, autentica no Firebase
       final UserCredential userCredential =
           await _firebaseAuth.signInWithCredential(credential);
 
       return Right(userCredential);
     } on GoogleSignInException catch (error) {
       if (error.code == GoogleSignInExceptionCode.canceled) {
-        return const Left(ServerFailure(message: 'Login com Google cancelado.'));
+        return const Left(ServerFailure(message: 'Login com Google cancelado pelo usuário.'));
       }
       if (kDebugMode) {
         debugPrint('Erro de autenticação Google: $error');
@@ -70,7 +77,7 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(ServerFailure(message: 'Erro ao fazer login com Google: $details'));
     } catch (error) {
       if (kDebugMode) {
-        debugPrint('Erro no signInWithGoogle: $error');
+        debugPrint('Erro genérico no signInWithGoogle: $error');
       }
       return Left(ServerFailure(message: 'Erro ao fazer login com Google: $error'));
     }
@@ -122,6 +129,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> signOut() async {
+    // É importante deslogar de ambos para evitar problemas de cache de sessão
     await _googleSignIn.signOut();
     await _firebaseAuth.signOut();
   }
@@ -143,6 +151,7 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  /// Traduz os códigos de erro do Firebase para mensagens amigáveis ao usuário.
   String _mapFirebaseError(String code) {
     switch (code) {
       case 'weak-password':
