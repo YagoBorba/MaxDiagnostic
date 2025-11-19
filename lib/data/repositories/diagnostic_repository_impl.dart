@@ -12,6 +12,7 @@ import '../../domain/repositories/diagnostic_repository.dart';
 import '../datasources/network_info_local_datasource.dart';
 import '../datasources/device_info_local_datasource.dart';
 import '../datasources/speed_test_remote_datasource.dart';
+import '../datasources/server_capacity_remote_datasource.dart';
 import '../models/final_results_model.dart';
 
 class DiagnosticRepositoryImpl implements DiagnosticRepository {
@@ -19,6 +20,7 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
   final SpeedTestRemoteDataSource speedTestRemoteDataSource;
   final NetworkInfo networkInfo;
   final DeviceInfoLocalDataSource deviceInfoLocalDataSource;
+  final ServerCapacityRemoteDataSource serverCapacityRemoteDataSource;
   final AppConfig appConfig;
 
   DiagnosticRepositoryImpl({
@@ -26,11 +28,15 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
     required this.speedTestRemoteDataSource,
     required this.networkInfo,
     required this.deviceInfoLocalDataSource,
+    required this.serverCapacityRemoteDataSource,
     required this.appConfig,
   });
 
   @override
   Stream<Either<Failure, DiagnosticFlowEvent>> runDiagnosticTest() async* {
+    String? reservationToken;
+    late final DeviceInfoEntity deviceInfo;
+    late final NetworkInfoEntity initialNetworkInfo;
     try {
       if (!await networkInfo.isConnected) {
         yield const Left(NetworkFailure(message: 'No network connection available'));
@@ -43,8 +49,8 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
         message: 'Iniciando diagnóstico...',
         timestamp: DateTime.now(),
       ));
-      
-      final deviceInfo = await deviceInfoLocalDataSource.getDeviceInfo();
+
+      deviceInfo = await deviceInfoLocalDataSource.getDeviceInfo();
       yield Right(DiagnosticProgressEntity(
         stage: DiagnosticStage.collectingDeviceInfo,
         progress: 1.0,
@@ -52,11 +58,53 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
         timestamp: DateTime.now(),
       ));
 
-      final initialNetworkInfo = await networkInfoLocalDataSource.getInitialNetworkInfo();
+      initialNetworkInfo = await networkInfoLocalDataSource.getInitialNetworkInfo();
       yield Right(DiagnosticProgressEntity(
         stage: DiagnosticStage.collectingNetworkInfo,
         progress: 1.0,
         message: 'Informações de rede coletadas',
+        timestamp: DateTime.now(),
+      ));
+
+      yield Right(DiagnosticProgressEntity(
+        stage: DiagnosticStage.startingSpeedTest,
+        progress: 0.0,
+        message: 'Verificando capacidade do servidor...',
+        timestamp: DateTime.now(),
+      ));
+
+      final reservation = await serverCapacityRemoteDataSource.reserveSlot(
+        _buildClientId(deviceInfo),
+      );
+
+      final normalizedStatus = reservation.status.toUpperCase();
+      if (normalizedStatus == 'BUSY') {
+        yield Right(DiagnosticQueueing(
+          estimatedWaitSeconds: reservation.estimatedWaitSeconds,
+          message: 'Capacidade do servidor atingida. Entrando na fila.',
+        ));
+        return;
+      }
+
+      if (normalizedStatus == 'OVERLOADED') {
+        throw const ServerException(
+          'Service Temporarily Unavailable (OVERLOADED)',
+          statusCode: 503,
+        );
+      }
+
+      if (normalizedStatus != 'GRANTED' || reservation.token == null) {
+        throw ServerException(
+          'Failed to reserve test slot: Server returned status ${reservation.status}',
+        );
+      }
+
+      reservationToken = reservation.token;
+
+      yield Right(DiagnosticProgressEntity(
+        stage: DiagnosticStage.startingSpeedTest,
+        progress: 1.0,
+        message: 'Slot reservado. Iniciando teste...',
         timestamp: DateTime.now(),
       ));
 
@@ -91,6 +139,10 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
       yield Left(DeviceInfoFailure(message: e.message));
     } catch (e) {
       yield Left(ServerFailure(message: 'Diagnostic test failed: ${e.toString()}'));
+    } finally {
+      if (reservationToken != null) {
+        unawaited(serverCapacityRemoteDataSource.releaseSlot(reservationToken));
+      }
     }
   }
 
@@ -190,5 +242,19 @@ class DiagnosticRepositoryImpl implements DiagnosticRepository {
   @override
   void disposeResources() {
     speedTestRemoteDataSource.dispose();
+  }
+
+  String _buildClientId(DeviceInfoEntity info) {
+    final os = _sanitizeForId(info.operatingSystem);
+    final brand = _sanitizeForId(info.deviceBrand);
+    final model = _sanitizeForId(info.deviceModel);
+    final unique = DateTime.now().microsecondsSinceEpoch.toString();
+    return 'md-$os-$brand-$model-$unique';
+  }
+
+  String _sanitizeForId(String value) {
+    final sanitized = value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-');
+    final collapsed = sanitized.replaceAll(RegExp(r'-+'), '-').replaceAll(RegExp(r'^-|-$'), '');
+    return collapsed.isEmpty ? 'na' : collapsed;
   }
 }

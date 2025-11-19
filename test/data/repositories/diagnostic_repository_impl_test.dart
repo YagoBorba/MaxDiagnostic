@@ -11,7 +11,9 @@ import 'package:maxt_diagnostic/core/network/network_info.dart';
 import 'package:maxt_diagnostic/data/datasources/device_info_local_datasource.dart';
 import 'package:maxt_diagnostic/data/datasources/network_info_local_datasource.dart';
 import 'package:maxt_diagnostic/data/datasources/speed_test_remote_datasource.dart';
+import 'package:maxt_diagnostic/data/datasources/server_capacity_remote_datasource.dart';
 import 'package:maxt_diagnostic/data/models/final_results_model.dart';
+import 'package:maxt_diagnostic/data/models/server_capacity_model.dart';
 import 'package:maxt_diagnostic/data/repositories/diagnostic_repository_impl.dart';
 import 'package:maxt_diagnostic/domain/entities/diagnostic_flow.dart';
 import 'package:maxt_diagnostic/domain/entities/final_results_entity.dart';
@@ -29,19 +31,28 @@ class _MockAppConfig extends Mock implements AppConfig {}
 class _MockDeviceInfoLocalDataSource extends Mock
     implements DeviceInfoLocalDataSource {}
 
+class _MockServerCapacityRemoteDataSource extends Mock
+    implements ServerCapacityRemoteDataSource {}
+
 void main() {
   late _MockNetworkInfoLocalDataSource networkInfoLocalDataSource;
   late _MockSpeedTestRemoteDataSource speedTestRemoteDataSource;
   late _MockNetworkInfo networkInfo;
   late _MockDeviceInfoLocalDataSource deviceInfoLocalDataSource;
+  late _MockServerCapacityRemoteDataSource serverCapacityRemoteDataSource;
   late _MockAppConfig appConfig;
   late DiagnosticRepositoryImpl repository;
+
+  setUpAll(() {
+    registerFallbackValue('stub-client-id');
+  });
 
   setUp(() {
     networkInfoLocalDataSource = _MockNetworkInfoLocalDataSource();
     speedTestRemoteDataSource = _MockSpeedTestRemoteDataSource();
     networkInfo = _MockNetworkInfo();
     deviceInfoLocalDataSource = _MockDeviceInfoLocalDataSource();
+    serverCapacityRemoteDataSource = _MockServerCapacityRemoteDataSource();
     appConfig = _MockAppConfig();
 
     repository = DiagnosticRepositoryImpl(
@@ -49,16 +60,58 @@ void main() {
       speedTestRemoteDataSource: speedTestRemoteDataSource,
       networkInfo: networkInfo,
       deviceInfoLocalDataSource: deviceInfoLocalDataSource,
+      serverCapacityRemoteDataSource: serverCapacityRemoteDataSource,
       appConfig: appConfig,
     );
   });
 
   group('runDiagnosticTest', () {
+    test('emits DiagnosticQueueing when server is busy', () async {
+      when(() => networkInfo.isConnected).thenAnswer((_) async => true);
+      when(() => deviceInfoLocalDataSource.getDeviceInfo()).thenAnswer(
+        (_) async => const DeviceInfoEntity(
+          deviceModel: 'Pixel 7',
+          deviceBrand: 'Google',
+          operatingSystem: 'Android',
+          osVersion: '14',
+        ),
+      );
+      when(() => networkInfoLocalDataSource.getInitialNetworkInfo())
+          .thenAnswer((_) async => const NetworkInfoEntity(connectionType: 'WiFi'));
+
+      when(() => serverCapacityRemoteDataSource.reserveSlot(any())).thenAnswer(
+        (_) async => const ServerCapacityModel(
+          status: 'BUSY',
+          estimatedWaitSeconds: 12,
+        ),
+      );
+
+      final events = await repository.runDiagnosticTest().toList();
+
+      expect(events.every((element) => element.isRight()), isTrue);
+      final lastEvent = events.last;
+      lastEvent.fold(
+        (_) => fail('Expected DiagnosticQueueing event as the final emission'),
+        (event) {
+          expect(event, isA<DiagnosticQueueing>());
+          final queueEvent = event as DiagnosticQueueing;
+          expect(queueEvent.estimatedWaitSeconds, 12);
+        },
+      );
+
+      verifyNever(() => serverCapacityRemoteDataSource.releaseSlot(any()));
+      verifyNever(() => speedTestRemoteDataSource.runSpeedTest());
+    });
+
     test('emits progress updates and final results on completion', () async {
       // Arrange
       when(() => networkInfo.isConnected).thenAnswer((_) async => true);
+      when(() => serverCapacityRemoteDataSource.reserveSlot(any())).thenAnswer(
+        (_) async => const ServerCapacityModel(status: 'GRANTED', token: 'token'),
+      );
+      when(() => serverCapacityRemoteDataSource.releaseSlot(any())).thenAnswer((_) async {});
 
-  const device = DeviceInfoEntity(
+      const device = DeviceInfoEntity(
         deviceModel: 'Pixel 7',
         deviceBrand: 'Google',
         operatingSystem: 'Android',
@@ -67,14 +120,14 @@ void main() {
       when(() => deviceInfoLocalDataSource.getDeviceInfo())
           .thenAnswer((_) async => device);
 
-  const netInitial = NetworkInfoEntity(
+    const netInitial = NetworkInfoEntity(
         connectionType: 'WiFi',
         wifiName: 'MyWiFi',
         wifiFrequency: '5 GHz',
         wifiSignalStrength: -50,
         wifiLinkSpeed: 300,
       );
-  const netFinal = NetworkInfoEntity(
+    const netFinal = NetworkInfoEntity(
         connectionType: 'WiFi',
         wifiName: 'MyWiFi',
         wifiFrequency: '5 GHz',
@@ -144,6 +197,10 @@ void main() {
 
     test('emits NetworkFailure when not connected', () async {
       when(() => networkInfo.isConnected).thenAnswer((_) async => false);
+      when(() => serverCapacityRemoteDataSource.reserveSlot(any())).thenAnswer(
+        (_) async => const ServerCapacityModel(status: 'GRANTED', token: 'token'),
+      );
+      when(() => serverCapacityRemoteDataSource.releaseSlot(any())).thenAnswer((_) async {});
 
       final first = await repository.runDiagnosticTest().first;
 
@@ -163,6 +220,10 @@ void main() {
                 operatingSystem: 'Android',
                 osVersion: '14',
               ));
+      when(() => serverCapacityRemoteDataSource.reserveSlot(any())).thenAnswer(
+        (_) async => const ServerCapacityModel(status: 'GRANTED', token: 'token'),
+      );
+      when(() => serverCapacityRemoteDataSource.releaseSlot(any())).thenAnswer((_) async {});
     when(() => networkInfoLocalDataSource.getInitialNetworkInfo())
       .thenAnswer((_) async => const NetworkInfoEntity(connectionType: 'WiFi'));
     when(() => networkInfoLocalDataSource.getNetworkInfo())
