@@ -142,13 +142,14 @@ class _DiagnosticContentState extends State<_DiagnosticContent> {
       return 'Diagnóstico concluído!';
     }
 
-    if (!_hasTestStarted || state.globalStatus == GlobalTestStatus.pending) {
-      return 'Inicializando diagnóstico...';
+    if (state.isQueued) {
+      _timer?.cancel();
+      final waitSeconds = state.queueWaitSeconds ?? 30;
+      return 'Só mais um instante! Estamos liberando o servidor para você. Tempo estimado: ${waitSeconds}s';
     }
-    
+
     return _statusMessages[_messageIndex];
   }
-
   @override
   Widget build(BuildContext context) {
     final state = context.watch<DiagnosticCubit>().state;
