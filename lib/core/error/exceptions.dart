@@ -1,7 +1,12 @@
 class ServerException implements Exception {
   final String message;
+  final int? statusCode;
 
-  const ServerException(this.message);
+  const ServerException(this.message, {this.statusCode});
+
+  @override
+  String toString() =>
+      'ServerException(statusCode: $statusCode, message: $message)';
 }
 
 class CacheException implements Exception {
@@ -32,4 +37,18 @@ class PermissionException implements Exception {
   final String message;
 
   const PermissionException(this.message);
+}
+
+class ServerBusyException implements Exception {
+  final String message;
+  final int estimatedWaitSeconds;
+
+  const ServerBusyException(
+    this.message, {
+    this.estimatedWaitSeconds = 30,
+  });
+
+  @override
+  String toString() =>
+      'ServerBusyException(estimatedWaitSeconds: $estimatedWaitSeconds, message: $message)';
 }
