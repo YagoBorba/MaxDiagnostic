@@ -44,6 +44,9 @@ class DiagnosticState extends Equatable {
   final FinalResultsEntity? finalResults;
   final String? errorMessage;
   final DiagnosticStage currentStage;
+  final bool isQueued;
+  final int? queueWaitSeconds;
+  final String? queueMessage;
 
 
   const DiagnosticState({
@@ -53,6 +56,9 @@ class DiagnosticState extends Equatable {
     required this.currentStage,
     this.finalResults,
     this.errorMessage,
+    this.isQueued = false,
+    this.queueWaitSeconds,
+    this.queueMessage,
   });
 
   factory DiagnosticState.initial() {
@@ -67,6 +73,7 @@ class DiagnosticState extends Equatable {
       overallProgress: 0.0,
       globalStatus: GlobalTestStatus.pending,
       currentStage: DiagnosticStage.initializing,
+      isQueued: false,
     );
   }
 
@@ -79,6 +86,10 @@ class DiagnosticState extends Equatable {
     bool clearError = false, 
     bool clearFinalResults = false,
     DiagnosticStage? currentStage,
+    bool? isQueued,
+    int? queueWaitSeconds,
+    String? queueMessage,
+    bool clearQueue = false,
   }) {
     return DiagnosticState(
       tests: tests ?? this.tests,
@@ -87,6 +98,10 @@ class DiagnosticState extends Equatable {
       finalResults: clearFinalResults ? null : finalResults ?? this.finalResults,
       errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
       currentStage: currentStage ?? this.currentStage,
+      isQueued: clearQueue ? false : isQueued ?? this.isQueued,
+      queueWaitSeconds:
+          clearQueue ? null : queueWaitSeconds ?? this.queueWaitSeconds,
+      queueMessage: clearQueue ? null : queueMessage ?? this.queueMessage,
     );
   }
 
@@ -98,5 +113,8 @@ class DiagnosticState extends Equatable {
         finalResults,
         errorMessage,
         currentStage,
+        isQueued,
+        queueWaitSeconds,
+        queueMessage,
       ];
 }
