@@ -9,6 +9,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../network/network_info.dart';
 import '../../data/datasources/speed_test_remote_datasource.dart';
+import '../../data/datasources/server_capacity_remote_datasource.dart';
 import '../../data/datasources/network_info_local_datasource.dart';
 import '../../data/datasources/device_info_local_datasource.dart';
 import '../../data/repositories/diagnostic_repository_impl.dart';
@@ -21,6 +22,7 @@ import '../../features/diagnostic/presentation/cubit/diagnostic_cubit.dart';
 import '../../features/diagnostic/presentation/mock/mock_run_diagnostic_test_usecase.dart';
 import '../../features/diagnostic/presentation/utils/progress_calculator.dart';
 import '../config/app_config.dart';
+import '../config/environment_config.dart';
 
 final sl = GetIt.instance;
 
@@ -46,6 +48,7 @@ Future<void> init({bool useMockDiagnostic = false}) async {
       ));
 
   sl.registerLazySingleton(() => http.Client());
+  sl.registerLazySingleton(() => EnvironmentConfig());
   sl.registerLazySingleton(() => GetInitialNetworkInfo(sl()));
   sl.registerLazySingleton(() => CheckServerReachability(sl()));
   
@@ -65,6 +68,7 @@ Future<void> init({bool useMockDiagnostic = false}) async {
       networkInfo: sl(),
       networkInfoLocalDataSource: sl(),
       deviceInfoLocalDataSource: sl(),
+      serverCapacityRemoteDataSource: sl(),
       appConfig: sl(),
     ),
   );
@@ -84,6 +88,13 @@ Future<void> init({bool useMockDiagnostic = false}) async {
 
   sl.registerLazySingleton<SpeedTestRemoteDataSource>(
     () => SpeedTestRemoteDataSourceImpl(config: sl()),
+  );
+
+  sl.registerLazySingleton<ServerCapacityRemoteDataSource>(
+    () => ServerCapacityRemoteDataSourceImpl(
+      client: sl(),
+      config: sl(),
+    ),
   );
 
   sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
