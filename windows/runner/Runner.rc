@@ -90,7 +90,7 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "br.com.yagoborba" "\0"
-            VALUE "FileDescription", "maxt_diagnostic" "\0"
+            VALUE "FileDescription", "MaxDiagnostic" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "maxt_diagnostic" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2025 br.com.yagoborba. All rights reserved." "\0"
