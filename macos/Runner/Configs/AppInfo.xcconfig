@@ -5,10 +5,10 @@
 // 'flutter create' template.
 
 // The application's name. By default this is also the title of the Flutter window.
-PRODUCT_NAME = maxt_diagnostic
+PRODUCT_NAME = MaxDiagnostic
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.maxtDiagnostic
+PRODUCT_BUNDLE_IDENTIFIER = br.com.yagoborba.maxDiagnostic
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2025 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2025 Yago Azevedo Borba. All rights reserved.
