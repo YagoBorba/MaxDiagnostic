@@ -305,3 +305,8 @@ Contributors are automatically listed in the README. We appreciate every contrib
 - [Code of Conduct](./CODE_OF_CONDUCT.md)
 - [Security Policy](./.github/SECURITY.md)
 - [Issue Templates](./.github/ISSUE_TEMPLATE/)
+
+## Documentation
+
+- [Architecture Guide](docs/ARCHITECTURE.md)
+- [Self-Hosting Guide](docs/SELF_HOSTING_GUIDE.md)
