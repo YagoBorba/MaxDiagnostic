@@ -1,4 +1,4 @@
-﻿name: Flutter CI/CD
+name: Flutter CI/CD
 
 on:
   push:
@@ -45,6 +45,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pub-
 
+      - name: Create .env from the example
+        run: cp .env.example .env
+
       - name: Flutter pub get
         run: flutter pub get
 
@@ -71,3 +74,14 @@ jobs:
         with:
           name: coverage-lcov
           path: coverage/lcov.info
+
+  speed_test_server:
+    name: Speed test server (Docker)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run the LibreSpeed and capacity manager smoke test
+        run: ./docker/librespeed/smoke-test.sh

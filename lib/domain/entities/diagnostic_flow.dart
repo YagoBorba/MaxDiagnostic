@@ -78,3 +78,16 @@ class DiagnosticCompleted extends DiagnosticFlowEvent {
   @override
   List<Object?> get props => [results];
 }
+
+class DiagnosticQueueing extends DiagnosticFlowEvent {
+  final int estimatedWaitSeconds;
+  final String message;
+
+  const DiagnosticQueueing({
+    required this.estimatedWaitSeconds,
+    required this.message,
+  });
+
+  @override
+  List<Object?> get props => [estimatedWaitSeconds, message];
+}

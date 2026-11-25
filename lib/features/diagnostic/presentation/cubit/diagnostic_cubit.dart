@@ -34,6 +34,8 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
     DiagnosticStage.collectingNetworkInfo: 'additionalInfo',
   };
 
+  static const int _capacityCheckPollingSeconds = 5;
+
   Future<void> startTest() async {
     await _sub?.cancel();
     emit(state.copyWith(
@@ -45,30 +47,120 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
       clearFinalResults: true,
       tests: DiagnosticState.initial().tests,
       overallProgress: 0.0,
+      clearQueue: true,
     ));
 
-    final eitherStream = await runDiagnosticTestUseCase(const NoParams());
-    eitherStream.fold(
-      (failure) => _handleFailure(failure),
-      (stream) {
-        _sub = stream.listen(
-          (Either<Failure, DiagnosticFlowEvent> either) {
-            either.fold(
-              (failure) => _handleFailure(failure),
-              (event) => _handleDiagnosticEvent(event),
+    await _runDiagnosticLoop();
+  }
+
+  Future<void> _runDiagnosticLoop() async {
+    while (!isClosed) {
+      final eitherStream = await runDiagnosticTestUseCase(const NoParams());
+      if (eitherStream.isLeft()) {
+        _handleFailure(eitherStream.swap().getOrElse(
+            () => const ServerFailure(message: 'Falha ao iniciar o diagnóstico.')));
+        return;
+      }
+
+      final stream = eitherStream.getOrElse(
+        () => const Stream<Either<Failure, DiagnosticFlowEvent>>.empty(),
+      );
+
+      bool shouldRetry = false;
+      int waitSeconds = _capacityCheckPollingSeconds;
+      bool sawTerminalEvent = false;
+      final completer = Completer<void>();
+
+      _sub = stream.listen(
+        (either) {
+          either.fold(
+            (failure) {
+              sawTerminalEvent = true;
+              shouldRetry = false;
+              if (!completer.isCompleted) {
+                _handleFailure(failure);
+                completer.complete();
+              }
+            },
+            (event) {
+              if (event is DiagnosticQueueing) {
+                sawTerminalEvent = true;
+                final wait = event.estimatedWaitSeconds > 0
+                    ? event.estimatedWaitSeconds
+                    : _capacityCheckPollingSeconds;
+                waitSeconds = wait;
+                shouldRetry = true;
+                _emitQueueState(wait, event.message);
+                if (!completer.isCompleted) {
+                  completer.complete();
+                }
+                return;
+              }
+
+              if (event is DiagnosticProgressEntity) {
+                _applyProgress(event);
+                return;
+              }
+
+              if (event is DiagnosticCompleted) {
+                sawTerminalEvent = true;
+                shouldRetry = false;
+                _handleTestCompletion(event);
+                if (!completer.isCompleted) {
+                  completer.complete();
+                }
+              }
+            },
+          );
+        },
+        onError: (error) {
+          sawTerminalEvent = true;
+          if (!completer.isCompleted) {
+            _handleFailure(
+              ServerFailure(message: 'Erro inesperado no stream: $error'),
             );
-          },
-          onError: (error) {
-            _handleFailure(ServerFailure(message: 'Erro inesperado no stream: $error'));
-            _disposeResourcesSafely();
-          },
-          onDone: () {
-            _handleStreamDone();
-            _disposeResourcesSafely();
-          },
-        );
-      },
-    );
+            completer.complete();
+          }
+        },
+        onDone: () {
+          if (!completer.isCompleted) {
+            if (!sawTerminalEvent) {
+              _handleFailure(const ServerFailure(
+                  message: 'O teste foi interrompido inesperadamente.'));
+            }
+            completer.complete();
+          }
+        },
+      );
+
+      await completer.future;
+      await _sub?.cancel();
+      _sub = null;
+      _disposeResourcesSafely();
+
+      if (!shouldRetry) {
+        break;
+      }
+
+      const int gracePeriodSeconds = 2;
+      final delaySeconds =
+          waitSeconds > 0 ? waitSeconds : _capacityCheckPollingSeconds;
+      await Future.delayed(
+        Duration(seconds: delaySeconds + gracePeriodSeconds),
+      );
+    }
+  }
+
+  void _emitQueueState(int waitSeconds, String backendMessage) {
+    debugPrint('ℹ️ Fila de capacidade: $backendMessage (retry em ${waitSeconds}s)');
+    emit(state.copyWith(
+      globalStatus: GlobalTestStatus.running,
+      currentStage: DiagnosticStage.startingSpeedTest,
+      isQueued: true,
+      queueWaitSeconds: waitSeconds,
+      queueMessage: null,
+      clearError: true,
+    ));
   }
 
   void _handleFailure(Failure failure) {
@@ -84,22 +176,8 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
       errorMessage: failure.message,
       tests: updatedTests,
       currentStage: DiagnosticStage.error,
+      clearQueue: true,
     ));
-  }
-
-  void _handleDiagnosticEvent(DiagnosticFlowEvent event) {
-  if (event is DiagnosticProgressEntity) { 
-    _applyProgress(event); 
-  } else if (event is DiagnosticCompleted) {
-    _handleTestCompletion(event);
-  }
-}
-
-  void _handleStreamDone() {
-    if (state.globalStatus != GlobalTestStatus.complete && state.globalStatus != GlobalTestStatus.error) {
-      debugPrint('⚠️ Stream finalizado sem conclusão adequada. Marcando como erro.');
-      _handleFailure(const ServerFailure(message: 'O teste foi interrompido inesperadamente.'));
-    }
   }
 
   void _handleTestCompletion(DiagnosticCompleted event) {
@@ -118,7 +196,8 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
       overallProgress: 100,
       tests: finalTests,
       finalResults: event.results,
-      clearError: true, 
+      clearError: true,
+      clearQueue: true,
       currentStage: DiagnosticStage.completed,
     ));
   }
@@ -139,6 +218,7 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
       emit(state.copyWith(
         overallProgress: overall,
         currentStage: p.stage,
+        clearQueue: true,
       ));
       return;
     }
@@ -171,7 +251,8 @@ class DiagnosticCubit extends Cubit<DiagnosticState> {
     emit(state.copyWith(
       overallProgress: overall,
       tests: updatedTests,
-      clearError: true, 
+      clearError: true,
+      clearQueue: true,
       currentStage: p.stage,
     ));
   }
