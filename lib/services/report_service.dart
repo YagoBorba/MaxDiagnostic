@@ -1,9 +1,7 @@
 import 'dart:io';
-import 'dart:convert';
-import 'package:flutter/services.dart' show rootBundle, ByteData;
 import 'package:flutter/material.dart' show debugPrint;
 import 'package:path_provider/path_provider.dart';
-import 'package:flutter_html_to_pdf/flutter_html_to_pdf.dart';
+import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
 
@@ -16,31 +14,26 @@ class ReportService {
     FinalResultsEntity results,
   ) async {
     try {
-      final String logoBase64 = await _getLogoBase64();
+      final String html = _generateHtmlReport(results);
 
-      final String html = _generateHtmlReport(results, logoBase64);
-
-      final Directory tempDir = await getTemporaryDirectory();
-      final String fileName =
-          'diagnostic_report_${DateTime.now().millisecondsSinceEpoch}';
-
-      final generatedPdf = await FlutterHtmlToPdf.convertFromHtmlContent(
-        html,
-        tempDir.path,
-        fileName,
-      );
-
-      if (generatedPdf.path.isEmpty) {
+      final pdfBytes = await Printing.convertHtml(html: html);
+      if (pdfBytes.isEmpty) {
         debugPrint('ReportService: PDF generation failed.');
         return false;
       }
 
-      final XFile pdfFile = XFile(generatedPdf.path);
+      final Directory tempDir = await getTemporaryDirectory();
+      final File pdf = File(
+        '${tempDir.path}/diagnostic_report_${DateTime.now().millisecondsSinceEpoch}.pdf',
+      );
+      await pdf.writeAsBytes(pdfBytes, flush: true);
+
+      final XFile pdfFile = XFile(pdf.path, mimeType: 'application/pdf');
 
       await SharePlus.instance.share(
         ShareParams(
           files: [pdfFile],
-          subject: 'Relatório de Diagnóstico Max Internet',
+          subject: 'Relatório de diagnóstico de rede · MaxDiagnostic',
         ),
       );
 
@@ -51,22 +44,7 @@ class ReportService {
     }
   }
 
-  static Future<String> _getLogoBase64() async {
-    try {
-      final ByteData data = await rootBundle.load('assets/images/logo.png');
-      final List<int> bytes = data.buffer.asUint8List();
-      final String base64 = base64Encode(bytes);
-      return 'data:image/png;base64,$base64';
-    } catch (error) {
-      debugPrint('ReportService: Error loading logo for the report: $error');
-      return '';
-    }
-  }
-
-  static String _generateHtmlReport(
-    FinalResultsEntity results,
-    String logoBase64,
-  ) {
+  static String _generateHtmlReport(FinalResultsEntity results) {
     String formatValue(String? value, [String unit = '']) {
       if (value == null || value.isEmpty) {
         return '<span class="not-available">N/A</span>';
@@ -93,7 +71,6 @@ class ReportService {
       :root { --primary-color: #4F46E5; --secondary-color: #374151; --border-color: #E5E7EB; --background-light: #F9FAFB; --text-color: #374151; --text-light: #6B7280; --error-color: #EF4444; }
       body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 40px; color: var(--text-color); background-color: #fff; font-size: 14px; line-height: 1.6; }
       .header { display: flex; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 20px; margin-bottom: 30px; }
-      .logo { width: 60px; height: auto; margin-right: 20px; }
       .header-text h1 { margin: 0; color: var(--primary-color); font-size: 24px; font-weight: 700; }
       .header-text p { margin: 4px 0 0; color: var(--text-light); font-size: 14px; }
       .section { margin-bottom: 30px; page-break-inside: avoid; }
@@ -124,7 +101,6 @@ class ReportService {
 
     final String body = '''
     <div class="header">
-      ${logoBase64.isNotEmpty ? '<img src="$logoBase64" class="logo" alt="Logo">' : ''}
       <div class="header-text">
         <h1>Relatório de Diagnóstico de Rede</h1>
         <p>Gerado em: $timestamp</p>
