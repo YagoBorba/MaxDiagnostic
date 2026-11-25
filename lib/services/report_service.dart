@@ -8,6 +8,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
 
+import 'package:maxt_diagnostic/core/config/demo_mode.dart';
 import 'package:maxt_diagnostic/domain/entities/final_results_entity.dart';
 
 /// Builds the diagnostic PDF report and shares it through the native share sheet.
@@ -160,6 +161,11 @@ class ReportService {
               style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, color: _primary)),
           pw.SizedBox(height: 4),
           pw.Text('Gerado em $timestamp', style: const pw.TextStyle(fontSize: 11, color: _muted)),
+          if (kDemoMode) ...[
+            pw.SizedBox(height: 6),
+            pw.Text('Dados simulados (modo demonstração): este relatório não mede uma conexão real.',
+                style: pw.TextStyle(fontSize: 11, color: _error, fontWeight: pw.FontWeight.bold)),
+          ],
         ],
       ),
     );

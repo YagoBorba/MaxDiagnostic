@@ -13,3 +13,12 @@ class CheckServerReachability implements UseCase<bool, NoParams> {
     return repository.checkServerReachability();
   }
 }
+
+/// Used in demo mode: the diagnostic is simulated, so no server is needed.
+class DemoServerReachability extends CheckServerReachability {
+  DemoServerReachability(super.repository);
+
+  @override
+  Future<Either<Failure, bool>> call(NoParams params) async =>
+      const Right(true);
+}

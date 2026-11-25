@@ -39,6 +39,10 @@
 
 Before calling the internet provider, the user runs a guided diagnostic that collects Wi-Fi, connection, device and speed test data in a single flow. The app then suggests what may be causing the problem and produces a report that can be sent to support, making it easier to tell real network failures apart from local issues such as a weak Wi-Fi signal.
 
+## 📥 Download
+
+The [latest release](https://github.com/YagoBorba/MaxDiagnostic/releases/latest) has an Android APK built in **demo mode**: it reads your real Wi-Fi and device information, but the speed test and the report use simulated data and are labeled as such, so the app can be explored without a speed test server. To measure real connections, build the app pointing to your own server (see [Getting Started](#-getting-started)).
+
 ## ✨ What Can MaxDiagnostic Do?
 
 - 📶 **Wi-Fi Analysis:**
@@ -145,6 +149,12 @@ flutter gen-l10n
 
 ```bash
 flutter run
+```
+
+To explore the app without a server, run it in demo mode, where the speed test and the report are simulated:
+
+```bash
+flutter run --dart-define=DEMO_MODE=true
 ```
 
 ## 📱 Platform Notes
