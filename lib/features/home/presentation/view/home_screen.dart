@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:maxt_diagnostic/features/home/presentation/cubit/home_cubit.dart';
 import 'package:maxt_diagnostic/core/config/app_config.dart';
+import 'package:maxt_diagnostic/core/config/demo_mode.dart';
 import 'package:maxt_diagnostic/core/di/injection_container.dart' as di;
 import 'package:maxt_diagnostic/core/theme/brand_theme_colors.dart';
 import 'package:maxt_diagnostic/features/home/presentation/view/widgets/diagnostic_button.dart';
@@ -216,6 +217,7 @@ class HomeScreen extends StatelessWidget {
             return ListView(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
               children: [
+                if (kDemoMode) const _DemoModeNotice(),
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0, bottom: 12.0),
                   child: Center(
@@ -277,6 +279,34 @@ class HomeScreen extends StatelessWidget {
               },
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+class _DemoModeNotice extends StatelessWidget {
+  const _DemoModeNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Card(
+      color: colors.tertiaryContainer,
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            Icon(Icons.science_outlined, color: colors.onTertiaryContainer),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Modo demonstração: o teste de velocidade e o relatório usam dados simulados e não medem a sua conexão.',
+                style: TextStyle(color: colors.onTertiaryContainer),
+              ),
+            ),
+          ],
         ),
       ),
     );

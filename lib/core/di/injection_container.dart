@@ -50,7 +50,11 @@ Future<void> init({bool useMockDiagnostic = false}) async {
   sl.registerLazySingleton(() => http.Client());
   sl.registerLazySingleton(() => EnvironmentConfig());
   sl.registerLazySingleton(() => GetInitialNetworkInfo(sl()));
-  sl.registerLazySingleton(() => CheckServerReachability(sl()));
+  sl.registerLazySingleton<CheckServerReachability>(
+    () => useMockDiagnostic
+        ? DemoServerReachability(sl())
+        : CheckServerReachability(sl()),
+  );
   
   if (useMockDiagnostic) {
     sl.registerLazySingleton<RunDiagnosticTest>(
