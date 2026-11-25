@@ -37,7 +37,7 @@
 > [!IMPORTANT]
 > MaxDiagnostic is a cross-platform network diagnostic app built with Flutter. It guides the user through a complete check of the Wi-Fi and internet connection and generates a shareable PDF report.
 
-The project was created to support the technical team of an internet service provider. Before opening a support ticket, the user runs a guided diagnostic that collects Wi-Fi, connection, device and speed test data in a single flow. The app then suggests what may be causing the problem and produces a report that can be sent to support, making it easier to tell real network failures apart from local issues such as weak Wi-Fi signal.
+Before calling the internet provider, the user runs a guided diagnostic that collects Wi-Fi, connection, device and speed test data in a single flow. The app then suggests what may be causing the problem and produces a report that can be sent to support, making it easier to tell real network failures apart from local issues such as a weak Wi-Fi signal.
 
 ## ✨ What Can MaxDiagnostic Do?
 
@@ -51,7 +51,10 @@ The project was created to support the technical team of an internet service pro
     Measures download, upload, ping and jitter against a LibreSpeed server, with live progress for each stage of the test.
 
 - 📉 **Before/After Signal Comparison:**
-    Captures a Wi-Fi snapshot before and after the speed test to show signal changes during the measurement.
+    Captures a Wi-Fi snapshot before and after the speed test; the PDF report shows how the signal changed during the measurement.
+
+- 🚦 **Server Load Control:**
+    Before each test the app reserves a slot on the speed test server. When the server is busy it shows the queue with the estimated wait and starts automatically, so concurrent tests never distort each other's results.
 
 - 💡 **Smart Recommendations:**
     Detects Wi-Fi bottlenecks (download below 50% of the link speed), flags high latency and jitter, and classifies the connection quality for streaming.
@@ -75,8 +78,8 @@ The project was created to support the technical team of an internet service pro
 - **[flutter_inappwebview](https://pub.dev/packages/flutter_inappwebview):** Headless WebView that runs the LibreSpeed test and streams results to Flutter.
 - **[connectivity_plus](https://pub.dev/packages/connectivity_plus), [network_info_plus](https://pub.dev/packages/network_info_plus), [wifi_scan](https://pub.dev/packages/wifi_scan), [device_info_plus](https://pub.dev/packages/device_info_plus):** Network, Wi-Fi and device information.
 - **[flutter_html_to_pdf](https://pub.dev/packages/flutter_html_to_pdf) & [share_plus](https://pub.dev/packages/share_plus):** PDF report generation and sharing.
-- **[LibreSpeed](https://github.com/librespeed/speedtest) + [Docker](https://www.docker.com/):** Self-hosted speed test server for local development.
-- **[GitHub Actions](https://github.com/features/actions):** Continuous integration (format, analyze and test).
+- **[LibreSpeed](https://github.com/librespeed/speedtest) + [Docker](https://www.docker.com/) + PHP:** Self-hosted speed test server with a capacity manager that limits concurrent tests.
+- **[GitHub Actions](https://github.com/features/actions):** Continuous integration: formatting, analysis, tests, release APK build and a server smoke test.
 
 ## 🏗️ Architecture
 
@@ -86,6 +89,8 @@ The app follows **Clean Architecture**, keeping business rules independent from 
 - **`domain`:** entities, repository contracts, use cases (`GetInitialNetworkInfo`, `CheckServerReachability`, `RunDiagnosticTest`) and the advice service.
 - **`data`:** datasources (device info, network info, speed test), models and the repository implementation.
 - **`features`:** presentation layer for `home`, `diagnostic` and `results`, with Cubits, screens and widgets.
+
+The [Architecture Guide](docs/ARCHITECTURE.md) describes each layer and the diagnostic flow step by step.
 
 ## 🚀 Getting Started
 
@@ -110,11 +115,17 @@ docker compose up -d
 cd ../..
 ```
 
-The server runs at **http://localhost:7000**.
+The server runs at **http://localhost:7000**. To run it on another machine, size the concurrent tests or expose it on the internet, see the [Self-Hosting Guide](docs/SELF_HOSTING_GUIDE.md).
 
 ### 3. Configure the environment
 
-Create a `.env` file at the project root (it is loaded as an asset in `pubspec.yaml`) based on `.env.example`:
+Create `.env` from the example (it is loaded as an asset in `pubspec.yaml` and not tracked by Git):
+
+```bash
+cp .env.example .env
+```
+
+and set the runner URL:
 
 ```env
 SPEED_TEST_URL=http://localhost:7000/librespeed_runner.html
@@ -150,9 +161,12 @@ The CI pipeline runs on every push and pull request to `main` and `develop`:
 dart format .
 flutter analyze
 flutter test --coverage
+flutter build apk --release
+./docker/librespeed/smoke-test.sh
 ```
 
-Unit tests use **bloc_test** and **mocktail** and cover the speed test datasource, the diagnostic repository, the `RunDiagnosticTest` use case and the `Home` and `Diagnostic` Cubits.
+- **Unit tests** use **bloc_test** and **mocktail** and cover the speed test datasource, the diagnostic repository (including slot reservation and the queue), the `RunDiagnosticTest` use case and the `Home` and `Diagnostic` Cubits.
+- **Server smoke test** starts the LibreSpeed container and checks the speed test endpoints, the reserve/refuse/release flow and that 20 concurrent reservations never exceed the configured limit.
 
 ## 🧩 Project Structure
 
@@ -186,7 +200,11 @@ lib/
     main.dart
 
 docker/
-    librespeed/
+    librespeed/         compose file, runner page, capacity API and smoke test
+
+docs/
+    ARCHITECTURE.md
+    SELF_HOSTING_GUIDE.md
 
 test/
 ```
@@ -203,7 +221,7 @@ Contributions are welcome. Please read the [Contributing Guide](CONTRIBUTING.md)
 
 ## 📝 License
 
-No `LICENSE` file is currently present in this repository. If you want, you can add one (for example, MIT) to define usage terms explicitly.
+Distributed under the [MIT License](LICENSE).
 
 ## 📬 Contact
 
