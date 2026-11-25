@@ -1,7 +1,11 @@
 <?php
 /**
  * api.php
- * * Central API endpoint for MaxDiagnostic server integrity and capacity management.
+ * Capacity endpoint used by MaxDiagnostic before and after each speed test.
+ *
+ *   GET  /api.php?action=check_capacity
+ *   POST /api.php?action=reserve_slot&clientId=<id>
+ *   GET  /api.php?action=release_slot&token=<token>
  *
  * @package MaxDiagnostic
  * @author Yago Borba
@@ -55,6 +59,11 @@ try {
             $response = ['status' => 'error', 'message' => 'Invalid or missing action.'];
             break;
     }
+} catch (RuntimeException $e) {
+    // The slot state could not be read or written: tell the app to back off.
+    $httpStatus = 503;
+    $response = ['status' => 'OVERLOADED', 'message' => 'Capacity state unavailable.'];
+    error_log("API Error: " . $e->getMessage());
 } catch (Exception $e) {
     $httpStatus = 500;
     $response = ['status' => 'error', 'message' => 'Internal server error: ' . $e->getMessage()];
@@ -64,4 +73,3 @@ try {
 http_response_code($httpStatus);
 echo json_encode($response, JSON_PRETTY_PRINT);
 
-?>

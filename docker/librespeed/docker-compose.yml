@@ -1,30 +1,30 @@
-# docker/librespeed/docker-compose.yml
+# LibreSpeed server used by MaxDiagnostic for speed tests.
+#
+#   docker compose up -d
+#
+# The app loads http://<host>:7000/librespeed_runner.html (SPEED_TEST_URL in .env)
+# and asks http://<host>:7000/api.php for a test slot before each test.
 
 services:
   librespeed:
-    # The official linuxserver.io image for LibreSpeed
     image: lscr.io/linuxserver/librespeed:latest
-    container_name: librespeed-local
-    
-    # Environment variables to configure the container.
-    # Essential to avoid file permission issues on some systems.
+    container_name: maxdiagnostic-librespeed
     environment:
-      - PUID=1000  # Your user ID (on Linux/Mac, run `id -u` in the terminal)
-      - PGID=1000  # Your group ID (on Linux/Mac, run `id -g` in the terminal)
-      - TZ=America/Sao_Paulo # Your timezone
-      
-    # Volume mapping. This is the most important part for customization.
+      - PUID=1000 # your user ID (`id -u` on Linux/macOS)
+      - PGID=1000 # your group ID (`id -g` on Linux/macOS)
+      - TZ=America/Sao_Paulo
+      # How many speed tests may run at the same time. Size it to the server link:
+      # for example 1 Gbps / ~500 Mbps per test = 2.
+      - MAX_CONCURRENT_TESTS=${MAX_CONCURRENT_TESTS:-1}
+      # Seconds before a slot that was never released is freed automatically.
+      - MAX_TEST_DURATION_SECONDS=${MAX_TEST_DURATION_SECONDS:-60}
     volumes:
-      # The syntax is: <path-on-your-machine>:<path-inside-the-container>
-      # We are "mirroring" our local ./config folder into the /config folder inside the container.
-      # This is where LibreSpeed looks for custom files like our runner.
-      - ./config:/config
-      
-    # Port mapping.
+      # LibreSpeed serves /app/www/public; only MaxDiagnostic's own files are added.
+      - ./librespeed_runner.html:/app/www/public/librespeed_runner.html:ro
+      - ./server/api.php:/app/www/public/api.php:ro
+      - ./server/CapacityManager.php:/app/www/public/CapacityManager.php:ro
+      # Lets PHP read the environment variables above.
+      - ./php/www2.conf:/config/php/www2.conf:ro
     ports:
-      # The syntax is: <port-on-your-machine>:<port-inside-the-container>
-      # We are connecting port 7000 on your machine to port 80 inside the container, where the web server runs.
       - "7000:80"
-      
-    # Restart policy. Useful for ensuring the service stays up during development.
     restart: unless-stopped
