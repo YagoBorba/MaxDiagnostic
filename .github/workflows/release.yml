@@ -45,6 +45,10 @@ jobs:
           apk="MaxDiagnostic-${version}-demo.apk"
           cp build/app/outputs/flutter-apk/app-release.apk "$apk"
           notes=$(awk -v v="$version" '$0 ~ "^## \[?"v"\]?" {p=1; next} /^## / {p=0} p' CHANGELOG.md)
-          gh release create "$GITHUB_REF_NAME" "$apk" \
-            --title "MaxDiagnostic ${version}" \
-            --notes "${notes:-MaxDiagnostic ${version}}"
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "$apk" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "$apk" \
+              --title "MaxDiagnostic ${version}" \
+              --notes "${notes:-MaxDiagnostic ${version}}"
+          fi
